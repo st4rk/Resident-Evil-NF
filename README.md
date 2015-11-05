@@ -13,6 +13,9 @@ To run the game you must have a copy of Resident Evil 1 or Resident Evil 2 and c
 -- Thanks --
 
 Gdkchan  -> Help with 3D <3
+
 Yuriks   -> Always helping with sexual favour during the development.
+
 FelipeBN 
+
 Nic333
