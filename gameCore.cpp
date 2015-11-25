@@ -7,6 +7,12 @@
 
 #include "gameCore.h"
 
+// All global variable here is used to some importants functions on engine
+// like which menu we are and bla bla
+
+// It will handle all possibles menus, ie: "inGame, MainMenu, Credits [...]"
+int gameState = 0;
+
 // Grande maioria aqui é temporário para teste
 // Mas alguns realmente vão ficar, acredito que a camera
 // realmente vai ficar aqui por enquanto até eu achar um lugar melhor
@@ -19,13 +25,11 @@ bool specialMov = false;
 bool creditos   = false;
 bool running    = false;
 
-// O sistema do menu principal é dividido em duas partes, a primeira parte
-// é a mais básica e fundamentos, um bool que diz se estamos nele ou não
-// a segunda parte é a dos eventos, o sistema de evento determina o que 
-// devemos fazer a cada momento, se devemos voltar para X evento ou se
-// devemos executar tal evento etc.
-bool mainMenu   = true;
-gameEvent eventMenu;
+
+// Main Menu
+unsigned char mainMenu = 0x0;
+// In Game
+unsigned char inGame   = 0x0;
 
 // Variaveis utilizadas para fadeblack effect, to pensando em criar um
 // engineEffect ou engineEvent ou algo do tipo, ou até mesmo um struct
@@ -34,6 +38,11 @@ float fadeBlackEffect = 1.0;
 bool fadeBlackNormal  = false;
 bool fadeBlackReverse = false;
 bool inFadeBlack      = false;
+
+
+// System Time, you can do a delay with it
+int timer1_start = 0;
+int delay_sys  = 0;
 
 EMD modelList[MAX_MODEL];
 RDT playerRDT;
@@ -64,9 +73,6 @@ gameCore::gameCore(int argc, char** argv) {
     memset(GAME_NAME, 0x0, 20);
     strcpy(GAME_NAME, "Nightmare Fiction Engine Rev 0.08a");
 
-    playerRDT.rdtLoadFile("background/ROOM1030.RDT");
-    soundEngine.engineSoundInit();
-    soundEngine.engineLoadSound("musicas/menu.ogg");
 }
 
 gameCore::~gameCore() {
@@ -92,94 +98,68 @@ void background_Loader(int bgNum) {
 
 void gameCore::renderLoadResource() {
 
+    // Clear Timer
+    timer1_start = 0;
+
+
+    // The game should start on Main Menu
+    gameState       = STATE_MAIN_MENU;
+    mainMenu        = MAIN_MENU_LOGO;
+    fadeBlackNormal = true;
+
+    // The game starts with fadeblack enable
+    inFadeBlack = true;
+
+    // RDT do Início do Player
+    playerRDT.rdtLoadFile("background/ROOM1030.RDT");
+    
+    // Música que vai ser tocada no menu
+    if (soundEngine.engineSoundInit()) {
+        soundEngine.engineLoadSound("musicas/menu.ogg");
+    }
+
+    // Alguns gráficos que são carregados na memória
     modelList[0].emdLoadFile("modelos/EM058.EMD");
     modelList[1].emdLoadFile("modelos/EM050.EMD");
     modelList[2].emdLoadFile("modelos/BetaLeon.EMD");
 
+    // Algumas imagens carregadas na memória
     engineThisGame.bmpLoaderFile("resource/intro_01.bmp");
     engineMainMenu.bmpLoaderFile("resource/intro_00.bmp");
     engineCreditos.bmpLoaderFile("creditos.bmp");
 
+    // Carrega o background com número 5
     background_Loader(5);
 
     engineFont.bmpLoaderFile("fonte/1.bmp");
 
+    // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setPlayerEMD(2);
     mainPlayer.setPlayerX(-17287);
     mainPlayer.setPlayerZ(-11394);
     mainPlayer.setPlayerY(0);
     mainPlayer.setPlayerCam(5);
 
-    // Como teremos um evento para o mainMenu, temos que inicializa-lo
-    // e desativa-lo quando for necessário !
-    // Ah ! os eventAction que teremos por enquanto são
-    // 0 = NADA
-    // 1 = fadeBlack Enable - fadeBlackNormal
-    // 2 = Aguarda um comando para ir para o próximo fade(reverso)
+    // Player Item HardCode
+    mainPlayer.setPlayerItem(0, -1); // NO ITEM
+    mainPlayer.setPlayerItem(1, -1); // NO ITEM
+    mainPlayer.setPlayerItem(2, -1); // NO ITEM
+    mainPlayer.setPlayerItem(3, -1); // NO ITEM
+    mainPlayer.setPlayerItem(4, -1); // NO ITEM
+    mainPlayer.setPlayerItem(5, -1); // NO ITEM
+    mainPlayer.setPlayerItem(6, -1); // NO ITEM
+    mainPlayer.setPlayerItem(7, -1); // NO ITEM
 
-    eventMenu.setEventEnable();
-    eventMenu.setMaxEvent(4);
-    eventMenu.setEventAction(0, EVENT_TYPE_ENABLEFB);
-    eventMenu.setEventAction(1, EVENT_TYPE_NONE);
-    eventMenu.setEventAction(2, EVENT_TYPE_NONE);
-    eventMenu.setEventAction(3, EVENT_TYPE_WAITBUTTON);
 
 }
 
 
 
-void renderhandleKeys(int key, int x, int y) {
-    // Todo o movimento do personagem(principal) será controlado por aqui
-    // Andar, subir, pegar objetos etc.
-    switch (key) {
-        case GLUT_KEY_UP:
-        if (running) {
-            mainPlayer.setPlayerInMove(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(1);
-        } else {
-            mainPlayer.setPlayerInMove(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(0);           
-        }
-        break;
+void eventSystem_downKey(int key, int x, int y) {
 
-        case GLUT_KEY_DOWN:
-
-        break;
-
-        case GLUT_KEY_LEFT:
-        if (running) {
-            mainPlayer.setPlayerInRotatePos(1);
-            mainPlayer.setPlayerInRotate(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(1);
-        } else {
-            mainPlayer.setPlayerInRotatePos(1);
-            mainPlayer.setPlayerInRotate(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(0);
-        }
-        break;
-
-        case GLUT_KEY_RIGHT:
-        if (running) {
-            mainPlayer.setPlayerInRotatePos(0);
-            mainPlayer.setPlayerInRotate(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(1);
-        } else {
-            mainPlayer.setPlayerInRotatePos(0);
-            mainPlayer.setPlayerInRotate(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(0);
-        }
-        break;
-
-    }
 }
 
-void renderhandleUpKeys(int key, int x, int y) {
+void eventSystem_upKey(int key, int x, int y) {
    switch (key) {
         case GLUT_KEY_UP:
             mainPlayer.setPlayerInMove(false);
@@ -200,37 +180,16 @@ void renderhandleUpKeys(int key, int x, int y) {
             mainPlayer.setPlayerInRotate(false);
         break;
 
-
-
     }
 }
 
-void keyboardKeys(unsigned char key, int x, int y) {
-    switch (key) {
-        case 'z':
-        if (mainMenu == false) {
-            mainPlayer.setPlayerInShoot(true);
-            mainPlayer.setPlayerInMove(false);
-            mainPlayer.setPlayerAnimSection(1);
-        } else {
-            if (eventMenu.getEventAction() == EVENT_TYPE_WAITBUTTON) {
-                soundEngine.enginePlaySound(0);
-                eventMenu.nextEvent();
-            }
-        }
-        break;
-
-        case 'x':
-            if (mainMenu == false) {
-                running  = true;
-                mainPlayer.setPlayerInMove(true);
-                mainPlayer.setPlayerAnimSection(1);
-                mainPlayer.setPlayerAnim(1);
-            } else {
-                if (eventMenu.getEventAction() == EVENT_TYPE_WAITBUTTON) {
-                    creditos = true;
-                    soundEngine.enginePlaySound(0);
-                    eventMenu.nextEvent();
+void eventSystem_keyboardDown(unsigned char key, int x, int y) {
+    switch (gameState) {
+        case STATE_MAIN_MENU:
+            if (mainMenu == MAIN_MENU_START) {
+                if (key == 'x') {
+                    mainMenu    = MAIN_MENU_GAME;
+                    inFadeBlack = true;
                 }
             }
         break;
@@ -242,7 +201,7 @@ void keyboardKeys(unsigned char key, int x, int y) {
 }
 
 
-void keyboardKeysUp(unsigned char key, int x, int y) {
+void eventSystem_keyboardUp(unsigned char key, int x, int y) {
     switch (key) {
         case 'z':
             mainPlayer.setPlayerInShoot(false);
@@ -268,33 +227,7 @@ void keyboardKeysUp(unsigned char key, int x, int y) {
 void MainLoop(int t) {
     float x = 0, z = 0;
     bool canMove = true;
-
-
-    // MainMenu EventHandle
-
-    if (mainMenu == true) {
-        if (eventMenu.getEventNum() == 0) {
-            inFadeBlack = true;
-            fadeBlackEffect = 1.0;
-            fadeBlackNormal = true;
-            eventMenu.nextEvent();
-        }
-        if ((inFadeBlack == false) && (eventMenu.getEventNum() == 1)) {
-            inFadeBlack     = true;
-            fadeBlackNormal = true;
-            eventMenu.nextEvent();  
-        }
-
-        if ((inFadeBlack == true) && (eventMenu.getEventNum() == 4) && (eventMenu.isEventEnable() == true)) {
-            fadeBlackReverse = true;
-            eventMenu.nextEvent(); // desativa o evento do Menu !
-        }
-
-    } else {
-
-        // Musica
-        soundEngine.enginePlaySound(-1);
-
+    if (gameState == STATE_IN_GAME) {
         if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
             specialMov = false;
             mainPlayer.setPlayerAnimSection(1);
@@ -373,81 +306,8 @@ void MainLoop(int t) {
     glutTimerFunc(33, MainLoop, 0);
 }
 
-// Todo sistema de eventos vai ficar aqui dentro
-// principalmente para o timerFunc(nosso querido fade black effect) que é utilizado
-// e abusado no Resident Evil
-void verifyEvent() {
-    // Eventos do mainMenu
-    // Verifica se o evento do menu foi desativado e se o último evento foi o 3 então
-    // desativamos o menu
-    // Verifica se o evento do menu está ativo
-    if (mainMenu) {     
-        if (eventMenu.isEventEnable() == true) {
-            if (eventMenu.getEventNum() == 2) {     
-                fadeBlackEffect = 0.0;
-                fadeBlackNormal = false;
-                eventMenu.nextEvent();
-            }
 
-            if (eventMenu.getEventNum() == 1) {
-                fadeBlackEffect = 0.0;
-                fadeBlackNormal  = false;
-                fadeBlackReverse = true;
-            }
-        }
-    }
-}
-
-// Eu não sei a melhor maneira de fazer o fade black effect, então pensei em utilizar
-// essa função, o opengl tem o glutTimerFunc que nos permite ficar chamando a função
-// de tempo em tempo X, vou utilizar ela para o fadeBlack e provavelmente terei que
-// re-escrever mais pra frente :P
 void eventSystem_fadeBlack(int t) {
-    if (inFadeBlack) {
-        if (fadeBlackNormal) {
-            if (fadeBlackEffect > 0.0) 
-                fadeBlackEffect -= 0.1;
-            else {
-                verifyEvent();
-            }
-        }
-
-        if (fadeBlackReverse) {
-
-            if (fadeBlackEffect > 1.0) {
-                fadeBlackEffect   = 1.0;
-                inFadeBlack       = false;
-                fadeBlackReverse  = false;
-
-                // Devido a conflitos no meu *crapy-event-system* 
-                // tive que separar o código do MainMenu eventMenu
-                if (mainMenu) {
-                    if ((eventMenu.isEventEnable() == false) && (eventMenu.getEventNum() == 4)) {
-                            inFadeBlack       = true;
-                            fadeBlackNormal   = true;
-                            mainMenu          = false;
-                            if (creditos == true) {
-                                soundEngine.engineStopSound();
-                                soundEngine.engineLoadSound("creditos.ogg");
-                            } else {
-                                soundEngine.engineStopSound();
-                                soundEngine.engineLoadSound("test.ogg");
-                        }
-                    }
-                } else 
-                    verifyEvent();
-
-            } else {
-                if (mainMenu) {
-                    if (soundEngine.enginePlayingMusic() == 0) 
-                        fadeBlackEffect += 0.1;
-                    else
-                        fadeBlackEffect += 0.03;
-                } else 
-                        fadeBlackEffect += 0.1;
-            }
-        }
-    }
 
     glutTimerFunc(100, eventSystem_fadeBlack, 0);
 }
@@ -499,10 +359,10 @@ void gameCore::renderInit() {
 
     // Função que vai ser chamada cada vez que for fazer a renderização
     glutDisplayFunc(renderScene);
-    glutSpecialFunc( renderhandleKeys );
-    glutSpecialUpFunc ( renderhandleUpKeys);
-    glutKeyboardFunc( keyboardKeys );
-    glutKeyboardUpFunc( keyboardKeysUp );
+    glutSpecialFunc( eventSystem_downKey );
+    glutSpecialUpFunc ( eventSystem_upKey );
+    glutKeyboardFunc( eventSystem_keyboardDown );
+    glutKeyboardUpFunc( eventSystem_keyboardUp );
 
     glutTimerFunc(1.0, MainLoop, 0);
     glutTimerFunc(1.0, eventSystem_fadeBlack,0);
@@ -532,25 +392,6 @@ void modelRelPosAnimation(unsigned int objNum, unsigned int var, int var2) {
      }
 }
 
-
-
-void drawMainMenu() {
-    if (eventMenu.getEventNum() == 1) {
-        glDepthMask(0);
-        glDrawPixels(engineThisGame.bmpWidth, engineThisGame.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineThisGame.bmpBuffer );
-        glPixelZoom(2.5,2.5);   
-        glDepthMask(1);
-    }
-
-
-    if ((eventMenu.getEventNum() == 2) || (eventMenu.getEventNum() == 3) || (eventMenu.getEventNum() == 4)) {
-        glDepthMask(0);
-        glDrawPixels(engineMainMenu.bmpWidth, engineMainMenu.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineMainMenu.bmpBuffer );
-        glPixelZoom(2.5,2.5);
-        glDepthMask(1);
-    }
-
-}
 
 
 void drawMainPlayer() {
@@ -734,11 +575,215 @@ void drawMapBackground() {
 
 
 void drawCreditos() {
-        glDepthMask(0);
-            glPixelZoom(1,1);
-        glDrawPixels(engineCreditos.bmpWidth, engineCreditos.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineCreditos.bmpBuffer );
-        glDepthMask(1);
+    glDepthMask(0);
+        glPixelZoom(1,1);
+    glDrawPixels(engineCreditos.bmpWidth, engineCreditos.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineCreditos.bmpBuffer );
+    glDepthMask(1);
 }
+
+void renderMainMenu() {
+
+    // FadeBlack Reverse
+   switch (mainMenu) {
+        // Render the game logo (this game contains...)
+        case MAIN_MENU_LOGO:
+            if (inFadeBlack) {
+                // First Game Logo
+                glDepthMask(0);
+                glDrawPixels(engineThisGame.bmpWidth, engineThisGame.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineThisGame.bmpBuffer );
+                glPixelZoom(2.5,2.5);   
+                glDepthMask(1);
+                if (fadeBlackNormal) {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect >  0.0) {
+                            fadeBlackEffect -= 0.1;
+                            delay_sys = 23;
+                        } else {
+                            fadeBlackEffect = 0.0;
+                            delay_sys--;
+                            if (delay_sys <= 0) {
+                                fadeBlackReverse = true;
+                                fadeBlackNormal  = false;
+                            }
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }
+                } else {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect <= 1.0) {
+                            fadeBlackEffect += 0.1;
+                            delay_sys = 100;
+                        } else {
+                            fadeBlackNormal = true;
+                            mainMenu = MAIN_MENU_ENGINE_LOGO;
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }                
+                }
+            }
+        break;
+
+        case MAIN_MENU_ENGINE_LOGO:
+            if (inFadeBlack) {
+                // First Game Logo
+                glDepthMask(0);
+                glDrawPixels(engineThisGame.bmpWidth, engineThisGame.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineThisGame.bmpBuffer );
+                glPixelZoom(2.5,2.5);   
+                glDepthMask(1);
+                if (fadeBlackNormal) {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect >  0.0) {
+                            fadeBlackEffect -= 0.1;
+                            delay_sys = 23;
+                        } else {
+                            fadeBlackEffect = 0.0;
+                            delay_sys--;
+                            if (delay_sys <= 0) {
+                                fadeBlackReverse = true;
+                                fadeBlackNormal  = false;
+                            }
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }
+                } else {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect <= 1.0) {
+                            fadeBlackEffect += 0.1;
+                            delay_sys = 100;
+                        } else {
+                            fadeBlackNormal = true;
+                            mainMenu = MAIN_MENU_START;
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }                
+                }
+            }
+        break;
+
+        case MAIN_MENU_START:
+            if (inFadeBlack) {
+                // MainMenu Background
+                glDepthMask(0);
+                glDrawPixels(engineMainMenu.bmpWidth, engineMainMenu.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineMainMenu.bmpBuffer );
+                glPixelZoom(2.5,2.5);
+                glDepthMask(1);
+                if (fadeBlackNormal) {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect >  0.0) {
+                            fadeBlackEffect -= 0.1;
+                            delay_sys = 23;
+                        } else {
+                            fadeBlackEffect = 0.0;
+                            delay_sys--;
+                            if (delay_sys <= 0) {
+                                fadeBlackReverse = true;
+                                fadeBlackNormal  = false;
+                            }
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }
+                }
+            }
+        break;
+
+
+       case MAIN_MENU_GAME:
+            if (inFadeBlack) {
+                glDepthMask(0);
+                glDrawPixels(engineMainMenu.bmpWidth, engineMainMenu.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineMainMenu.bmpBuffer );
+                glPixelZoom(2.5,2.5);
+                glDepthMask(1);
+
+                if (fadeBlackNormal) {
+                    // Timer
+                    if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                        if (fadeBlackEffect <= 1.0) {
+                            fadeBlackEffect += 0.1;
+                            delay_sys = 23;
+                        } else {
+                            delay_sys--;
+                            if (delay_sys <= 0) {
+                                fadeBlackReverse = true;
+                                fadeBlackNormal  = false;
+                                gameState       = STATE_IN_GAME;
+                                inGame          = IN_GAME_BEGIN;
+                            }
+                        }
+
+                        timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+                    }
+                }       
+            }
+       break;
+
+       default:
+          std::cout << "Main Menu System bug !" << std::endl;
+       break;
+   }
+
+    
+}
+
+
+void renderCredits() {
+
+}
+
+void renderInventary() {
+
+}
+
+// All in game stuff related with rendering is done here
+void renderGame() {
+
+    if (inGame == IN_GAME_BEGIN) {
+        if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+            if (fadeBlackEffect >  0.0) {
+                fadeBlackEffect -= 0.1;
+            } else {
+                fadeBlackNormal = true;
+                inFadeBlack     = false;
+                inGame          = IN_GAME_NORMAL;
+            }
+
+            timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+        }          
+    }
+
+
+    // Filtros de textura, é necessário definilos para a textura ser apresentada
+    // Eu utilizei até agora 2 filtros, o GL_NEAREST que deixa a qualidade da textura mais *original*
+    // e o GL_LINEAR que é um filtro que deixa a textura mais bonita
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); 
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    // Isso vai ser subistituido futuramente por um *sceneNum* ficará mais fácil
+    // decidir o que vai ser renderizado no momento certo, como menu, menu de start
+    // ou qualquer outro, mas por enquanto fica apenas esse bool =)
+ 
+
+    // Todo .RDT tem vários fundos, toda a renderização fica nessa parte
+    drawMapBackground();
+
+
+    // Toda iluminação do motor gráfico é tratado aqui
+    // No caso a iluminação é relativamente *simples*, tudo vai ser lido dos .RDT
+    // só precisamos colocar de forma certa
+    engineLight();
+
+    // Toda a renderização do personagem é feita por essa função
+    drawMainPlayer();
+}
+
 
 void renderScene( void ) {
     
@@ -749,55 +794,46 @@ void renderScene( void ) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-   if (mainMenu == true) {
-        drawMainMenu();
-    } else {
+    switch (gameState) {
+        case STATE_MAIN_MENU:
+            renderMainMenu();
+        break;
 
-        if (creditos == true) {
-            drawCreditos();
+        case STATE_INVENTARY:
+            renderInventary();
+        break;
 
-        } else {
-            // Filtros de textura, é necessário definilos para a textura ser apresentada
-            // Eu utilizei até agora 2 filtros, o GL_NEAREST que deixa a qualidade da textura mais *original*
-            // e o GL_LINEAR que é um filtro que deixa a textura mais bonita
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); 
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-            // Isso vai ser subistituido futuramente por um *sceneNum* ficará mais fácil
-            // decidir o que vai ser renderizado no momento certo, como menu, menu de start
-            // ou qualquer outro, mas por enquanto fica apenas esse bool =)
-         
+        case STATE_IN_GAME:
+            renderGame();
+        break;
 
-            // Todo .RDT tem vários fundos, toda a renderização fica nessa parte
-            drawMapBackground();
+        case STATE_CREDITS:
+            renderCredits();
+        break;
 
-
-            // Toda iluminação do motor gráfico é tratado aqui
-            // No caso a iluminação é relativamente *simples*, tudo vai ser lido dos .RDT
-            // só precisamos colocar de forma certa
-            engineLight();
-
-            // Toda a renderização do personagem é feita por essa função
-            drawMainPlayer();
-
-        }
+        default:
+            std::cout << "meh" << std::endl;
+        break;
     }
+  
+        // Fade Black Effect
+    if (inFadeBlack) {
+        glDisable(GL_LIGHTING);
+        glDisable(GL_TEXTURE_2D);
+        
+        glLoadIdentity();
 
-    // Efeito Fade Black
-    glDisable(GL_LIGHTING);
-    glDisable(GL_TEXTURE_2D);
-    
-    glLoadIdentity();
+        glBegin(GL_QUADS);                     
+            glColor4f(0.0, 0.0, 0.0, fadeBlackEffect);
+            glVertex3f(-3.0f, 2.0f, -3.0f);              // Top Left
+            glVertex3f( 3.0f, 2.0f, -3.0f);              // Top Right
+            glVertex3f( 3.0f,-2.0f, -3.0f);              // Bottom Right
+            glVertex3f(-3.0f,-2.0f, -3.0f);              // Bottom Left        
+        glEnd();
 
-    glBegin(GL_QUADS);                     
-        glColor4f(0.0, 0.0, 0.0, fadeBlackEffect);
-        glVertex3f(-3.0f, 2.0f, -3.0f);              // Top Left
-        glVertex3f( 3.0f, 2.0f, -3.0f);              // Top Right
-        glVertex3f( 3.0f,-2.0f, -3.0f);              // Bottom Right
-        glVertex3f(-3.0f,-2.0f, -3.0f);              // Bottom Left        
-    glEnd();
-
-    glEnable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_TEXTURE_2D);
+    }
 
     // Buffers de renderização
     glutSwapBuffers();

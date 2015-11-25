@@ -8,8 +8,8 @@
 
 enum EVENT_TYPE {
 	EVENT_TYPE_NONE        = 0,
-	EVENT_TYPE_ENABLEFB    = 1,
-	EVENT_TYPE_WAITBUTTON  = 2
+	EVENT_TYPE_MAINMENU    = 1,
+	EVENT_TYPE_INGAME      = 2
 };
 
 class gameEvent {

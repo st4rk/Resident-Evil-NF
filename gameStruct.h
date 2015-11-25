@@ -42,12 +42,28 @@
 // a serem adiciona a X e Y, a gente utiliza COS/SEN, dependendo do quadrante que ele se encontra
 // Saberemos quanto diminuir ou somar.
 
-#define PI 3.14159265
-
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
+// Math 
+#define PI 3.14159265
+// All possible menus, dunno af
+#define STATE_MAIN_MENU  1
+#define STATE_CREDITS    2
+#define STATE_INVENTARY  3
+#define STATE_IN_GAME    4
+
+// MainMenu sub-menus
+#define MAIN_MENU_LOGO         0x0
+#define MAIN_MENU_ENGINE_LOGO  0x1
+#define MAIN_MENU_START        0x2
+#define MAIN_MENU_GAME         0x3
+
+// InGame sub-menus/status
+#define IN_GAME_BEGIN          0x0
+#define IN_GAME_NORMAL         0x1
 
 class playerClass {
 public:
@@ -82,25 +98,59 @@ public:
    unsigned short getPlayerEMD();
    unsigned int   getPlayerRDT();
 
+   // Item Stuff
+   int   getPlayerItemID(int slotNum);
+   int   getPlayerItemAmount(int slotNum);
+   bool  getPlayerIsAmount(int slotNum);
+
+   void setPlayerItem(int slotNum, int id);
+   void setPlayerItemAmount(int slotNum, int amount);
+
 private:
+
+   // Player Item Structure
+   typedef struct pItem {
+      int id;
+      bool isAmount;
+      int amount;
+   } pItem;
 	
+   // Player EMD(Model)
 	unsigned short playerEMD;
+
+   // Animation Section
    unsigned char animSection;
+
+   // Player Animation Num
 	unsigned char playerAnimNum;
+   
+   // Rotation position
    unsigned char inRotatePos;
+   
+   // CAM 
    unsigned char camNum;
 
+   // RDT
    unsigned int rdtNum;
 
+   // Some stuff to verify what the player is doing
    bool inRotate;
    bool inMove;
    bool inShoot;
 
+   // Player Coord
 	float playerX;
    float playerY;
    float playerZ;
 
+   // PlayerHP
+   unsigned short playerHP;
+
+   // Player Items
+   pItem item[8];
+
 };
+
 
 class bmp_loader_24bpp {
 public:	
@@ -117,5 +167,6 @@ private:
 	unsigned int bmpSize;
 
 };
+
 
 #endif

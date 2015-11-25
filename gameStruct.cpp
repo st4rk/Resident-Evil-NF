@@ -78,6 +78,21 @@ bool playerClass::getPlayerInMove() { return inMove; }
 bool playerClass::getPlayerInRotate() { return inRotate; }
 bool playerClass::getPlayerInShoot() { return inShoot; }
 
+
+// Item Stuff
+int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
+int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }
+bool  playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
+
+void  playerClass::setPlayerItem(int slotNum, int id) {
+
+}
+
+void  playerClass::setPlayerItemAmount(int slotNum, int amount) {
+
+}
+
+
 bmp_loader_24bpp::bmp_loader_24bpp() {
 	memset(bmpHeader, 0x0, 54);
 	bmpBuffer = NULL;

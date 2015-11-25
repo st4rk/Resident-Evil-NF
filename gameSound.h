@@ -19,7 +19,7 @@ class gameSound {
 public:
 	gameSound();
 	~gameSound();
-	void engineSoundInit();
+	bool engineSoundInit();
 	void engineLoadSound(std::string soundName);
 	void enginePlaySound(int rept);
 	void engineStopSound();
@@ -28,6 +28,10 @@ public:
 	int  enginePlayingMusic();
 private:
 	Mix_Music *backgroundMusic;
+
+	Mix_Chunk *gunEffect;
+	Mix_Chunk *walkEffect;
+	
 };
 
 #endif
