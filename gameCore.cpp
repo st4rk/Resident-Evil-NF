@@ -156,31 +156,105 @@ void gameCore::renderLoadResource() {
 
 
 void eventSystem_downKey(int key, int x, int y) {
+    switch (gameState) {
+        case STATE_MAIN_MENU:
 
+        break;
+
+        case STATE_IN_GAME:
+            // Todo o movimento do personagem(principal) será controlado por aqui
+            // Andar, subir, pegar objetos etc.
+            switch (key) {
+                case GLUT_KEY_UP:
+                if (running) {
+                    mainPlayer.setPlayerInMove(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(1);
+                } else {
+                    mainPlayer.setPlayerInMove(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(0);           
+                }
+                break;
+
+                case GLUT_KEY_DOWN:
+
+                break;
+
+                case GLUT_KEY_LEFT:
+                if (running) {
+                    mainPlayer.setPlayerInRotatePos(1);
+                    mainPlayer.setPlayerInRotate(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(1);
+                } else {
+                    mainPlayer.setPlayerInRotatePos(1);
+                    mainPlayer.setPlayerInRotate(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(0);
+                }
+                break;
+
+                case GLUT_KEY_RIGHT:
+                if (running) {
+                    mainPlayer.setPlayerInRotatePos(0);
+                    mainPlayer.setPlayerInRotate(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(1);
+                } else {
+                    mainPlayer.setPlayerInRotatePos(0);
+                    mainPlayer.setPlayerInRotate(true);
+                    mainPlayer.setPlayerAnimSection(1);
+                    mainPlayer.setPlayerAnim(0);
+                }
+                break;
+
+            }
+        break;
+
+
+        default:
+
+        break;
+    }
 }
 
 void eventSystem_upKey(int key, int x, int y) {
-   switch (key) {
-        case GLUT_KEY_UP:
-            mainPlayer.setPlayerInMove(false);
-        break;
-
-        case GLUT_KEY_DOWN:
+    switch (gameState) {
+        case STATE_MAIN_MENU:
 
         break;
 
-        case GLUT_KEY_LEFT:
-            mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
-            mainPlayer.setPlayerInRotate(false);
-          
+        case STATE_IN_GAME:
+           switch (key) {
+                case GLUT_KEY_UP:
+                    mainPlayer.setPlayerInMove(false);
+                break;
+
+                case GLUT_KEY_DOWN:
+
+                break;
+
+                case GLUT_KEY_LEFT:
+                    mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
+                    mainPlayer.setPlayerInRotate(false);
+                  
+                break;
+
+                case GLUT_KEY_RIGHT:
+                    mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
+                    mainPlayer.setPlayerInRotate(false);
+                break;
+
+            }
         break;
 
-        case GLUT_KEY_RIGHT:
-            mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
-            mainPlayer.setPlayerInRotate(false);
-        break;
+        default:
 
+        break;
     }
+
+
 }
 
 void eventSystem_keyboardDown(unsigned char key, int x, int y) {
