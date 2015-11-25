@@ -562,10 +562,13 @@ void drawMainPlayer() {
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageWidth*2), modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[mainPlayer.getPlayerEMD()].emdTimTexture.rawTexture);
 
+
     // Toda a renderização do personagem vai ficar aqui !
     for (unsigned int x = 0; x < modelList[mainPlayer.getPlayerEMD()].emdTotalObj; x++) {
         
         glLoadIdentity();
+
+
         
         // Aqui temos a camera do mapa que o personagem se encontra
         // o número de cameras é variado
@@ -574,10 +577,11 @@ void drawMainPlayer() {
                        0.0f,   -0.1f,   0.0f);
    
         glTranslatef((float)mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), (float)mainPlayer.getPlayerZ());  
-//        std::cout << "X: " << mainPlayer.getPlayerX() << " Z:" << mainPlayer.getPlayerZ() << std::endl;
 
         
         glRotatef(projectionScale, 0.0f, 1.0f, 0.0f);
+
+
 
         for (unsigned int z = 0; z <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; z++) {
             modelRelPosAnimation(x, z, z);
@@ -669,6 +673,7 @@ void drawMainPlayer() {
            }
     } 
 
+
 }
 
 void engineLight() {
@@ -704,14 +709,29 @@ void engineLight() {
 
 void drawMapBackground() {
     glDepthMask(0);
+    glDisable(GL_LIGHTING);
+    
+    glLoadIdentity();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineBackground.bmpWidth, engineBackground.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineBackground.bmpBuffer);
 
+    glBegin(GL_QUADS);                     
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glTexCoord2i(0,1);
+        glVertex3f(-0.77f, 0.58f, -1.0f);              // Top Left
+        glTexCoord2i(1,1);
+        glVertex3f( 0.77f, 0.58f, -1.0f);              // Top Right
+        glTexCoord2i(1,0);
+        glVertex3f( 0.77f,-0.58f, -1.0f);              // Bottom Right
+        glTexCoord2i(0,0);
+        glVertex3f(-0.77f,-0.58f, -1.0f);              // Bottom Left        
+    glEnd();
 
-    glDrawPixels(engineBackground.bmpWidth, engineBackground.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineBackground.bmpBuffer );
-    glPixelZoom(2.5,2.5);
-
-
+    glEnable(GL_LIGHTING);
     glDepthMask(1);
+    
 }
+
 
 void drawCreditos() {
         glDepthMask(0);
