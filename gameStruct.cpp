@@ -56,6 +56,16 @@ void playerClass::setPlayerRDT(unsigned int RDT) {
 	rdtNum = RDT;
 }
 
+void  playerClass::setPlayerItem(int slotNum, int id) {
+
+}
+
+void  playerClass::setPlayerItemAmount(int slotNum, int amount) {
+
+}
+
+
+void playerClass::setPlayerRunning(bool value) { running = value; }
 void playerClass::setPlayerInMove(bool mov) { inMove = mov; }
 void playerClass::setPlayerInRotate(bool rot) { inRotate = rot; }
 void playerClass::setPlayerInShoot(bool shoot) { inShoot = shoot; }
@@ -77,20 +87,15 @@ unsigned int playerClass::getPlayerRDT() { return rdtNum; }
 bool playerClass::getPlayerInMove() { return inMove; }
 bool playerClass::getPlayerInRotate() { return inRotate; }
 bool playerClass::getPlayerInShoot() { return inShoot; }
-
-
-// Item Stuff
-int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
-int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }
+bool playerClass::getPlayerRunning() { return running; }
 bool  playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
 
-void  playerClass::setPlayerItem(int slotNum, int id) {
+int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
+int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }
 
-}
 
-void  playerClass::setPlayerItemAmount(int slotNum, int amount) {
 
-}
+
 
 
 bmp_loader_24bpp::bmp_loader_24bpp() {

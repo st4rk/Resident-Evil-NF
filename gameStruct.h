@@ -82,7 +82,10 @@ public:
    void setPlayerInShoot(bool shoot);
    void setPlayerRDT(unsigned int RDT);
    void setPlayerCam(unsigned char num);
-   
+   void setPlayerItem(int slotNum, int id);
+   void setPlayerItemAmount(int slotNum, int amount);
+   void setPlayerRunning(bool);
+
    float getPlayerX();
    float getPlayerY();
    float getPlayerZ();
@@ -90,7 +93,9 @@ public:
    bool getPlayerInMove();
    bool getPlayerInRotate();
    bool getPlayerInShoot();
-
+   bool getPlayerIsAmount(int slotNum);
+   bool getPlayerRunning();
+   
    unsigned char  getPlayerAnim();
    unsigned char  getPlayerCam();
    unsigned char  getPlayerAnimSection();
@@ -101,10 +106,9 @@ public:
    // Item Stuff
    int   getPlayerItemID(int slotNum);
    int   getPlayerItemAmount(int slotNum);
-   bool  getPlayerIsAmount(int slotNum);
 
-   void setPlayerItem(int slotNum, int id);
-   void setPlayerItemAmount(int slotNum, int amount);
+
+
 
 private:
 
@@ -137,6 +141,8 @@ private:
    bool inRotate;
    bool inMove;
    bool inShoot;
+
+   bool running;
 
    // Player Coord
 	float playerX;

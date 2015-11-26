@@ -21,9 +21,6 @@ float projectionScale = 90.0f;
 unsigned int animCount = 0;
 unsigned int animSelect = 0;
 unsigned int camSelect = 0;
-bool specialMov = false;
-bool creditos   = false;
-bool running    = false;
 
 
 // Main Menu
@@ -87,9 +84,9 @@ gameCore::~gameCore() {
 void background_Loader(int bgNum) {
     char background[50];
     if (bgNum < 10)
-        sprintf(background, "background/ROOM103_0%d.BMP", bgNum);
+        sprintf(background, "resource/stages/re1/ROOM10A00.bmp", bgNum);
     else
-        sprintf(background, "background/ROOM103_%d.BMP", bgNum);
+        sprintf(background, "resource/stages/re1/ROOM10A00.bmp", bgNum);
 
     engineBackground.bmpLoaderFile(background);
     mainPlayer.setPlayerCam(bgNum);
@@ -129,12 +126,12 @@ void gameCore::renderLoadResource() {
     engineCreditos.bmpLoaderFile("creditos.bmp");
 
     // Carrega o background com número 5
-    background_Loader(5);
+    background_Loader(10);
 
     engineFont.bmpLoaderFile("fonte/1.bmp");
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
-    mainPlayer.setPlayerEMD(2);
+    mainPlayer.setPlayerEMD(1);
     mainPlayer.setPlayerX(-17287);
     mainPlayer.setPlayerZ(-11394);
     mainPlayer.setPlayerY(0);
@@ -166,7 +163,7 @@ void eventSystem_downKey(int key, int x, int y) {
             // Andar, subir, pegar objetos etc.
             switch (key) {
                 case GLUT_KEY_UP:
-                if (running) {
+                if (mainPlayer.getPlayerRunning()) {
                     mainPlayer.setPlayerInMove(true);
                     mainPlayer.setPlayerAnimSection(1);
                     mainPlayer.setPlayerAnim(1);
@@ -182,7 +179,7 @@ void eventSystem_downKey(int key, int x, int y) {
                 break;
 
                 case GLUT_KEY_LEFT:
-                if (running) {
+                if (mainPlayer.getPlayerRunning()) {
                     mainPlayer.setPlayerInRotatePos(1);
                     mainPlayer.setPlayerInRotate(true);
                     mainPlayer.setPlayerAnimSection(1);
@@ -196,7 +193,7 @@ void eventSystem_downKey(int key, int x, int y) {
                 break;
 
                 case GLUT_KEY_RIGHT:
-                if (running) {
+                if (mainPlayer.getPlayerRunning()) {
                     mainPlayer.setPlayerInRotatePos(0);
                     mainPlayer.setPlayerInRotate(true);
                     mainPlayer.setPlayerAnimSection(1);
@@ -264,7 +261,24 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
                 if (key == 'x') {
                     mainMenu    = MAIN_MENU_GAME;
                     inFadeBlack = true;
+                    glutIgnoreKeyRepeat(1);    
                 }
+            }
+        break;
+
+        case STATE_IN_GAME:
+            switch (key) {
+                case 'x':
+                    if (!mainPlayer.getPlayerRunning()) {
+                        mainPlayer.setPlayerRunning(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(1);
+                    }
+                break;
+
+                default:
+
+                break;
             }
         break;
 
@@ -278,17 +292,15 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
 void eventSystem_keyboardUp(unsigned char key, int x, int y) {
     switch (key) {
         case 'z':
-            mainPlayer.setPlayerInShoot(false);
-            mainPlayer.setPlayerInRotate(false);
-            mainPlayer.setPlayerInMove(false);
-            mainPlayer.setPlayerAnimSection(1);
+
         break;
 
         case 'x':
-            running = false;
-            mainPlayer.setPlayerInMove(true);
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(0);    
+            if (mainPlayer.getPlayerRunning()) {
+                mainPlayer.setPlayerRunning(false);     
+                mainPlayer.setPlayerAnimSection(1);
+                mainPlayer.setPlayerAnim(0);       
+            }
         break;
 
         default:
@@ -303,7 +315,6 @@ void MainLoop(int t) {
     bool canMove = true;
     if (gameState == STATE_IN_GAME) {
         if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
-            specialMov = false;
             mainPlayer.setPlayerAnimSection(1);
             mainPlayer.setPlayerAnim(2);
         }
@@ -322,7 +333,7 @@ void MainLoop(int t) {
 
         if (((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == false)) 
             || ((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == true))) {
-            if (running) {
+            if (mainPlayer.getPlayerRunning()) {
                 x = cos((projectionScale * PI/180)) * 180.0;
                 z = sin((projectionScale * PI/180)) * 180.0;
             } else {
@@ -342,7 +353,7 @@ void MainLoop(int t) {
                     
                     if (playerRDT.rdtCameraSwitch[i].cam1 != 0) //|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
                             background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
-                     //   printf("SwitchNum: %d Cam: %d\n", i, playerRDT.rdtCameraSwitch[i].cam1);
+
                 
                 } 
             }
@@ -381,10 +392,6 @@ void MainLoop(int t) {
 }
 
 
-void eventSystem_fadeBlack(int t) {
-
-    glutTimerFunc(100, eventSystem_fadeBlack, 0);
-}
 
 void gameCore::renderInit() {    
     GLuint textureTest;
@@ -432,6 +439,7 @@ void gameCore::renderInit() {
     }
 
     // Função que vai ser chamada cada vez que for fazer a renderização
+
     glutDisplayFunc(renderScene);
     glutSpecialFunc( eventSystem_downKey );
     glutSpecialUpFunc ( eventSystem_upKey );
@@ -439,7 +447,6 @@ void gameCore::renderInit() {
     glutKeyboardUpFunc( eventSystem_keyboardUp );
 
     glutTimerFunc(1.0, MainLoop, 0);
-    glutTimerFunc(1.0, eventSystem_fadeBlack,0);
 
     // Evento de Loop
     glutMainLoop();
