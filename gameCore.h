@@ -14,6 +14,7 @@
 #include <GL/glut.h>
 #include <list>
 #include <math.h>
+#include <SDL/SDL.h>
 #include "EMD.h"
 #include "PLD.h"
 #include "RDT.h"
@@ -21,6 +22,11 @@
 #include "gameSound.h"
 #include "gameMath.h"
 #include "gameEvent.h"
+
+
+#include "depack_vlc.h"
+#include "depack_mdec.h"
+#include "file_functions.h"
 
 
 #define RES_HEIGHT 800

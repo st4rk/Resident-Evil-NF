@@ -62,6 +62,9 @@ playerClass mainPlayer;
 gameMath  mathEngine;
 gameSound soundEngine;
 
+int backgroundNow = 0;
+SDL_Surface *bg[9];
+
 gameCore::gameCore(int argc, char** argv) {
     // Inicializa a GLUT
     glutInit(&argc, argv);
@@ -73,7 +76,8 @@ gameCore::gameCore(int argc, char** argv) {
 }
 
 gameCore::~gameCore() {
-
+    for (int i = 0; i < 9; i++)
+        SDL_FreeSurface(bg[i]);
 }
 
 
@@ -81,15 +85,62 @@ gameCore::~gameCore() {
 // e vi isso funcionando, o por que de tanta função espalhada nessa merda
 // sinceramente eu quero organizar esse código, vou começar a criar uma
 // parte toda estruturada só pra isso e deixar rolar.
-void background_Loader(int bgNum) {
-    char background[50];
-    if (bgNum < 10)
-        sprintf(background, "resource/stages/re1/ROOM10A00.bmp", bgNum);
-    else
-        sprintf(background, "resource/stages/re1/ROOM10A00.bmp", bgNum);
+void background_Loader() {
+    // TESTE NOW ROOM109.BSS
 
-    engineBackground.bmpLoaderFile(background);
-    mainPlayer.setPlayerCam(bgNum);
+    SDL_RWops *src;
+    Uint8 *dstBuffer;
+    int dstBufLen;
+
+    src = SDL_RWFromFile("resource/stages/re1/ROOM109.BSS", "rb");
+    if (!src) {
+        fprintf(stderr, "Can not open %s for reading\n", "ROOM109.bss");
+        exit (0);
+    }
+
+     int i = 0;
+     int length = SDL_RWseek(src, 0, RW_SEEK_END);
+     SDL_RWseek(src, 0, RW_SEEK_SET);
+
+     while (SDL_RWseek(src, 0, RW_SEEK_CUR) < length) {
+      vlc_depack(src, &dstBuffer, &dstBufLen);
+      
+      int pos = SDL_RWseek(src, 0, RW_SEEK_CUR);
+      if ((pos & 0x7fff) != 0) SDL_RWseek(src, (pos & ~0x7fff) + 0x8000, RW_SEEK_SET);
+      
+      if (dstBuffer && dstBufLen) {
+       SDL_RWops *mdec_src;
+
+       mdec_src = SDL_RWFromMem(dstBuffer, dstBufLen);
+       
+       if (mdec_src) {
+        Uint8 *dstMdecBuf;
+        int dstMdecLen;
+
+        mdec_depack(mdec_src, &dstMdecBuf, &dstMdecLen, 320,240);
+        SDL_RWclose(mdec_src);
+
+        if (dstMdecBuf && dstMdecLen) {
+          SDL_Surface *image = mdec_surface(dstMdecBuf,320,240,0);
+         
+         if (image) {
+              //char outname[10];
+              //sprintf(outname, "%d", i++);
+              //save_bmp(outname, image);
+
+              bg[i] = image;
+              i++;
+
+         }
+
+         free(dstMdecBuf);
+       }
+      }
+        free(dstBuffer);
+      }
+    }
+
+
 }
 
 
@@ -126,7 +177,7 @@ void gameCore::renderLoadResource() {
     engineCreditos.bmpLoaderFile("creditos.bmp");
 
     // Carrega o background com número 5
-    background_Loader(10);
+    background_Loader();
 
     engineFont.bmpLoaderFile("fonte/1.bmp");
 
@@ -351,9 +402,10 @@ void MainLoop(int t) {
                 if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
                                          playerRDT.rdtCameraSwitch[i].x3, playerRDT.rdtCameraSwitch[i].z3, playerRDT.rdtCameraSwitch[i].x4, playerRDT.rdtCameraSwitch[i].z4)) {
                     
-                    if (playerRDT.rdtCameraSwitch[i].cam1 != 0) //|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
-                            background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
-
+                    if (playerRDT.rdtCameraSwitch[i].cam1 != 0) {//|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
+                           backgroundNow = playerRDT.rdtCameraSwitch[i].cam1;// background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
+                           mainPlayer.setPlayerCam(backgroundNow);
+                    }
                 
                 } 
             }
@@ -635,9 +687,9 @@ void drawMapBackground() {
     
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineBackground.bmpWidth, engineBackground.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineBackground.bmpBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[1]->w, bg[1]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[1]->pixels);
 
-    glBegin(GL_QUADS);                     
+  /*  glBegin(GL_QUADS);                     
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glTexCoord2i(0,1);
         glVertex3f(-0.77f, 0.58f, -1.0f);              // Top Left
@@ -646,6 +698,20 @@ void drawMapBackground() {
         glTexCoord2i(1,0);
         glVertex3f( 0.77f,-0.58f, -1.0f);              // Bottom Right
         glTexCoord2i(0,0);
+        glVertex3f(-0.77f,-0.58f, -1.0f);              // Bottom Left        
+    glEnd();
+
+    */
+    
+    glBegin(GL_QUADS);                     
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glTexCoord2i(0,0);
+        glVertex3f(-0.77f, 0.58f, -1.0f);              // Top Left
+        glTexCoord2i(1,0);
+        glVertex3f( 0.77f, 0.58f, -1.0f);              // Top Right
+        glTexCoord2i(1,1);
+        glVertex3f( 0.77f,-0.58f, -1.0f);              // Bottom Right
+        glTexCoord2i(0,1);
         glVertex3f(-0.77f,-0.58f, -1.0f);              // Bottom Left        
     glEnd();
 

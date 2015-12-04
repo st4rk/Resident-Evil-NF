@@ -101,7 +101,7 @@ void RDT::rdtLoadFile(std::string fileName) {
 			break;
 
 		memcpy(&nodeSwitch, (rdtBuffer+rdtObjectList[8]+(cont*(sizeof(RDT_CAMERA_SWITCH_T)))), sizeof(RDT_CAMERA_SWITCH_T));
-		
+		/*
 		printf("SwitchNum: %d\n", cont);
 		printf("beFlag: 0x%X\n", nodeSwitch.beFlag);
 		printf("nFloor: 0x%X\n", nodeSwitch.nFloor);
@@ -114,7 +114,7 @@ void RDT::rdtLoadFile(std::string fileName) {
 		printf("X3:       %d\n", nodeSwitch.x3);
 		printf("Z3:       %d\n", nodeSwitch.z3);
 		printf("X4:       %d\n", nodeSwitch.x4);
-		printf("Z4:       %d\n", nodeSwitch.z4);
+		printf("Z4:       %d\n", nodeSwitch.z4);*/
 		
 		rdtCameraSwitch.push_back(nodeSwitch);
 		cont++;
