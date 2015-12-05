@@ -92,7 +92,7 @@ void background_Loader() {
     Uint8 *dstBuffer;
     int dstBufLen;
 
-    src = SDL_RWFromFile("resource/stages/re1/ROOM109.BSS", "rb");
+    src = SDL_RWFromFile("resource/stages/re1/ROOM106.BSS", "rb");
     if (!src) {
         fprintf(stderr, "Can not open %s for reading\n", "ROOM109.bss");
         exit (0);
@@ -159,7 +159,7 @@ void gameCore::renderLoadResource() {
     inFadeBlack = true;
 
     // RDT do Início do Player
-    playerRDT.rdtLoadFile("background/ROOM1030.RDT");
+    playerRDT.rdtRE1LoadFile("resource/stages/re1/ROOM1060.RDT");
     
     // Música que vai ser tocada no menu
     if (soundEngine.engineSoundInit()) {
@@ -183,10 +183,12 @@ void gameCore::renderLoadResource() {
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setPlayerEMD(1);
-    mainPlayer.setPlayerX(-17287);
-    mainPlayer.setPlayerZ(-11394);
+   mainPlayer.setPlayerX(-15600);
+    mainPlayer.setPlayerZ(-27700);
+ /*   mainPlayer.setPlayerX(18391);
+    mainPlayer.setPlayerZ(12901);*/
     mainPlayer.setPlayerY(0);
-    mainPlayer.setPlayerCam(5);
+    mainPlayer.setPlayerCam(0);
 
     // Player Item HardCode
     mainPlayer.setPlayerItem(0, -1); // NO ITEM
@@ -391,13 +393,25 @@ void MainLoop(int t) {
                 x = cos((projectionScale * PI/180)) * 80.0;
                 z = sin((projectionScale * PI/180)) * 80.0;
             }
+
+            /* Collision Detection RE 1 */
+            for (unsigned int i = 0; i < (playerRDT.rdtRE1ColisionHeader.counts -1); i++) {
+                if (mathEngine.collisionDetect(0, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
+                                         playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
+                    canMove = false;
+                } 
+            }
+
+            /* Colision Detection RDT 1.5 and 2.0
             for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
                 if (mathEngine.collisionDetect(0, playerRDT.rdtColissionArray[i].X, playerRDT.rdtColissionArray[i].Z, 
                                          playerRDT.rdtColissionArray[i].W, playerRDT.rdtColissionArray[i].D, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
                     canMove = false;
                 } 
             }
-        
+            */
+            
+            /* Camera Switch RDT 1.5 and 2.0
             for (unsigned int i = 0; i < playerRDT.rdtCameraSwitch.size(); i++) {
                 if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
                                          playerRDT.rdtCameraSwitch[i].x3, playerRDT.rdtCameraSwitch[i].z3, playerRDT.rdtCameraSwitch[i].x4, playerRDT.rdtCameraSwitch[i].z4)) {
@@ -409,6 +423,18 @@ void MainLoop(int t) {
                 
                 } 
             }
+            */
+
+            /* Camera Switch Zone/Camera Position RE 1.0 */
+            for (unsigned int i = 0; i < playerRDT.rdtRE1CameraSwitch.size(); i++) {
+                if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
+                                         playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
+                    
+                         backgroundNow = playerRDT.rdtRE1CameraSwitch[i].from;// background_Loader(playerRDT.rdtRE1CameraSwitch[i].cam1);
+                         mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].from);
+
+                } 
+            }                    
 
 
             if (canMove == true) {
@@ -544,15 +570,21 @@ void drawMainPlayer() {
 
 
         
-        // Aqui temos a camera do mapa que o personagem se encontra
-        // o número de cameras é variado
+        
+        /*
+        Camera Position from RDT 1.5 and 2.0
         gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionZ,
                        playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetZ,   
+                       0.0f,   -0.1f,   0.0f);
+        */
+
+        gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
+                       playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
                        0.0f,   -0.1f,   0.0f);
    
         glTranslatef((float)mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), (float)mainPlayer.getPlayerZ());  
 
-        
+        std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
         glRotatef(projectionScale, 0.0f, 1.0f, 0.0f);
 
 
@@ -687,7 +719,7 @@ void drawMapBackground() {
     
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[1]->w, bg[1]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[1]->pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[mainPlayer.getPlayerCam()]->w, bg[mainPlayer.getPlayerCam()]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[mainPlayer.getPlayerCam()]->pixels);
 
   /*  glBegin(GL_QUADS);                     
         glColor4f(1.0, 1.0, 1.0, 1.0);
@@ -702,7 +734,7 @@ void drawMapBackground() {
     glEnd();
 
     */
-    
+
     glBegin(GL_QUADS);                     
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glTexCoord2i(0,0);
@@ -925,7 +957,7 @@ void renderGame() {
     // Toda iluminação do motor gráfico é tratado aqui
     // No caso a iluminação é relativamente *simples*, tudo vai ser lido dos .RDT
     // só precisamos colocar de forma certa
-    engineLight();
+    //engineLight();
 
     // Toda a renderização do personagem é feita por essa função
     drawMainPlayer();

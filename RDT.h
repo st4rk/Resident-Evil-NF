@@ -8,6 +8,74 @@
 #include <vector>
 
 
+/******************************************************
+**           Resident Evil 1 RDT Support             **
+*******************************************************/
+
+typedef struct RDT_RE1_PART_T {
+	int unk_pos_x;
+	int unk_pos_y;
+	int unk_pos_z;
+	unsigned int unk0[2];
+} RDT_RE1_PART_T;
+
+typedef struct RDT_RE1_HEADER_T {
+	char unk0;
+	char num_cameras;
+	char num_sound_banks;
+	char unk1[3];
+	unsigned short unk2[3];
+
+	RDT_RE1_PART_T unk3[3];
+} RDT_RE1_HEADER_T;
+
+typedef struct RDT_RE1_CAMERA_POS_T {
+	signed int mask_offset;
+	signed int tim_mask_offset;
+
+	signed int positionX;
+	signed int positionY;
+	signed int positionZ;
+	signed int targetX;
+	signed int targetY;
+	signed int targetZ;
+	signed int unk[3];
+} RDT_RE1_CAMERA_POS_T;
+
+typedef struct RDT_RE1_CAMERA_SWITCH_T {
+	unsigned short to;
+	unsigned short from;
+	signed short x1;
+	signed short z1;
+	signed short x2;
+	signed short z2;
+	signed short x3;
+	signed short z3;
+	signed short x4;
+	signed short z4;
+} RDT_RE1_CAMERA_SWITCH_T;
+
+
+typedef struct RDT_RE1_SCA_HEADER_T {
+	unsigned short cx;
+	unsigned short cy;
+	unsigned int   counts;
+} RDT_RE1_SCA_HEADER_T;
+
+
+typedef struct RDT_RE1_SCA_OBJ_T {
+	signed short x1;
+	signed short z1;
+	unsigned short x2;
+	unsigned short z2;
+	unsigned short type;
+	unsigned short floor;
+} RDT_RE1_SCA_OBJ_T;
+
+/******************************************************
+** Resident Evil 1.5 and Resident Evil 2 RDT Support **
+*******************************************************/
+
 typedef struct RDT_HEADER_T {
 	unsigned char nSprite;
 	unsigned char nCut; // Quantidade de cameras 
@@ -101,12 +169,21 @@ public:
    ~RDT();
 
     void rdtLoadFile(std::string fileName);
+    void rdtRE1LoadFile(std::string fileName);
+
 	RDT_CAMERA_POS_T                   *rdtCameraPos;
 	RDT_HEADER_T                        rdtHeader;
 	RDT_LIGHT_T                        *rdtLight;
 	RDT_COLI_HEADER_T                   rdtColisionHeader;
 	RDT_coli_1_5                       *rdtColissionArray;
 	std::vector<RDT_CAMERA_SWITCH_T>    rdtCameraSwitch;
+
+
+	RDT_RE1_HEADER_T                       rdtRE1Header;
+	RDT_RE1_CAMERA_POS_T                  *rdtRE1CameraPos;
+	RDT_RE1_SCA_HEADER_T                   rdtRE1ColisionHeader;
+	RDT_RE1_SCA_OBJ_T                     *rdtRE1ColissionArray;
+	std::vector<RDT_RE1_CAMERA_SWITCH_T>   rdtRE1CameraSwitch;
 
 private:
 	unsigned char      *rdtBuffer;

@@ -29,8 +29,8 @@
 #include "file_functions.h"
 
 
-#define RES_HEIGHT 800
-#define RES_WIDTH  600
+#define RES_HEIGHT 640
+#define RES_WIDTH  480
 #define MAX_MODEL  20
 
 
