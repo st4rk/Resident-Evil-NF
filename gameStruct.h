@@ -158,6 +158,39 @@ private:
 };
 
 
+class enemyClass {
+public:
+   enemyClass();
+   ~enemyClass();
+
+
+   float getX();
+   float getY();
+   float getZ();
+   float getProjection();
+
+
+   int   getEMD();
+
+   void  setX(float x);
+   void  setY(float y);
+   void  setZ(float z);
+   void  setEMD(int n);
+   void  setProjection(float n);
+
+private:
+   float x;
+   float y;
+   float z;
+   float p;
+   
+   int emd;
+
+
+
+};
+
+
 class bmp_loader_24bpp {
 public:	
 	bmp_loader_24bpp();

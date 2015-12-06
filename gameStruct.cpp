@@ -70,9 +70,6 @@ void playerClass::setPlayerInMove(bool mov) { inMove = mov; }
 void playerClass::setPlayerInRotate(bool rot) { inRotate = rot; }
 void playerClass::setPlayerInShoot(bool shoot) { inShoot = shoot; }
 
-
-
-
 float playerClass::getPlayerX() { return playerX; }
 float playerClass::getPlayerY() { return playerY; }
 float playerClass::getPlayerZ() { return playerZ; }
@@ -96,7 +93,31 @@ int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amoun
 
 
 
+/****************
+** Enemy Class **
+*****************/
 
+enemyClass::enemyClass() {
+
+}
+
+enemyClass::~enemyClass() {
+
+}
+
+
+float enemyClass::getX() { return x; }
+float enemyClass::getY() { return y; }
+float enemyClass::getZ() { return z; }
+float enemyClass::getProjection() { return p; }
+
+int   enemyClass::getEMD() { return emd; }
+
+void  enemyClass::setX(float X) { x = X; }
+void  enemyClass::setY(float Y) { y = Y; }
+void  enemyClass::setZ(float Z) { z = Z; }
+void  enemyClass::setEMD(int n) { emd = n; }
+void  enemyClass::setProjection(float n) { p = n; }
 
 bmp_loader_24bpp::bmp_loader_24bpp() {
 	memset(bmpHeader, 0x0, 54);

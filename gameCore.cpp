@@ -39,12 +39,17 @@ bool inFadeBlack      = false;
 
 // System Time, you can do a delay with it
 int timer1_start = 0;
+int timer2_start = 0;
 int delay_sys  = 0;
 
 EMD modelList[MAX_MODEL];
 RDT playerRDT;
 PLD modelList_2[MAX_MODEL];
 EMD_SEC2_DATA_T emdFrameAnimation;
+
+EMD_SEC2_DATA_T emdFrameAnimationEnemy;
+
+int animEnemyCount = 0;
 
 // engineBackground é utilizado para carregar os backgrounds de cada .RDT
 // que o player se encontra.
@@ -62,8 +67,10 @@ playerClass mainPlayer;
 gameMath  mathEngine;
 gameSound soundEngine;
 
-int backgroundNow = 0;
-SDL_Surface *bg[9];
+SDL_Surface *bg[0xFF];
+
+
+enemyClass gameEnemy;
 
 gameCore::gameCore(int argc, char** argv) {
     // Inicializa a GLUT
@@ -71,12 +78,16 @@ gameCore::gameCore(int argc, char** argv) {
 
     // Coloca o nome da Engine + Revisão
     memset(GAME_NAME, 0x0, 20);
-    strcpy(GAME_NAME, "Nightmare Fiction Engine Rev 0.08a");
+    strcpy(GAME_NAME, "Resident Evil : Nightmare Fiction");
+
+
+    for (int i = 0; i < 0xFF; i++) 
+        bg[i] = NULL;
 
 }
 
 gameCore::~gameCore() {
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < 0xFF; i++)
         SDL_FreeSurface(bg[i]);
 }
 
@@ -140,9 +151,51 @@ void background_Loader() {
       }
     }
 
-
 }
 
+
+
+/************************
+** ENEMY Render and AI **
+*************************/
+
+void enemyAI_followPlayer() {
+
+    if (mainPlayer.getPlayerX() > gameEnemy.getX()) {
+        gameEnemy.setX(gameEnemy.getX() + 50);
+    } else {
+        gameEnemy.setX(gameEnemy.getX() - 50);
+    }
+
+    if (mainPlayer.getPlayerZ() > gameEnemy.getZ()) {
+        gameEnemy.setZ(gameEnemy.getZ() + 50);
+    } else {
+        gameEnemy.setZ(gameEnemy.getZ() - 50);        
+    }
+
+
+
+    if (animEnemyCount < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animCount-1))
+        animEnemyCount++;
+    else {
+        animEnemyCount = 0;
+    }
+
+    emdFrameAnimationEnemy = modelList[gameEnemy.getEMD()].emdSec2Data[animEnemyCount+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animStart];
+    
+
+    float angle = (atan2(((mainPlayer.getPlayerX() - gameEnemy.getX())), (mainPlayer.getPlayerZ() - gameEnemy.getZ())) / (M_PI / 180));
+    gameEnemy.setProjection((angle-90));
+
+/*    float x,z;
+
+    x = cos(angle-90) * 80.0;
+    z = sin(angle-90) * 80.0;
+    
+    gameEnemy.setX(gameEnemy.getX() + x);
+    gameEnemy.setZ(gameEnemy.getZ() - z);  
+    */ 
+}
 
 void gameCore::renderLoadResource() {
 
@@ -168,8 +221,8 @@ void gameCore::renderLoadResource() {
 
     // Alguns gráficos que são carregados na memória
     modelList[0].emdLoadFile("modelos/EM058.EMD");
-    modelList[1].emdLoadFile("modelos/EM050.EMD");
-    modelList[2].emdLoadFile("modelos/BetaLeon.EMD");
+    modelList[1].emdLoadFile("modelos/EMD21.EMD");
+    modelList[2].emdLoadFile("modelos/EMD04.EMD");
 
     // Algumas imagens carregadas na memória
     engineThisGame.bmpLoaderFile("resource/intro_01.bmp");
@@ -182,13 +235,12 @@ void gameCore::renderLoadResource() {
     engineFont.bmpLoaderFile("fonte/1.bmp");
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
-    mainPlayer.setPlayerEMD(1);
-   mainPlayer.setPlayerX(-15600);
-    mainPlayer.setPlayerZ(-27700);
- /*   mainPlayer.setPlayerX(18391);
-    mainPlayer.setPlayerZ(12901);*/
+    mainPlayer.setPlayerEMD(0);
+
+    mainPlayer.setPlayerX(18391);
+    mainPlayer.setPlayerZ(12901);
     mainPlayer.setPlayerY(0);
-    mainPlayer.setPlayerCam(0);
+    mainPlayer.setPlayerCam(1);
 
     // Player Item HardCode
     mainPlayer.setPlayerItem(0, -1); // NO ITEM
@@ -200,6 +252,13 @@ void gameCore::renderLoadResource() {
     mainPlayer.setPlayerItem(6, -1); // NO ITEM
     mainPlayer.setPlayerItem(7, -1); // NO ITEM
 
+    /* Init teste enemy */
+
+    gameEnemy.setX(18400);
+    gameEnemy.setZ(13000);
+    gameEnemy.setY(0);
+    gameEnemy.setEMD(1);
+    gameEnemy.setProjection(0);
 
 }
 
@@ -342,6 +401,7 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
 }
 
 
+
 void eventSystem_keyboardUp(unsigned char key, int x, int y) {
     switch (key) {
         case 'z':
@@ -384,6 +444,8 @@ void MainLoop(int t) {
             projectionScale = fmod((projectionScale + 5), 360.0);
         }
 
+        enemyAI_followPlayer();
+
         if (((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == false)) 
             || ((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == true))) {
             if (mainPlayer.getPlayerRunning()) {
@@ -396,10 +458,12 @@ void MainLoop(int t) {
 
             /* Collision Detection RE 1 */
             for (unsigned int i = 0; i < (playerRDT.rdtRE1ColisionHeader.counts -1); i++) {
-                if (mathEngine.collisionDetect(0, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
-                                         playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
-                    canMove = false;
-                } 
+                if (playerRDT.rdtRE1ColissionArray[i].floor == 768) {
+                    if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, 
+                                             playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
+                        canMove = false;
+                    } 
+                }
             }
 
             /* Colision Detection RDT 1.5 and 2.0
@@ -430,17 +494,21 @@ void MainLoop(int t) {
                 if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
                                          playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
                     
-                         backgroundNow = playerRDT.rdtRE1CameraSwitch[i].from;// background_Loader(playerRDT.rdtRE1CameraSwitch[i].cam1);
-                         mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].from);
+                        if (playerRDT.rdtRE1CameraSwitch[i].to != 9) {
+                             mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].to);
+                        }
 
                 } 
             }                    
 
 
+
             if (canMove == true) {
+
                 mainPlayer.setPlayerX(mainPlayer.getPlayerX() + x);
                 mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() - z);
             }
+
         }
 
 
@@ -464,6 +532,7 @@ void MainLoop(int t) {
 
         animSelect = mainPlayer.getPlayerAnim(); 
     }
+
 
     glutPostRedisplay();   
     glutTimerFunc(33, MainLoop, 0);
@@ -551,6 +620,142 @@ void modelRelPosAnimation(unsigned int objNum, unsigned int var, int var2) {
      }
 }
 
+void modelRelPosAnimation2(unsigned int objNum, unsigned int var, int var2) {
+     if (var == objNum) {
+
+        glTranslatef((float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].x, (float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].y, (float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].z);
+        glRotatef(emdFrameAnimationEnemy.vector[var2].x, 1.0f, 0.0f, 0.0f);
+        glRotatef(emdFrameAnimationEnemy.vector[var2].y, 0.0f, 1.0f, 0.0f);
+        glRotatef(emdFrameAnimationEnemy.vector[var2].z, 0.0f, 0.0f, 1.0f);
+    
+
+  }
+     
+     for (unsigned int c = 0; c < modelList[gameEnemy.getEMD()].emdSec2Armature[var].meshCount; c++) {
+        modelRelPosAnimation2(objNum, modelList[gameEnemy.getEMD()].emdSec2Mesh[var][c], var2);
+     }
+}
+
+
+void drawEnemy() {
+
+    float width_t  = (float) (modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageWidth*2);
+    float height_t = (float)  modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageHeight;
+
+    unsigned short uPage = 0;
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageWidth*2), modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[gameEnemy.getEMD()].emdTimTexture.rawTexture);
+
+
+    // Toda a renderização do personagem vai ficar aqui !
+    for (unsigned int x = 0; x < modelList[gameEnemy.getEMD()].emdTotalObj; x++) {
+        
+        glLoadIdentity();
+
+        gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
+                   playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
+                   0.0f,   -0.1f,   0.0f);
+
+
+   
+        glTranslatef(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ());  
+
+        //std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
+        glRotatef(gameEnemy.getProjection(), 0.0f, 1.0f, 0.0f);
+
+        for (unsigned int z = 0; z <  modelList[gameEnemy.getEMD()].emdTotalObj; z++) {
+            modelRelPosAnimation2(x, z, z);
+        }
+
+        for (unsigned int y = 0; y < modelList[gameEnemy.getEMD()].emdObjectBuffer[x].triangles.triCount; y++) {
+            uPage = ((modelList[gameEnemy.getEMD()].emdTritexture[x][y].page & 0b00111111) * 128);
+
+            glBegin(GL_TRIANGLES);
+ 
+                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].x,
+                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].z);
+                
+                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[gameEnemy.getEMD()].emdTritexture[x][y].v0/height_t);
+
+                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].x,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].y ,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].z);
+
+                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].x,
+                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].z);
+                
+                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[gameEnemy.getEMD()].emdTritexture[x][y].v1/height_t);
+                
+                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].x,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].y ,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].z );
+
+                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].x,
+                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].z);
+                
+                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[gameEnemy.getEMD()].emdTritexture[x][y].v2/height_t);
+
+                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].x ,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].y ,
+                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].z );
+                
+            glEnd();
+        }
+
+        for (unsigned int y = 0; y < modelList[gameEnemy.getEMD()].emdObjectBuffer[x].quads.quadCount; y++) {
+            uPage = ((modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].page & 0b00111111) * 128);
+            glBegin(GL_QUADS);
+
+                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].x,
+                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].z);
+
+                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v0/height_t);
+
+                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].x , 
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].y ,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].z );
+
+                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].x,
+                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].y) * -1,
+                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].z);
+               glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v1/height_t);
+                
+                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].x ,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].y ,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].z );
+
+
+                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].x ,
+                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].z);
+                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v3/height_t);
+               
+                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].x,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].y ,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].z);
+
+
+               glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].x,
+                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].y)*-1,
+                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].z);
+               glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v2/height_t);
+               
+                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].x,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].y ,
+                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].z);
+
+
+            glEnd();
+           }
+    } 
+
+
+}
 
 
 void drawMainPlayer() {
@@ -584,7 +789,7 @@ void drawMainPlayer() {
    
         glTranslatef((float)mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), (float)mainPlayer.getPlayerZ());  
 
-        std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
+        //std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
         glRotatef(projectionScale, 0.0f, 1.0f, 0.0f);
 
 
@@ -712,6 +917,11 @@ void engineLight() {
     glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);   
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor2);
 }
+
+
+
+
+
 
 void drawMapBackground() {
     glDepthMask(0);
@@ -961,6 +1171,10 @@ void renderGame() {
 
     // Toda a renderização do personagem é feita por essa função
     drawMainPlayer();
+
+
+    /* Enemy Render */
+    drawEnemy();
 }
 
 
@@ -995,6 +1209,7 @@ void renderScene( void ) {
         break;
     }
   
+
         // Fade Black Effect
     if (inFadeBlack) {
         glDisable(GL_LIGHTING);
@@ -1017,3 +1232,5 @@ void renderScene( void ) {
     // Buffers de renderização
     glutSwapBuffers();
 }
+
+

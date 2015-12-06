@@ -64,11 +64,12 @@ typedef struct RDT_RE1_SCA_HEADER_T {
 
 
 typedef struct RDT_RE1_SCA_OBJ_T {
-	signed short x1;
-	signed short z1;
+	unsigned short x1; // D
+	unsigned short z1; // W
 	unsigned short x2;
 	unsigned short z2;
-	unsigned short type;
+	unsigned char  type;
+	unsigned char  id;
 	unsigned short floor;
 } RDT_RE1_SCA_OBJ_T;
 

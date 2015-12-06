@@ -122,7 +122,6 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
     	rdtRE1ColisionHeader.counts += *(unsigned int*)(rdtBuffer+rdtObjectList[1]+4+(i * 4));
     }
 
-
     rdtRE1ColissionArray = new RDT_RE1_SCA_OBJ_T [rdtRE1ColisionHeader.counts - 1];
 
     for (unsigned short i = 0; i < (rdtRE1ColisionHeader.counts - 1); i++) {
@@ -132,9 +131,9 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
     	printf("Z1: %d\n", rdtRE1ColissionArray[i].z1);
     	printf("X2: %d\n", rdtRE1ColissionArray[i].x2);
     	printf("Z2: %d\n", rdtRE1ColissionArray[i].z2);
-    	
     	printf("Floor: %d\n", rdtRE1ColissionArray[i].floor);
-    	printf("Type: %d\n", (rdtRE1ColissionArray[i].type));
+    	printf("Type: %d\n", rdtRE1ColissionArray[i].type );
+    	printf("Id:   %d\n", rdtRE1ColissionArray[i].id);
     }
 
 
