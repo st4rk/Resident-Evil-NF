@@ -40,6 +40,14 @@ void playerClass::setPlayerZ(float z) {
 	playerZ = z;
 }
 
+void playerClass::setPlayerAngle(float n) {
+	p = n;
+}
+
+void playerClass::setPlayerAnimCount(int n) {
+	animCount = n;
+}
+
 void playerClass::setPlayerAnim(unsigned char num) {
 	playerAnimNum = num;
 }
@@ -69,10 +77,12 @@ void playerClass::setPlayerRunning(bool value) { running = value; }
 void playerClass::setPlayerInMove(bool mov) { inMove = mov; }
 void playerClass::setPlayerInRotate(bool rot) { inRotate = rot; }
 void playerClass::setPlayerInShoot(bool shoot) { inShoot = shoot; }
+void playerClass::setPlayerEMDAnim(EMD_SEC2_DATA_T n) { anim = n; }
 
 float playerClass::getPlayerX() { return playerX; }
 float playerClass::getPlayerY() { return playerY; }
 float playerClass::getPlayerZ() { return playerZ; }
+float playerClass::getPlayerAngle() { return p; }
 
 unsigned char playerClass::getPlayerCam() { return camNum; }
 unsigned char playerClass::getPlayerAnim() { return playerAnimNum; }
@@ -80,16 +90,19 @@ unsigned char playerClass::getPlayerAnimSection() { return animSection; }
 unsigned char playerClass::getPlayerInRotatePos() { return inRotatePos; }
 unsigned short playerClass::getPlayerEMD() { return playerEMD; }
 unsigned int playerClass::getPlayerRDT() { return rdtNum; }
-	
+unsigned int   playerClass::getPlayerAnimCount() { return animCount; }
+
 bool playerClass::getPlayerInMove() { return inMove; }
 bool playerClass::getPlayerInRotate() { return inRotate; }
 bool playerClass::getPlayerInShoot() { return inShoot; }
 bool playerClass::getPlayerRunning() { return running; }
-bool  playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
+bool playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
 
 int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
 int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }
 
+
+EMD_SEC2_DATA_T playerClass::getPlayerEMDAnim() { return anim; }
 
 
 
@@ -113,11 +126,17 @@ float enemyClass::getAngle() { return p; }
 
 int   enemyClass::getEMD() { return emd; }
 
+unsigned int enemyClass::getAnimCount() { return animCount; }
+
 void  enemyClass::setX(float X) { x = X; }
 void  enemyClass::setY(float Y) { y = Y; }
 void  enemyClass::setZ(float Z) { z = Z; }
 void  enemyClass::setEMD(int n) { emd = n; }
 void  enemyClass::setAngle(float n) { p = n; }
+void  enemyClass::setAnim(EMD_SEC2_DATA_T n) { anim = n; }
+void  enemyClass::setAnimCount(unsigned int n) { animCount = n; }
+
+EMD_SEC2_DATA_T enemyClass::getAnim() { return anim; }
 
 bmp_loader_24bpp::bmp_loader_24bpp() {
 	memset(bmpHeader, 0x0, 54);

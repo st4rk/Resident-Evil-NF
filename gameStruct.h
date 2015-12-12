@@ -47,6 +47,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "EMD.h"
+
 // Math 
 #define PI 3.14159265
 // All possible menus, dunno af
@@ -85,10 +87,14 @@ public:
    void setPlayerItem(int slotNum, int id);
    void setPlayerItemAmount(int slotNum, int amount);
    void setPlayerRunning(bool);
+   void setPlayerAngle(float n);
+   void setPlayerAnimCount(int n);
+   void setPlayerEMDAnim(EMD_SEC2_DATA_T n);
 
    float getPlayerX();
    float getPlayerY();
    float getPlayerZ();
+   float getPlayerAngle();
 	
    bool getPlayerInMove();
    bool getPlayerInRotate();
@@ -102,13 +108,12 @@ public:
    unsigned char  getPlayerInRotatePos();
    unsigned short getPlayerEMD();
    unsigned int   getPlayerRDT();
+   unsigned int   getPlayerAnimCount();
 
-   // Item Stuff
    int   getPlayerItemID(int slotNum);
    int   getPlayerItemAmount(int slotNum);
 
-
-
+   EMD_SEC2_DATA_T getPlayerEMDAnim();
 
 private:
 
@@ -127,7 +132,15 @@ private:
 
    // Player Animation Num
 	unsigned char playerAnimNum;
-   
+
+   // Player Animation Count
+   unsigned int animCount;
+
+   // Player EMD Animation
+   EMD_SEC2_DATA_T anim;
+
+
+
    // Rotation position
    unsigned char inRotatePos;
    
@@ -155,6 +168,9 @@ private:
    // Player Items
    pItem item[8];
 
+   // Player angle
+   float p;
+
 };
 
 
@@ -172,11 +188,20 @@ public:
 
    int   getEMD();
 
+   unsigned int getAnimCount();
+
+
    void  setX(float x);
    void  setY(float y);
    void  setZ(float z);
    void  setEMD(int n);
    void  setAngle(float n);
+   void  setAnim(EMD_SEC2_DATA_T n);
+   void  setAnimCount(unsigned int n);
+
+
+   EMD_SEC2_DATA_T getAnim();
+
 
 private:
    float x;
@@ -185,6 +210,10 @@ private:
    float p;
    
    int emd;
+
+   unsigned int    animCount;
+   EMD_SEC2_DATA_T anim;
+
 
 
 

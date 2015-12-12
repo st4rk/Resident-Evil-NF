@@ -13,16 +13,6 @@
 // It will handle all possibles menus, ie: "inGame, MainMenu, Credits [...]"
 int gameState = 0;
 
-// Grande maioria aqui é temporário para teste
-// Mas alguns realmente vão ficar, acredito que a camera
-// realmente vai ficar aqui por enquanto até eu achar um lugar melhor
-// para colocar
-float projectionScale = 90.0f;
-unsigned int animCount = 0;
-unsigned int animSelect = 0;
-unsigned int camSelect = 0;
-
-
 // Main Menu
 unsigned char mainMenu = 0x0;
 // In Game
@@ -45,11 +35,7 @@ int delay_sys  = 0;
 EMD modelList[MAX_MODEL];
 RDT playerRDT;
 PLD modelList_2[MAX_MODEL];
-EMD_SEC2_DATA_T emdFrameAnimation;
 
-EMD_SEC2_DATA_T emdFrameAnimationEnemy;
-
-int animEnemyCount = 0;
 
 // engineBackground é utilizado para carregar os backgrounds de cada .RDT
 // que o player se encontra.
@@ -64,23 +50,23 @@ bmp_loader_24bpp engineMainMenu;
 bmp_loader_24bpp engineCreditos;
 
 playerClass mainPlayer;
-gameMath  mathEngine;
-gameSound soundEngine;
+gameMath    mathEngine;
+gameSound   soundEngine;
+enemyClass  gameEnemy;
 
 SDL_Surface *bg[0xFF];
 
 
-enemyClass gameEnemy;
-
 gameCore::gameCore(int argc, char** argv) {
-    // Inicializa a GLUT
+    /* start glut */
     glutInit(&argc, argv);
 
-    // Coloca o nome da Engine + Revisão
+    /* game name */
     memset(GAME_NAME, 0x0, 20);
     strcpy(GAME_NAME, "Resident Evil : Nightmare Fiction");
 
 
+    /* set all bacgrkoudns to null ptr */
     for (int i = 0; i < 0xFF; i++) 
         bg[i] = NULL;
 
@@ -92,10 +78,7 @@ gameCore::~gameCore() {
 }
 
 
-// Tava pensando aqui 06/05/2015 as 01:50 da manhã, assim que fiz o teste
-// e vi isso funcionando, o por que de tanta função espalhada nessa merda
-// sinceramente eu quero organizar esse código, vou começar a criar uma
-// parte toda estruturada só pra isso e deixar rolar.
+/* Okay, I want to remove you soon */
 void background_Loader() {
     // TESTE NOW ROOM109.BSS
 
@@ -135,15 +118,9 @@ void background_Loader() {
           SDL_Surface *image = mdec_surface(dstMdecBuf,320,240,0);
          
          if (image) {
-              //char outname[10];
-              //sprintf(outname, "%d", i++);
-              //save_bmp(outname, image);
-
               bg[i] = image;
               i++;
-
          }
-
          free(dstMdecBuf);
        }
       }
@@ -158,9 +135,9 @@ void background_Loader() {
 /************************
 ** ENEMY Render and AI **
 *************************/
-
 void enemyAI_followPlayer() {
 
+    /* Crappy AI, it's only follow the player, without path find obvious */
     if (mainPlayer.getPlayerX() > gameEnemy.getX()) {
         gameEnemy.setX(gameEnemy.getX() + 50);
     } else {
@@ -174,29 +151,22 @@ void enemyAI_followPlayer() {
     }
 
 
-
-    if (animEnemyCount < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animCount-1))
-        animEnemyCount++;
+    /* AI Animation */
+    if (gameEnemy.getAnimCount() < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animCount-1))
+        gameEnemy.setAnimCount(gameEnemy.getAnimCount() + 1);
     else {
-        animEnemyCount = 0;
+        gameEnemy.setAnimCount(0);
     }
 
-    emdFrameAnimationEnemy = modelList[gameEnemy.getEMD()].emdSec2Data[animEnemyCount+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animStart];
+    gameEnemy.setAnim(modelList[gameEnemy.getEMD()].emdSec2Data[gameEnemy.getAnimCount()+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animStart]);
     
 
+    /* Angle between two vect, to know the player position */
     float angle = (atan2(((mainPlayer.getPlayerX() - gameEnemy.getX())), (mainPlayer.getPlayerZ() - gameEnemy.getZ())) / (M_PI / 180));
-    gameEnemy.setAngle((angle-90));
-
-/*    float x,z;
-
-    x = cos(angle-90) * 80.0;
-    z = sin(angle-90) * 80.0;
-    
-    gameEnemy.setX(gameEnemy.getX() + x);
-    gameEnemy.setZ(gameEnemy.getZ() - z);  
-    */ 
+    gameEnemy.setAngle((angle-90)); 
 }
 
+/* Hardcode game init */
 void gameCore::renderLoadResource() {
 
     // Clear Timer
@@ -241,6 +211,7 @@ void gameCore::renderLoadResource() {
     mainPlayer.setPlayerZ(12901);
     mainPlayer.setPlayerY(0);
     mainPlayer.setPlayerCam(1);
+    mainPlayer.setPlayerAngle(90.0);
 
     // Player Item HardCode
     mainPlayer.setPlayerItem(0, -1); // NO ITEM
@@ -427,6 +398,10 @@ void MainLoop(int t) {
     float x = 0, z = 0;
     bool canMove = true;
     if (gameState == STATE_IN_GAME) {
+
+        /* Enemy AI Stuff */
+        enemyAI_followPlayer();
+
         if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
             mainPlayer.setPlayerAnimSection(1);
             mainPlayer.setPlayerAnim(2);
@@ -437,23 +412,21 @@ void MainLoop(int t) {
         } 
 
         if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 1)) {
-            projectionScale = fmod((projectionScale - 5), 360.0);
+            mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() - 5), 360.0));
         }
 
         if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 0)) {
-            projectionScale = fmod((projectionScale + 5), 360.0);
+            mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() + 5), 360.0));
         }
-
-        enemyAI_followPlayer();
 
         if (((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == false)) 
             || ((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == true))) {
             if (mainPlayer.getPlayerRunning()) {
-                x = cos((projectionScale * PI/180)) * 180.0;
-                z = sin((projectionScale * PI/180)) * 180.0;
+                x = cos((mainPlayer.getPlayerAngle() * PI/180)) * 180.0;
+                z = sin((mainPlayer.getPlayerAngle() * PI/180)) * 180.0;
             } else {
-                x = cos((projectionScale * PI/180)) * 80.0;
-                z = sin((projectionScale * PI/180)) * 80.0;
+                x = cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0;
+                z = sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0;
             }
 
             /* Collision Detection RE 1 */
@@ -513,24 +486,25 @@ void MainLoop(int t) {
 
 
 
+        /* Here is the animation stuff */
         if ((mainPlayer.getPlayerAnimSection()) == 0) {
-            if (animCount < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[animSelect].animCount-1))
-                animCount++;
+            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
             else {
-                animCount = 0;
+                mainPlayer.setPlayerAnimCount(0);
             }
-            emdFrameAnimation = modelList[mainPlayer.getPlayerEMD()].emdSec2Data[animCount+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[animSelect].animStart];
+
+            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec2Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
         } else {
-            if (animCount < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[animSelect].animCount-1))
-                animCount++;
+            
+            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
             else {
-                animCount = 0;
+                mainPlayer.setPlayerAnimCount(0);
             }
 
-            emdFrameAnimation = modelList[mainPlayer.getPlayerEMD()].emdSec4Data[animCount+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[animSelect].animStart];
+            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
         }
-
-        animSelect = mainPlayer.getPlayerAnim(); 
     }
 
 
@@ -539,7 +513,7 @@ void MainLoop(int t) {
 }
 
 
-
+/* OpenGL stuff start */
 void gameCore::renderInit() {    
     GLuint textureTest;
 
@@ -769,10 +743,6 @@ void engineLight() {
 }
 
 
-
-
-
-
 void drawMapBackground() {
     glDepthMask(0);
     glDisable(GL_LIGHTING);
@@ -781,7 +751,9 @@ void drawMapBackground() {
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[mainPlayer.getPlayerCam()]->w, bg[mainPlayer.getPlayerCam()]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[mainPlayer.getPlayerCam()]->pixels);
 
-  /*  glBegin(GL_QUADS);                     
+
+  /* RE 1.5 and RE 2
+     glBegin(GL_QUADS);                     
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glTexCoord2i(0,1);
         glVertex3f(-0.77f, 0.58f, -1.0f);              // Top Left
@@ -795,6 +767,7 @@ void drawMapBackground() {
 
     */
 
+    /* RE 1 */
     glBegin(GL_QUADS);                     
         glColor4f(1.0, 1.0, 1.0, 1.0);
         glTexCoord2i(0,0);
@@ -813,6 +786,7 @@ void drawMapBackground() {
 }
 
 
+/* I WILL REMOVE THIS SHIT RENDERING URRGG */
 void drawCreditos() {
     glDepthMask(0);
         glPixelZoom(1,1);
@@ -1010,23 +984,16 @@ void renderGame() {
     // ou qualquer outro, mas por enquanto fica apenas esse bool =)
  
 
-    // Todo .RDT tem vários fundos, toda a renderização fica nessa parte
+    /* .BSS Background stuff */
     drawMapBackground();
-
-
-    // Toda iluminação do motor gráfico é tratado aqui
-    // No caso a iluminação é relativamente *simples*, tudo vai ser lido dos .RDT
-    // só precisamos colocar de forma certa
-    //engineLight();
-
-    // Toda a renderização do personagem é feita por essa função
-    //drawMainPlayer();
 
     /* All model rendering is done by renderEMD Function */
     /* Player Rendering */
-    renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), projectionScale, mainPlayer.getPlayerEMD(), emdFrameAnimation);
+    renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
+              mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
     /* Enemy Render */
-    renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), gameEnemy.getAngle(), gameEnemy.getEMD(), emdFrameAnimationEnemy);
+    renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), 
+              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
 }
 
 
