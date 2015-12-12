@@ -84,30 +84,28 @@ bool gameMath::mapSwitch(signed int x, signed int z, signed int x1, signed int z
 
 }
 
-bool gameMath::collisionDetect(unsigned int colType, signed int x_1, signed int z_1, 
-	                           signed int w, signed int h, 
+bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z1, 
+	                           signed int x2, signed int z2, 
 	                           signed int x, signed int z) {
 
 	switch (colType) {
 
 		case COL_TYPE_RECTANGLE:
-			if ((x_1 <= x) && (x <= (x_1+w))) {
-				if ((z_1 <= z) && (z <= (z_1+h))) {
+			if ((x1 <= x) && (x <= (x1+x2))) {
+				if ((z1 <= z) && (z <= (z1+z2))) {
 					return true;
 				}
 			}
 		break;
 
 		case COL_TYPE_TRIANGLE: {
-	/*		double RayX = (w) - x_1) / 2;
-			double RayZ = (h - z_1) / 2;
-			double cX = x_1 + RayX;
-			double cZ = z_1 + RayZ;
-			double k = Math.Pow((X - cX) / RayX, 2) + Math.Pow((Z - cZ) / RayZ, 2);
+			double RayX = (x2 - x1) / 2;
+			double RayZ = (z2 - z1) / 2;
+			double cX = x1 + RayX;
+			double cZ = x1 + RayZ;
+			double k = pow((x - cX) / RayX, 2) + pow((z - cZ) / RayZ, 2);
 			if (k <= 1)
-			{
-			 //A colisão ocorreu
-			} */
+				return true;
 		}
 			return false;
 		break;

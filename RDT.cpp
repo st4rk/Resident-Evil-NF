@@ -95,7 +95,7 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 			break;
 
 		memcpy(&nodeSwitch, (rdtBuffer+rdtObjectList[0]+(cont*(sizeof(RDT_RE1_CAMERA_SWITCH_T)))), sizeof(RDT_RE1_CAMERA_SWITCH_T));
-		
+		/*
 		printf("SwitchNum: %d\n", cont);
 		printf("to:     0x%X\n", nodeSwitch.to);
 		printf("from:   0x%X\n", nodeSwitch.from);
@@ -107,7 +107,7 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 		printf("Z3:       %d\n", nodeSwitch.z3);
 		printf("X4:       %d\n", nodeSwitch.x4);
 		printf("Z4:       %d\n", nodeSwitch.z4);
-		
+		*/
 		rdtRE1CameraSwitch.push_back(nodeSwitch);
 		cont++;
 	}
@@ -131,7 +131,7 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
     	printf("Z1: %d\n", rdtRE1ColissionArray[i].z1);
     	printf("X2: %d\n", rdtRE1ColissionArray[i].x2);
     	printf("Z2: %d\n", rdtRE1ColissionArray[i].z2);
-    	printf("Floor: %d\n", rdtRE1ColissionArray[i].floor);
+    	printf("Floor: %d\n", (rdtRE1ColissionArray[i].floor / 256));
     	printf("Type: %d\n", rdtRE1ColissionArray[i].type );
     	printf("Id:   %d\n", rdtRE1ColissionArray[i].id);
     }
