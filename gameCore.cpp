@@ -185,7 +185,7 @@ void enemyAI_followPlayer() {
     
 
     float angle = (atan2(((mainPlayer.getPlayerX() - gameEnemy.getX())), (mainPlayer.getPlayerZ() - gameEnemy.getZ())) / (M_PI / 180));
-    gameEnemy.setProjection((angle-90));
+    gameEnemy.setAngle((angle-90));
 
 /*    float x,z;
 
@@ -258,7 +258,7 @@ void gameCore::renderLoadResource() {
     gameEnemy.setZ(13000);
     gameEnemy.setY(0);
     gameEnemy.setEMD(1);
-    gameEnemy.setProjection(0);
+    gameEnemy.setAngle(0);
 
 }
 
@@ -604,180 +604,37 @@ void gameCore::renderText(float x, float y, float z, std::string texto) {
 
 }   
 
-    
-void modelRelPosAnimation(unsigned int objNum, unsigned int var, int var2) {
-     if (var == objNum) {
+/* This function is responsible for all emd animation */
+void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, EMD_SEC2_DATA_T animFrame, unsigned int emdNum) {
+    if (var == objNum) {
+        glTranslatef((float)modelList[emdNum].emdSec2RelPos[var2].x, (float)modelList[emdNum].emdSec2RelPos[var2].y, (float)modelList[emdNum].emdSec2RelPos[var2].z);
+        glRotatef(animFrame.vector[var2].x, 1.0f, 0.0f, 0.0f);
+        glRotatef(animFrame.vector[var2].y, 0.0f, 1.0f, 0.0f);
+        glRotatef(animFrame.vector[var2].z, 0.0f, 0.0f, 1.0f);
+    }
 
-        glTranslatef((float)modelList[mainPlayer.getPlayerEMD()].emdSec2RelPos[var2].x, (float)modelList[mainPlayer.getPlayerEMD()].emdSec2RelPos[var2].y, (float)modelList[mainPlayer.getPlayerEMD()].emdSec2RelPos[var2].z);
-        glRotatef(emdFrameAnimation.vector[var2].x, 1.0f, 0.0f, 0.0f);
-        glRotatef(emdFrameAnimation.vector[var2].y, 0.0f, 1.0f, 0.0f);
-        glRotatef(emdFrameAnimation.vector[var2].z, 0.0f, 0.0f, 1.0f);
-
-  }
-     
-     for (unsigned int c = 0; c < modelList[mainPlayer.getPlayerEMD()].emdSec2Armature[var].meshCount; c++) {
-        modelRelPosAnimation(objNum, modelList[mainPlayer.getPlayerEMD()].emdSec2Mesh[var][c], var2);
+     for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
+        renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
      }
 }
 
-void modelRelPosAnimation2(unsigned int objNum, unsigned int var, int var2) {
-     if (var == objNum) {
-
-        glTranslatef((float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].x, (float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].y, (float)modelList[gameEnemy.getEMD()].emdSec2RelPos[var2].z);
-        glRotatef(emdFrameAnimationEnemy.vector[var2].x, 1.0f, 0.0f, 0.0f);
-        glRotatef(emdFrameAnimationEnemy.vector[var2].y, 0.0f, 1.0f, 0.0f);
-        glRotatef(emdFrameAnimationEnemy.vector[var2].z, 0.0f, 0.0f, 1.0f);
-    
-
-  }
-     
-     for (unsigned int c = 0; c < modelList[gameEnemy.getEMD()].emdSec2Armature[var].meshCount; c++) {
-        modelRelPosAnimation2(objNum, modelList[gameEnemy.getEMD()].emdSec2Mesh[var][c], var2);
-     }
-}
-
-
-void drawEnemy() {
-
-    float width_t  = (float) (modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageWidth*2);
-    float height_t = (float)  modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageHeight;
+/* This functions is responsible for all emd rendering used by the game */
+void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum, EMD_SEC2_DATA_T animFrame) {
+    float width_t  = (float) (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2);
+    float height_t = (float)  modelList[emdNum].emdTimTexture.timTexture.imageHeight;
 
     unsigned short uPage = 0;
 
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageWidth*2), modelList[gameEnemy.getEMD()].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[gameEnemy.getEMD()].emdTimTexture.rawTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2), modelList[emdNum].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[emdNum].emdTimTexture.rawTexture);
 
 
     // Toda a renderização do personagem vai ficar aqui !
-    for (unsigned int x = 0; x < modelList[gameEnemy.getEMD()].emdTotalObj; x++) {
+    for (unsigned int x = 0; x < modelList[emdNum].emdTotalObj; x++) {
         
-        glLoadIdentity();
-
-        gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
-                   playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
-                   0.0f,   -0.1f,   0.0f);
-
-
-   
-        glTranslatef(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ());  
-
-        //std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
-        glRotatef(gameEnemy.getProjection(), 0.0f, 1.0f, 0.0f);
-
-        for (unsigned int z = 0; z <  modelList[gameEnemy.getEMD()].emdTotalObj; z++) {
-            modelRelPosAnimation2(x, z, z);
-        }
-
-        for (unsigned int y = 0; y < modelList[gameEnemy.getEMD()].emdObjectBuffer[x].triangles.triCount; y++) {
-            uPage = ((modelList[gameEnemy.getEMD()].emdTritexture[x][y].page & 0b00111111) * 128);
-
-            glBegin(GL_TRIANGLES);
- 
-                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].x,
-                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n0].z);
-                
-                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[gameEnemy.getEMD()].emdTritexture[x][y].v0/height_t);
-
-                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].x,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].y ,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v0].z);
-
-                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].x,
-                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n1].z);
-                
-                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[gameEnemy.getEMD()].emdTritexture[x][y].v1/height_t);
-                
-                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].x,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].y ,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v1].z );
-
-                glNormal3i(modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].x,
-                    (modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdNormal[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].n2].z);
-                
-                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[gameEnemy.getEMD()].emdTritexture[x][y].v2/height_t);
-
-                glVertex3i(modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].x ,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].y ,
-                    modelList[gameEnemy.getEMD()].emdVertex[x][modelList[gameEnemy.getEMD()].emdTriangle[x][y].v2].z );
-                
-            glEnd();
-        }
-
-        for (unsigned int y = 0; y < modelList[gameEnemy.getEMD()].emdObjectBuffer[x].quads.quadCount; y++) {
-            uPage = ((modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].page & 0b00111111) * 128);
-            glBegin(GL_QUADS);
-
-                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].x,
-                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n0].z);
-
-                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v0/height_t);
-
-                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].x , 
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].y ,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v0].z );
-
-                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].x,
-                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].y) * -1,
-                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n1].z);
-               glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v1/height_t);
-                
-                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].x ,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].y ,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v1].z );
-
-
-                glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].x ,
-                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n3].z);
-                glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v3/height_t);
-               
-                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].x,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].y ,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v3].z);
-
-
-               glNormal3i(modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].x,
-                    (modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].y)*-1,
-                    modelList[gameEnemy.getEMD()].emdquadNormal[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].n2].z);
-               glTexCoord2f((float)(modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[gameEnemy.getEMD()].emdQuadTexture[x][y].v2/height_t);
-               
-                glVertex3i(modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].x,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].y ,
-                    modelList[gameEnemy.getEMD()].emdquadVertex[x][modelList[gameEnemy.getEMD()].emdQuad[x][y].v2].z);
-
-
-            glEnd();
-           }
-    } 
-
-
-}
-
-
-void drawMainPlayer() {
-    float width_t  = (float) (modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageWidth*2);
-    float height_t = (float)  modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageHeight;
-
-    unsigned short uPage = 0;
-
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageWidth*2), modelList[mainPlayer.getPlayerEMD()].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[mainPlayer.getPlayerEMD()].emdTimTexture.rawTexture);
-
-
-    // Toda a renderização do personagem vai ficar aqui !
-    for (unsigned int x = 0; x < modelList[mainPlayer.getPlayerEMD()].emdTotalObj; x++) {
+        glLoadIdentity();        
         
-        glLoadIdentity();
-
-
-        
-        
-        /*
-        Camera Position from RDT 1.5 and 2.0
+        /* Camera Position from RDT 1.5 and 2.0
         gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionZ,
                        playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetZ,   
                        0.0f,   -0.1f,   0.0f);
@@ -787,110 +644,103 @@ void drawMainPlayer() {
                        playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
                        0.0f,   -0.1f,   0.0f);
    
-        glTranslatef((float)mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), (float)mainPlayer.getPlayerZ());  
+        glTranslatef(m_x, m_y, m_z);  
 
-        //std::cout << "Player X: " << mainPlayer.getPlayerX() << " Player Y: " << mainPlayer.getPlayerY()  << " Player Z: " << mainPlayer.getPlayerZ() << std::endl;
-        glRotatef(projectionScale, 0.0f, 1.0f, 0.0f);
-
+        glRotatef(angle, 0.0f, 1.0f, 0.0f);
 
 
-        for (unsigned int z = 0; z <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; z++) {
-            modelRelPosAnimation(x, z, z);
+        for (unsigned int z = 0; z <  modelList[emdNum].emdTotalObj; z++) {
+            renderEMD_modelAnimation(x, z, z, animFrame, emdNum);
         }
 
-        for (unsigned int y = 0; y < modelList[mainPlayer.getPlayerEMD()].emdObjectBuffer[x].triangles.triCount; y++) {
-            uPage = ((modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].page & 0b00111111) * 128);
+        for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].triangles.triCount; y++) {
+            uPage = ((modelList[emdNum].emdTritexture[x][y].page & 0b00111111) * 128);
 
             glBegin(GL_TRIANGLES);
  
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n0].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n0].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n0].z);
+                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].x,
+                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].y)*-1,
+                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].z);
                 
-                glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].v0/height_t);
+                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v0/height_t);
 
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v0].x,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v0].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v0].z);
+                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].x,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].y ,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].z);
 
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n1].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n1].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n1].z);
+                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].x,
+                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].y)*-1,
+                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].z);
                 
-                glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].v1/height_t);
+                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v1/height_t);
                 
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v1].x,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v1].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v1].z );
+                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].x,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].y ,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].z );
 
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n2].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n2].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdNormal[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].n2].z);
+                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].x,
+                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].y)*-1,
+                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].z);
                 
-                glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[mainPlayer.getPlayerEMD()].emdTritexture[x][y].v2/height_t);
+                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[emdNum].emdTritexture[x][y].v2/height_t);
 
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v2].x ,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v2].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdVertex[x][modelList[mainPlayer.getPlayerEMD()].emdTriangle[x][y].v2].z );
+                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].x ,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].y ,
+                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].z );
                 
             glEnd();
         }
 
-        for (unsigned int y = 0; y < modelList[mainPlayer.getPlayerEMD()].emdObjectBuffer[x].quads.quadCount; y++) {
-            uPage = ((modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].page & 0b00111111) * 128);
+        for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].quads.quadCount; y++) {
+            uPage = ((modelList[emdNum].emdQuadTexture[x][y].page & 0b00111111) * 128);
             glBegin(GL_QUADS);
 
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n0].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n0].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n0].z);
+                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].x,
+                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].y)*-1,
+                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].z);
 
-                glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].v0/height_t);
+                glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v0/height_t);
 
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v0].x , 
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v0].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v0].z );
+                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].x , 
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].y ,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].z );
 
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n1].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n1].y) * -1,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n1].z);
-               glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].v1/height_t);
+                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].x,
+                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].y) * -1,
+                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].z);
+               glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v1/height_t);
                 
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v1].x ,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v1].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v1].z );
+                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].x ,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].y ,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].z );
 
 
-                glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n3].x ,
-                    (modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n3].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n3].z);
-                glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].v3/height_t);
+                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].x ,
+                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].y)*-1,
+                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].z);
+                glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v3/height_t);
                
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v3].x,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v3].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v3].z);
+                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].x,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].y ,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].z);
 
 
-               glNormal3i(modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n2].x,
-                    (modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n2].y)*-1,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadNormal[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].n2].z);
-               glTexCoord2f((float)(modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[mainPlayer.getPlayerEMD()].emdQuadTexture[x][y].v2/height_t);
+               glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].x,
+                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].y)*-1,
+                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].z);
+               glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v2/height_t);
                
-                glVertex3i(modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v2].x,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v2].y ,
-                    modelList[mainPlayer.getPlayerEMD()].emdquadVertex[x][modelList[mainPlayer.getPlayerEMD()].emdQuad[x][y].v2].z);
+                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].x,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].y ,
+                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].z);
 
 
             glEnd();
            }
     } 
-
-
 }
 
 void engineLight() {
-    // Toda a iluminação de cada mapa, toda camera tem três iluminações, onde duas são lidas
-    // do arquivo RDT e a outra fica no *SCD* que eu não vou pegar por enquanto
-    // Tirando isso eu tenho que converter para float :p 
     GLfloat ambientColor[] = {(float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.R/255.0f)*1.0f + 1.0),
         (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.G/255.0f)*1.0f + 1.0),
         (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.B/255.0f)*1.0f + 1.0),  1.0 };
@@ -1170,11 +1020,13 @@ void renderGame() {
     //engineLight();
 
     // Toda a renderização do personagem é feita por essa função
-    drawMainPlayer();
+    //drawMainPlayer();
 
-
+    /* All model rendering is done by renderEMD Function */
+    /* Player Rendering */
+    renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), projectionScale, mainPlayer.getPlayerEMD(), emdFrameAnimation);
     /* Enemy Render */
-    drawEnemy();
+    renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), gameEnemy.getAngle(), gameEnemy.getEMD(), emdFrameAnimationEnemy);
 }
 
 
@@ -1210,7 +1062,7 @@ void renderScene( void ) {
     }
   
 
-        // Fade Black Effect
+    // Fade Black Effect
     if (inFadeBlack) {
         glDisable(GL_LIGHTING);
         glDisable(GL_TEXTURE_2D);

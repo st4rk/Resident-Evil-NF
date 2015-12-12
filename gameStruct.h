@@ -167,7 +167,7 @@ public:
    float getX();
    float getY();
    float getZ();
-   float getProjection();
+   float getAngle();
 
 
    int   getEMD();
@@ -176,7 +176,7 @@ public:
    void  setY(float y);
    void  setZ(float z);
    void  setEMD(int n);
-   void  setProjection(float n);
+   void  setAngle(float n);
 
 private:
    float x;

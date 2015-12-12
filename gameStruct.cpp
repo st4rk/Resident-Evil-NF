@@ -109,7 +109,7 @@ enemyClass::~enemyClass() {
 float enemyClass::getX() { return x; }
 float enemyClass::getY() { return y; }
 float enemyClass::getZ() { return z; }
-float enemyClass::getProjection() { return p; }
+float enemyClass::getAngle() { return p; }
 
 int   enemyClass::getEMD() { return emd; }
 
@@ -117,7 +117,7 @@ void  enemyClass::setX(float X) { x = X; }
 void  enemyClass::setY(float Y) { y = Y; }
 void  enemyClass::setZ(float Z) { z = Z; }
 void  enemyClass::setEMD(int n) { emd = n; }
-void  enemyClass::setProjection(float n) { p = n; }
+void  enemyClass::setAngle(float n) { p = n; }
 
 bmp_loader_24bpp::bmp_loader_24bpp() {
 	memset(bmpHeader, 0x0, 54);
