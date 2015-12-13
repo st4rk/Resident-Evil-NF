@@ -256,12 +256,17 @@ void eventSystem_newRoom(int roomNum) {
 
     /* Load BSS and RDT */
     background_Loader(bss);
-    playerRDT.rdtRE1LoadFile(rdt);
-
     /* Set Player new X,Y,Z */
     mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
     mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
     mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
+    playerRDT.rdtRE1LoadFile(rdt);
+
+    std::cout << "New X: " << playerRDT.door_set_re1[roomNum].next_x << std::endl;
+    std::cout << "New Y: " << playerRDT.door_set_re1[roomNum].next_y << std::endl;
+    std::cout << "New Z: " << playerRDT.door_set_re1[roomNum].next_z << std::endl;
+
+
    // mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[1].from);
 }
 
@@ -438,8 +443,11 @@ void eventSystem_keyboardUp(unsigned char key, int x, int y) {
 void MainLoop(int t) {
     float x = 0, z = 0;
     bool canMove = true;
+
     if (gameState == STATE_IN_GAME) {
 
+        //std::cout << "X: " << mainPlayer.getPlayerX() << " - Z: " << mainPlayer.getPlayerZ() << std::endl;
+    
         /* Enemy AI Stuff */
         //enemyAI_followPlayer();
 
