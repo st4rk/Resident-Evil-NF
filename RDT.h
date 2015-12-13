@@ -73,6 +73,28 @@ typedef struct RDT_RE1_SCA_OBJ_T {
 	unsigned short floor;
 } RDT_RE1_SCA_OBJ_T;
 
+/* Scenario Data */
+
+
+/* Door set script: Macros and Typedef */
+#define STAGE(x) (x >> 5)
+#define ROOM(x)  (x & 0x1F)
+typedef struct script_door_set_re1 {
+	unsigned char opcode;
+	unsigned char id;
+	unsigned short x;
+	unsigned short y;
+	unsigned short w;
+	unsigned short h;
+	unsigned char unk0[5];
+	unsigned char next_stage_and_room;
+	unsigned short next_x;
+	unsigned short next_y;
+	unsigned short next_z;
+	unsigned short next_dir;
+	unsigned short unk1;
+} script_door_set_re1;
+
 /******************************************************
 ** Resident Evil 1.5 and Resident Evil 2 RDT Support **
 *******************************************************/
@@ -169,6 +191,9 @@ public:
 	RDT();
    ~RDT();
 
+
+   	void rdtRE1_sca();
+
     void rdtLoadFile(std::string fileName);
     void rdtRE1LoadFile(std::string fileName);
 
@@ -185,6 +210,11 @@ public:
 	RDT_RE1_SCA_HEADER_T                   rdtRE1ColisionHeader;
 	RDT_RE1_SCA_OBJ_T                     *rdtRE1ColissionArray;
 	std::vector<RDT_RE1_CAMERA_SWITCH_T>   rdtRE1CameraSwitch;
+
+	unsigned char *RDT_RE1_SCD_DATA;
+	unsigned short scdSize;
+	unsigned int door_set_len;
+	script_door_set_re1 door_set_re1[0x10];
 
 private:
 	unsigned char      *rdtBuffer;

@@ -3,6 +3,7 @@
 
 RDT::RDT() {
 	memset(rdtObjectList, 0x0, 92);
+
 }
 
 RDT::~RDT() {
@@ -28,6 +29,10 @@ RDT::~RDT() {
 		rdtRE1ColissionArray = NULL;
 	}
 
+	if (RDT_RE1_SCD_DATA != NULL) {
+		delete [] RDT_RE1_SCD_DATA;
+		RDT_RE1_SCD_DATA = NULL;
+	}
 }
 
 void RDT::rdtRE1LoadFile(std::string fileName) {
@@ -69,7 +74,7 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 
     
     for (int i = 0; i < rdtRE1Header.num_cameras; i++) {
-	    printf("---Debug---\n");
+	    /*printf("---Debug---\n");
 	    printf("mask offset:0x%x\n", rdtRE1CameraPos[i].mask_offset);
 	    printf("tim_mask_offset; 0x%x\n", rdtRE1CameraPos[i].tim_mask_offset);
 	    printf("Pos X: 0x%d\n", rdtRE1CameraPos[i].positionX);
@@ -77,14 +82,14 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 	    printf("Pos Z: 0x%d\n", rdtRE1CameraPos[i].positionZ);
 	    printf("Tar X: 0x%d\n", rdtRE1CameraPos[i].targetX);
 		printf("Tar Y: 0x%d\n", rdtRE1CameraPos[i].targetY);
-	    printf("Tar Z: 0x%d\n", rdtRE1CameraPos[i].targetZ);
+	    printf("Tar Z: 0x%d\n", rdtRE1CameraPos[i].targetZ);*/
 	}
 
 	// Load all Switch Zone/Camera Zones
 
 	// Offset 8 - Zonas das Cameras e Camera "Switch"
 	RDT_RE1_CAMERA_SWITCH_T nodeSwitch;
-
+	rdtRE1CameraSwitch.clear();
 	unsigned int cont = 0;
 	while (true) {
 		unsigned int checkInt = 0;
@@ -126,17 +131,333 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 
     for (unsigned short i = 0; i < (rdtRE1ColisionHeader.counts - 1); i++) {
     	memcpy(&rdtRE1ColissionArray[i], (rdtBuffer+rdtObjectList[1]+0x18+(i*sizeof(RDT_RE1_SCA_OBJ_T))), sizeof(RDT_RE1_SCA_OBJ_T));
-    	printf("Colissão Nº %d\n", i);
+    	/*printf("Colissão Nº %d\n", i);
     	printf("X1: %d\n", rdtRE1ColissionArray[i].x1);
     	printf("Z1: %d\n", rdtRE1ColissionArray[i].z1);
     	printf("X2: %d\n", rdtRE1ColissionArray[i].x2);
     	printf("Z2: %d\n", rdtRE1ColissionArray[i].z2);
     	printf("Floor: %d\n", (rdtRE1ColissionArray[i].floor / 256));
     	printf("Type: %d\n", rdtRE1ColissionArray[i].type );
-    	printf("Id:   %d\n", rdtRE1ColissionArray[i].id);
+    	printf("Id:   %d\n", rdtRE1ColissionArray[i].id);*/
     }
 
 
+    // Offset 6 - Scenario Data
+
+    /* Get SCD Section Size */
+    scdSize = *(unsigned short*)(rdtBuffer+rdtObjectList[6]);
+
+    printf("ScdSize: 0x%X\n", scdSize);
+    /* Allocate the necessary space */
+    RDT_RE1_SCD_DATA = new unsigned char [scdSize];
+
+    /* copy the scd data to my buffer */
+    memcpy(RDT_RE1_SCD_DATA, (rdtBuffer+rdtObjectList[6]+2), scdSize);
+
+    /* Clear total of doors */
+	door_set_len = 0;
+
+	/* Read scripts */
+    rdtRE1_sca();
+}
+
+
+void RDT::rdtRE1_sca() {
+	unsigned short i = 0;
+	bool macgyver = false;
+	while (i < scdSize) {
+		switch (RDT_RE1_SCD_DATA[i]) {	
+			case 0x00:
+				// NOP
+				i+= 2;
+			break;
+
+			case 0x01:
+				// IF
+				i+= 2;
+			break;
+
+			case 0x02:
+				// ELSE
+				i+= 2;
+			break;
+
+			case 0x03:
+				// end if
+				i+= 2;
+			break;
+
+			case 0x4:
+				// bit test
+				i+= 4;
+			break;
+
+			case 0x05:
+				// bit op
+				i+= 4;
+			break;
+
+			case 0x06:
+				// obj06_test
+				i+=4;
+			break;
+
+			case 0x07:
+				// obj07_test
+			    i+= 6;
+			break;
+
+			case 0x08:
+				// stage room cam set
+				i+= 4;
+			break;
+
+			case 0x09:
+				// cut_Set
+				i+= 2;
+			break;
+
+			case 0x0A:
+				// cut set 2
+				i+= 2;
+			break;
+
+			case 0x0B:
+				// no idea yet
+				i+= 4;
+			break;
+
+			case 0x0C:
+
+				/* Here is stored the door informations */
+				door_set_re1[door_set_len] = *(script_door_set_re1*)(&RDT_RE1_SCD_DATA[i]);
+
+				/* DEBUG PURPOSE */
+				/*
+				printf("id: 0x%X\n", door_set_re1[door_set_len].id);
+				printf("x:  %x\n", door_set_re1[door_set_len].x);
+				printf("y:  %x\n", door_set_re1[door_set_len].y);
+				printf("w:  %x\n", door_set_re1[door_set_len].w);
+				printf("h:  %x\n", door_set_re1[door_set_len].h);
+				printf("next x:    %d\n", door_set_re1[door_set_len].next_x);
+				printf("next y:    %d\n", door_set_re1[door_set_len].next_y);
+				printf("next z:    %d\n", door_set_re1[door_set_len].next_z);
+				printf("next dir:  %d\n", door_set_re1[door_set_len].next_dir);
+				printf("room: %d\n", ROOM(door_set_re1[door_set_len].next_stage_and_room));
+				printf("stage: %d\n", STAGE(door_set_re1[door_set_len].next_stage_and_room));
+				*/
+				door_set_len++;
+				i+= 26;
+			break;
+
+			case 0x0D:
+				// item set
+				i+= 18;
+			break;
+
+			case 0x0E:
+				// nop again ?
+				i+= 2;
+			break;
+
+			case 0x0F:
+				// ?
+				i+= 8;
+			break;
+
+			case 0x10:
+				// obj10_test
+				i+= 2;
+			break;
+
+			case 0x11:
+				// obj11_test
+				i+= 2;
+			break;
+
+			case 0x12:
+				// item 0x12
+				i+=10;
+			break;
+
+			case 0x13:
+				// item 0x13
+				i+= 4;
+			break;
+
+			case 0x14:
+				// ?
+				i+=4;
+			break;
+
+			case 0x15:
+
+				i+= 2;
+			break;
+
+			case 0x16:
+				i+= 2;
+			break;
+
+			case 0x17:
+				i+= 10;
+			break;
+
+			case 0x18:
+				i+= 26;
+			break;
+
+			case 0x19:
+				i+=4;
+			break;
+
+			case 0x1a:
+				i+= 2;
+			break;
+
+			case 0x1b:
+				i+= 22;
+			break;
+
+			case 0x1c:
+				i+= 6;
+			break;
+
+			case 0x1d:
+				i+= 2;
+			break;
+
+			case 0x1e:
+				i+= 4;
+			break;
+
+			case 0x1f:
+				i+= 28;
+			break;
+
+			case 0x20:
+				i+= 14;
+			break;
+
+			case 0x21:
+				i+= 14;
+			break;
+
+			case 0x22:
+				i+= 4;
+			break;
+
+			case 0x23:
+				i+= 2;
+			break;
+
+			case 0x24:
+				i+= 4;
+			break;
+
+			case 0x25:
+				i+= 4;
+			break;
+
+			case 0x27:
+				i+= 2;
+			break;
+
+			case 0x29:
+				i+= 2;
+			break;
+
+			case 0x2a:
+				i+= 12;
+			break;
+
+			case 0x2b:
+				i+= 4;
+			break;
+
+			case 0x2c:
+				i+= 2;
+			break;
+
+			case 0x2d:
+				i+= 4;
+			break;
+
+			case 0x2f:
+				i+= 4;
+			break;
+
+			case 0x30:
+				i+= 12;
+			break;
+
+			case 0x31:
+				i+= 4;
+			break;
+
+			case 0x32:
+				i+= 4;
+			break;
+
+
+			case 0x34:
+				i+= 8;
+			break;
+
+			case 0x35:
+				i+= 4;
+			break;
+
+			case 0x36:
+				i+= 4;
+			break;
+
+			case 0x37:
+				i+= 4;
+			break;
+
+			case 0x38:
+				i+= 4;
+			break;
+
+			case 0x39:
+				i+= 2;
+			break;
+
+			case 0x3a:
+				i+= 4;
+			break;
+
+			case 0x3b:
+				i+= 6;
+			break;
+
+			case 0x3c:
+				i+= 6;
+			break;
+
+			case 0x3d:
+				i+= 12;
+			break;
+
+			case 0x3e:
+				i+= 2;
+			break;
+
+			case 0x3f:
+				i+= 6;
+			break;
+
+
+			default:
+				printf("Script Num: 0x%X\n", RDT_RE1_SCD_DATA[i]);
+				macgyver = true;
+			break;
+		}
+
+		if (macgyver)
+			break;
+	}
 }
 
 void RDT::rdtLoadFile(std::string fileName) {
@@ -211,6 +532,7 @@ void RDT::rdtLoadFile(std::string fileName) {
 
 	// Offset 8 - Zonas das Cameras e Camera "Switch"
 	RDT_CAMERA_SWITCH_T nodeSwitch;
+
 
 	unsigned int cont = 0;
 	while (1) {

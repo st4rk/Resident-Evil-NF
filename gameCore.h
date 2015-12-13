@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include <GL/glut.h>
 #include <list>
 #include <math.h>

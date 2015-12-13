@@ -79,14 +79,14 @@ gameCore::~gameCore() {
 
 
 /* Okay, I want to remove you soon */
-void background_Loader() {
+void background_Loader(std::string roomName) {
     // TESTE NOW ROOM109.BSS
 
     SDL_RWops *src;
     Uint8 *dstBuffer;
     int dstBufLen;
 
-    src = SDL_RWFromFile("resource/stages/re1/ROOM106.BSS", "rb");
+    src = SDL_RWFromFile(roomName.c_str(), "rb");
     if (!src) {
         fprintf(stderr, "Can not open %s for reading\n", "ROOM109.bss");
         exit (0);
@@ -129,6 +129,7 @@ void background_Loader() {
     }
 
 }
+
 
 
 
@@ -200,7 +201,7 @@ void gameCore::renderLoadResource() {
     engineCreditos.bmpLoaderFile("creditos.bmp");
 
     // Carrega o background com número 5
-    background_Loader();
+    background_Loader("resource/stages/re1/ROOM106.BSS");
 
     engineFont.bmpLoaderFile("fonte/1.bmp");
 
@@ -233,6 +234,49 @@ void gameCore::renderLoadResource() {
 
 }
 
+/* Here all stuff related with new room/stage goes here */
+void eventSystem_newRoom(int roomNum) {
+     std::stringstream bss;
+     std::stringstream rdt;
+     
+
+    /*  if (mathEngine.collisionDetect(1, playerRDT.door_set_re1[i].x, playerRDT.door_set_re1[i].y, 
+                               playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
+                               mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
+    */
+     //"resource/stages/re1/ROOM106.BSS"
+
+    char stage[10];
+    char room[10];
+
+    sprintf(room, "%01X", ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
+    sprintf(stage, "%X", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1));
+
+    std::cout << "stage: " << stage << " - room: " << room << std::endl;
+
+    /* bss - shit code x.x */
+    if (ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 15) {
+        bss << "resource/stages/re1/ROOM" <<  stage << room << ".BSS";
+        rdt << "resource/stages/re1/ROOM" <<  stage << room  << "0.RDT";
+    }
+    else {
+        bss << "resource/stages/re1/ROOM" <<  stage << "0" << room << ".BSS";
+        rdt << "resource/stages/re1/ROOM" <<  stage << "0" << room << "0.RDT";    
+    }
+    
+    std::cout << bss.str() << std::endl;
+    std::cout << rdt.str() << std::endl;
+
+    /* Load BSS and RDT */
+    background_Loader(bss.str().c_str());
+    playerRDT.rdtRE1LoadFile(rdt.str().c_str());
+
+    /* Set Player new X,Y,Z */
+    mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
+    mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
+    mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
+    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[1].from);
+}
 
 
 void eventSystem_downKey(int key, int x, int y) {
@@ -359,6 +403,16 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
                     }
                 break;
 
+                case 'z':
+                for(unsigned int i = 0; i < playerRDT.door_set_len; i++) {
+                    if (mathEngine.collisionDetect(1, playerRDT.door_set_re1[i].x, playerRDT.door_set_re1[i].y, 
+                               playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
+                               mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
+                        eventSystem_newRoom(i);
+                    }
+                }
+                break;
+
                 default:
 
                 break;
@@ -400,7 +454,7 @@ void MainLoop(int t) {
     if (gameState == STATE_IN_GAME) {
 
         /* Enemy AI Stuff */
-        enemyAI_followPlayer();
+        //enemyAI_followPlayer();
 
         if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
             mainPlayer.setPlayerAnimSection(1);
@@ -434,7 +488,7 @@ void MainLoop(int t) {
                 if (playerRDT.rdtRE1ColissionArray[i].floor == 768) {
                     if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, 
                                              playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
-                        canMove = false;
+                      //  canMove = false;
                     } 
                 }
             }
@@ -991,9 +1045,9 @@ void renderGame() {
     /* Player Rendering */
     renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
               mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
-    /* Enemy Render */
+    /* Enemy Render 
     renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), 
-              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
+              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());*/
 }
 
 

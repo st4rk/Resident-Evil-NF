@@ -107,7 +107,6 @@ bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z
 			if (k <= 1)
 				return true;
 		}
-			return false;
 		break;
 
 		default:
