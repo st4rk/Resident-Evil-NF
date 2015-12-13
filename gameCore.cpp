@@ -83,20 +83,13 @@ void background_Loader(std::string roomName) {
     // TESTE NOW ROOM109.BSS
 
 
-    // Clear all Surface allocated in memory
-
-    for (int i = 0; i < 0xFF; i++) {
-        if (bg[i] != NULL)
-            SDL_FreeSurface(bg[i]);
-    }
-
     SDL_RWops *src;
     Uint8 *dstBuffer;
     int dstBufLen;
 
     src = SDL_RWFromFile(roomName.c_str(), "rb");
     if (!src) {
-        fprintf(stderr, "Can not open %s for reading\n", "ROOM109.bss");
+        fprintf(stderr, "Can not open %s for reading\n", roomName.c_str());
         exit (0);
     }
 
@@ -126,6 +119,10 @@ void background_Loader(std::string roomName) {
           SDL_Surface *image = mdec_surface(dstMdecBuf,320,240,0);
          
          if (image) {
+             
+             if (bg[i] != NULL)
+                 SDL_FreeSurface(bg[i]);
+
               bg[i] = image;
               i++;
          }
@@ -247,10 +244,10 @@ void eventSystem_newRoom(int roomNum) {
     char bss[0xFF];
     char rdt[0xFF];
 
-    sprintf(rdt, "resource/stages/re1/ROOM%x%02x0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+    sprintf(rdt, "resource/stages/re1/ROOM%X%02X0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
         ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
-    sprintf(bss, "resource/stages/re1/ROOM%x%02x.BSS", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+    sprintf(bss, "resource/stages/re1/ROOM%X%02X.BSS", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
         ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
 
@@ -265,7 +262,7 @@ void eventSystem_newRoom(int roomNum) {
     mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
     mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
     mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
-    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[1].from);
+   // mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[1].from);
 }
 
 
