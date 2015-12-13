@@ -102,11 +102,12 @@ bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z
 			double RayX = (x2 - x1) / 2;
 			double RayZ = (z2 - z1) / 2;
 			double cX = x1 + RayX;
-			double cZ = x1 + RayZ;
+			double cZ = z1 + RayZ;
 			double k = pow((x - cX) / RayX, 2) + pow((z - cZ) / RayZ, 2);
 			if (k <= 1)
 				return true;
 		}
+
 		break;
 
 		default:

@@ -484,7 +484,7 @@ void MainLoop(int t) {
                 if (playerRDT.rdtRE1ColissionArray[i].floor == 768) {
                     if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, 
                                              playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
-                      //  canMove = false;
+                        canMove = false;
                     } 
                 }
             }
