@@ -82,6 +82,14 @@ gameCore::~gameCore() {
 void background_Loader(std::string roomName) {
     // TESTE NOW ROOM109.BSS
 
+
+    // Clear all Surface allocated in memory
+
+    for (int i = 0; i < 0xFF; i++) {
+        if (bg[i] != NULL)
+            SDL_FreeSurface(bg[i]);
+    }
+
     SDL_RWops *src;
     Uint8 *dstBuffer;
     int dstBufLen;
@@ -236,40 +244,22 @@ void gameCore::renderLoadResource() {
 
 /* Here all stuff related with new room/stage goes here */
 void eventSystem_newRoom(int roomNum) {
-     std::stringstream bss;
-     std::stringstream rdt;
-     
+    char bss[0xFF];
+    char rdt[0xFF];
 
-    /*  if (mathEngine.collisionDetect(1, playerRDT.door_set_re1[i].x, playerRDT.door_set_re1[i].y, 
-                               playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
-                               mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
-    */
-     //"resource/stages/re1/ROOM106.BSS"
+    sprintf(rdt, "resource/stages/re1/ROOM%x%02x0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
-    char stage[10];
-    char room[10];
+    sprintf(bss, "resource/stages/re1/ROOM%x%02x.BSS", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
-    sprintf(room, "%01X", ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
-    sprintf(stage, "%X", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1));
 
-    std::cout << "stage: " << stage << " - room: " << room << std::endl;
-
-    /* bss - shit code x.x */
-    if (ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 15) {
-        bss << "resource/stages/re1/ROOM" <<  stage << room << ".BSS";
-        rdt << "resource/stages/re1/ROOM" <<  stage << room  << "0.RDT";
-    }
-    else {
-        bss << "resource/stages/re1/ROOM" <<  stage << "0" << room << ".BSS";
-        rdt << "resource/stages/re1/ROOM" <<  stage << "0" << room << "0.RDT";    
-    }
-    
-    std::cout << bss.str() << std::endl;
-    std::cout << rdt.str() << std::endl;
+    std::cout << bss << std::endl;
+    std::cout << rdt << std::endl;
 
     /* Load BSS and RDT */
-    background_Loader(bss.str().c_str());
-    playerRDT.rdtRE1LoadFile(rdt.str().c_str());
+    background_Loader(bss);
+    playerRDT.rdtRE1LoadFile(rdt);
 
     /* Set Player new X,Y,Z */
     mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
