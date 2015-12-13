@@ -261,13 +261,13 @@ void eventSystem_newRoom(int roomNum) {
     mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
     mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
     playerRDT.rdtRE1LoadFile(rdt);
+    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
 
     std::cout << "New X: " << playerRDT.door_set_re1[roomNum].next_x << std::endl;
     std::cout << "New Y: " << playerRDT.door_set_re1[roomNum].next_y << std::endl;
     std::cout << "New Z: " << playerRDT.door_set_re1[roomNum].next_z << std::endl;
 
 
-   // mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[1].from);
 }
 
 
@@ -401,6 +401,7 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
                                playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
                                mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
                         eventSystem_newRoom(i);
+                        break;
                     }
                 }
                 break;
