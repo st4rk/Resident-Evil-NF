@@ -49,6 +49,7 @@ bmp_loader_24bpp engineThisGame;
 bmp_loader_24bpp engineMainMenu;
 bmp_loader_24bpp engineCreditos;
 
+
 playerClass mainPlayer;
 gameMath    mathEngine;
 gameSound   soundEngine;
@@ -196,7 +197,7 @@ void gameCore::renderLoadResource() {
     }
 
     // Alguns gráficos que são carregados na memória
-    modelList[0].emdLoadFile("modelos/EM058.EMD");
+    modelList[0].emdLoadFile("modelos/BetaLeon.EMD");
     modelList[1].emdLoadFile("modelos/EMD21.EMD");
     modelList[2].emdLoadFile("modelos/EMD04.EMD");
 
@@ -208,7 +209,7 @@ void gameCore::renderLoadResource() {
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
 
-    engineFont.bmpLoaderFile("fonte/1.bmp");
+    engineFont.bmpLoaderFile("resource/texture/1.bmp");
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setPlayerEMD(0);
@@ -480,14 +481,18 @@ void MainLoop(int t) {
             }
 
             /* Collision Detection RE 1 */
-            for (unsigned int i = 0; i < (playerRDT.rdtRE1ColisionHeader.counts -1); i++) {
-                if (playerRDT.rdtRE1ColissionArray[i].floor == 768) {
-                    if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, 
-                                             playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
+            for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
+                    if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
+                                             playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ() - z) == true) {
                         canMove = false;
-                    } 
+
+                        printf("Type: %d\n", playerRDT.rdtRE1ColissionArray[i].type);
+                        printf("X1: %d\n",playerRDT.rdtRE1ColissionArray[i].x1);
+                        printf("Z1: %d\n",playerRDT.rdtRE1ColissionArray[i].z1);
+                        printf("X2: %d\n",playerRDT.rdtRE1ColissionArray[i].x2);
+                        printf("Z2: %d\n",playerRDT.rdtRE1ColissionArray[i].z2);
                 }
-            }
+            } 
 
             /* Colision Detection RDT 1.5 and 2.0
             for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
@@ -625,8 +630,88 @@ void gameCore::renderInit() {
 }
 
 void gameCore::renderText(float x, float y, float z, std::string texto) {
-
+ 
 }   
+
+/* Resident Evil has a font-set, this function is used to render the font-set 
+from Resident Evil's */
+void renderText(float x, float y, float z, std::string text) {
+    glDepthMask(0);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+
+    glLoadIdentity();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
+
+    float c = 0.060;
+    float a = 0.7150 + c;
+    float b = a+0.0655 + c;
+    /* RE 1 */
+    glBegin(GL_QUADS);                     
+        glColor4f(1.0, 1.0, 1.0, 1.0);
+        glTexCoord2f(a,b);
+        glVertex3f(-0.3f, 0.3f, -1.0f);              // Top Left
+        glTexCoord2f(b,b);
+        glVertex3f( 0.3f, 0.3f, -1.0f);              // Top Right
+        glTexCoord2f(b,a);
+        glVertex3f( 0.3f,-0.3f, -1.0f);              // Bottom Right
+        glTexCoord2f(a,a);
+        glVertex3f(-0.3f,-0.3f, -1.0f);              // Bottom Left        
+    glEnd();
+
+
+
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+    glDepthMask(1);
+}
+
+/* I had some problems with collision, so I decide to draw the collisions wire-frame
+it will help me to figure if the collions boundaries are right or wrong */
+void renderCollision() {
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glLoadIdentity();
+    gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
+                   playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
+                   0.0f,   -0.1f,   0.0f);
+
+    // Enable wireframe mode
+    glPolygonMode(GL_FRONT, GL_LINE);
+
+ 
+    for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
+        if (playerRDT.rdtRE1ColissionArray[i].type == 1) {
+            /* Wireframe collision */
+            glBegin(GL_QUADS);      
+                glColor3f(1.0f, 0.0f, 0.0f);                  
+                glVertex3f(playerRDT.rdtRE1ColissionArray[i].x1, 0x0,  playerRDT.rdtRE1ColissionArray[i].z1);          
+                glVertex3f((playerRDT.rdtRE1ColissionArray[i].x1 + playerRDT.rdtRE1ColissionArray[i].x2), 0x0,  playerRDT.rdtRE1ColissionArray[i].z1);              
+                glVertex3f((playerRDT.rdtRE1ColissionArray[i].x1 + playerRDT.rdtRE1ColissionArray[i].x2), 0x0,  (playerRDT.rdtRE1ColissionArray[i].z1 + playerRDT.rdtRE1ColissionArray[i].z2));   
+                glVertex3f(playerRDT.rdtRE1ColissionArray[i].x1, 0x0,  (playerRDT.rdtRE1ColissionArray[i].z1 + playerRDT.rdtRE1ColissionArray[i].z2));       
+            glEnd();
+        }
+    }
+
+    /* Wireframe collision */
+    glBegin(GL_QUADS);      
+        glColor3f(1.0f, 0.0f, 0.0f);                  
+        glVertex3f(mainPlayer.getPlayerX(), 0x0,  mainPlayer.getPlayerZ());             
+        glVertex3f((mainPlayer.getPlayerX() + 1280), 0x0,  mainPlayer.getPlayerZ());              
+        glVertex3f((mainPlayer.getPlayerX() + 1280), 0x0,  (mainPlayer.getPlayerZ() + 1280));   
+        glVertex3f(mainPlayer.getPlayerX(), 0x0,  (mainPlayer.getPlayerZ() + 1280));       
+    glEnd();
+
+    // disable wireframe
+    glPolygonMode(GL_FRONT, GL_FILL);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+
+
+}
 
 /* This function is responsible for all emd animation */
 void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, EMD_SEC2_DATA_T animFrame, unsigned int emdNum) {
@@ -800,22 +885,6 @@ void drawMapBackground() {
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[mainPlayer.getPlayerCam()]->w, bg[mainPlayer.getPlayerCam()]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[mainPlayer.getPlayerCam()]->pixels);
-
-
-  /* RE 1.5 and RE 2
-     glBegin(GL_QUADS);                     
-        glColor4f(1.0, 1.0, 1.0, 1.0);
-        glTexCoord2i(0,1);
-        glVertex3f(-0.77f, 0.58f, -1.0f);              // Top Left
-        glTexCoord2i(1,1);
-        glVertex3f( 0.77f, 0.58f, -1.0f);              // Top Right
-        glTexCoord2i(1,0);
-        glVertex3f( 0.77f,-0.58f, -1.0f);              // Bottom Right
-        glTexCoord2i(0,0);
-        glVertex3f(-0.77f,-0.58f, -1.0f);              // Bottom Left        
-    glEnd();
-
-    */
 
     /* RE 1 */
     glBegin(GL_QUADS);                     
@@ -1024,15 +1093,6 @@ void renderGame() {
     }
 
 
-    // Filtros de textura, é necessário definilos para a textura ser apresentada
-    // Eu utilizei até agora 2 filtros, o GL_NEAREST que deixa a qualidade da textura mais *original*
-    // e o GL_LINEAR que é um filtro que deixa a textura mais bonita
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); 
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-    // Isso vai ser subistituido futuramente por um *sceneNum* ficará mais fácil
-    // decidir o que vai ser renderizado no momento certo, como menu, menu de start
-    // ou qualquer outro, mas por enquanto fica apenas esse bool =)
- 
 
     /* .BSS Background stuff */
     drawMapBackground();
@@ -1044,6 +1104,7 @@ void renderGame() {
     /* Enemy Render 
     renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), 
               gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());*/
+    renderCollision();
 }
 
 
@@ -1078,6 +1139,16 @@ void renderScene( void ) {
         break;
     }
   
+    // Filtros de textura, é necessário definilos para a textura ser apresentada
+    // Eu utilizei até agora 2 filtros, o GL_NEAREST que deixa a qualidade da textura mais *original*
+    // e o GL_LINEAR que é um filtro que deixa a textura mais bonita
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); 
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    // Isso vai ser subistituido futuramente por um *sceneNum* ficará mais fácil
+    // decidir o que vai ser renderizado no momento certo, como menu, menu de start
+    // ou qualquer outro, mas por enquanto fica apenas esse bool =)
+ 
+    renderText(100.0f, 100.0f, 100.0f, "QKWOEKQWOEKWQO");
 
     // Fade Black Effect
     if (inFadeBlack) {

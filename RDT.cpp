@@ -24,11 +24,6 @@ RDT::~RDT() {
 		rdtRE1CameraPos = NULL;
 	}
 
-	if (rdtRE1ColissionArray != NULL) {
-		delete [] rdtRE1ColissionArray;
-		rdtRE1ColissionArray = NULL;
-	}
-
 	if (RDT_RE1_SCD_DATA != NULL) {
 		delete [] RDT_RE1_SCD_DATA;
 		RDT_RE1_SCD_DATA = NULL;
@@ -119,28 +114,41 @@ void RDT::rdtRE1LoadFile(std::string fileName) {
 
 
 	// Offset 1 - SCA Collision Boundaries for 3D Models
-    rdtRE1ColisionHeader.cx = *(unsigned short*)(rdtBuffer+rdtObjectList[1]);
+/*    rdtRE1ColisionHeader.cx = *(unsigned short*)(rdtBuffer+rdtObjectList[1]);
     rdtRE1ColisionHeader.cy = *(unsigned short*)(rdtBuffer+rdtObjectList[1]+2);
 
     rdtRE1ColisionHeader.counts = 0;
     for (unsigned int i = 0; i < 5; i++) {
     	rdtRE1ColisionHeader.counts += *(unsigned int*)(rdtBuffer+rdtObjectList[1]+4+(i * 4));
     }
+  */
 
-    rdtRE1ColissionArray = new RDT_RE1_SCA_OBJ_T [rdtRE1ColisionHeader.counts - 1];
 
-    for (unsigned short i = 0; i < (rdtRE1ColisionHeader.counts - 1); i++) {
-    	memcpy(&rdtRE1ColissionArray[i], (rdtBuffer+rdtObjectList[1]+0x18+(i*sizeof(RDT_RE1_SCA_OBJ_T))), sizeof(RDT_RE1_SCA_OBJ_T));
-    	/*printf("Colissão Nº %d\n", i);
-    	printf("X1: %d\n", rdtRE1ColissionArray[i].x1);
-    	printf("Z1: %d\n", rdtRE1ColissionArray[i].z1);
-    	printf("X2: %d\n", rdtRE1ColissionArray[i].x2);
-    	printf("Z2: %d\n", rdtRE1ColissionArray[i].z2);
-    	printf("Floor: %d\n", (rdtRE1ColissionArray[i].floor / 256));
-    	printf("Type: %d\n", rdtRE1ColissionArray[i].type );
-    	printf("Id:   %d\n", rdtRE1ColissionArray[i].id);*/
+    /* Header of collision boundaries */
+
+    rdtRE1ColisionHeader = *(RDT_RE1_SCA_HEADER_T*)(rdtBuffer+rdtObjectList[1]);
+
+    rdtRE1ColissionArray.clear();
+    RDT_RE1_SCA_OBJ_T *nodeSCA = (RDT_RE1_SCA_OBJ_T*)(rdtBuffer+rdtObjectList[1]+sizeof(RDT_RE1_SCA_HEADER_T));
+
+
+    unsigned short fX = 0;
+    unsigned short fZ = 0;
+    for (int i = 0; i < 4; i++) {
+        for (unsigned int j = 0; j < rdtRE1ColisionHeader.counts[i]; j++, nodeSCA++) {
+        	if (nodeSCA->type == 1) {
+	            fX = abs(nodeSCA->x1 - nodeSCA->x2);
+	            fZ = abs(nodeSCA->z1 - nodeSCA->z2);
+
+	            nodeSCA->x1 = nodeSCA->x1 < nodeSCA->x2 ? nodeSCA->x1 : nodeSCA->x2;
+	            nodeSCA->z1 = nodeSCA->z1 < nodeSCA->z2 ? nodeSCA->z1 : nodeSCA->z2;
+	            nodeSCA->x2 = fX;
+	            nodeSCA->z2 = fZ;
+        	}
+            rdtRE1ColissionArray.push_back(*nodeSCA);
+        }
     }
-
+    	
 
     // Offset 6 - Scenario Data
 

@@ -112,6 +112,7 @@ bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z
 
 		default:
 			std::cout << "The collision type: " << colType << " wasn't implemented" << std::endl;
+			return false;
 		break;
 
 	}

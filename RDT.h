@@ -59,15 +59,15 @@ typedef struct RDT_RE1_CAMERA_SWITCH_T {
 typedef struct RDT_RE1_SCA_HEADER_T {
 	unsigned short cx;
 	unsigned short cy;
-	unsigned int   counts;
+	unsigned int   counts[5];
 } RDT_RE1_SCA_HEADER_T;
 
 
 typedef struct RDT_RE1_SCA_OBJ_T {
-	unsigned short x1; // D
-	unsigned short z1; // W
-	unsigned short x2;
-	unsigned short z2;
+	unsigned short x1; 
+	unsigned short z1; 
+	unsigned short x2; // W
+	unsigned short z2; // D
 	unsigned char  type;
 	unsigned char  id;
 	unsigned short floor;
@@ -208,7 +208,7 @@ public:
 	RDT_RE1_HEADER_T                       rdtRE1Header;
 	RDT_RE1_CAMERA_POS_T                  *rdtRE1CameraPos;
 	RDT_RE1_SCA_HEADER_T                   rdtRE1ColisionHeader;
-	RDT_RE1_SCA_OBJ_T                     *rdtRE1ColissionArray;
+	std::vector<RDT_RE1_SCA_OBJ_T>         rdtRE1ColissionArray;
 	std::vector<RDT_RE1_CAMERA_SWITCH_T>   rdtRE1CameraSwitch;
 
 	unsigned char *RDT_RE1_SCD_DATA;
