@@ -55,6 +55,13 @@ gameMath    mathEngine;
 gameSound   soundEngine;
 enemyClass  gameEnemy;
 
+/* Room transition */
+unsigned int roomNum = -1; 
+
+/* Debug Menu Features */
+bool wireFrameMode = false;
+
+
 SDL_Surface *bg[0xFF];
 
 
@@ -240,34 +247,150 @@ void gameCore::renderLoadResource() {
 
 }
 
+
+/* Resident Evil has a font-set, this function is used to render the font-set 
+from Resident Evil's */
+void renderText(float x, float y, float z, int type, std::string text) {
+    glDisable(GL_LIGHTING);
+
+    glLoadIdentity();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
+
+
+    /* 
+       Important information, character(big) Y(up) = 0.0532
+       Next Character(right), 0.055 * char_num
+       Note: what the hell is wrong with my coordinate system ? :|
+       ASCII Starts in 0x24(36)
+
+       There are 18(0x12) character per line
+       To know which charater draw in line, character_num mod 18
+       To know which line is, (character_num - 36) / 18
+
+    */
+
+
+    switch(type) {
+        case TEXT_TYPE_NORMAL: {
+            float tX = -0.77+x;
+            float tY =  0.48-y;
+
+            for (unsigned int i = 0; i < text.size(); i++, tX += 0.11) {
+                float Xo = 0.055 * (text[i] % 18);
+                float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
+                glBegin(GL_QUADS);                     
+                    glColor4f(1.0, 1.0, 1.0, 1.0);
+                    /* Texture Coord */
+                    glTexCoord2f(Xo,Yo);
+                    glVertex3f(tX, tY, -1.0f);            
+                    /* Texture Coord */
+                    glTexCoord2f(Xo+0.053,Yo);
+                    glVertex3f(tX+0.1f, tY, -1.0f);              
+                    /* Texture Coord */
+                    glTexCoord2f(Xo+0.053,Yo+0.053);
+                    glVertex3f(tX+0.1f,tY+0.1f, -1.0f);              
+                    /* Texture Coord */
+                    glTexCoord2f(Xo, Yo+0.053);
+                    glVertex3f(tX, tY+0.1f, -1.0f);                  
+                glEnd();
+            }
+        }
+        
+        case TEXT_TYPE_LITTLE: {
+            float tX = -0.77+x;
+            float tY =  0.48-y;
+
+            for (unsigned int i = 0; i < text.size(); i++, tX += 0.05) {
+                float Xo = 0.03123 * (text[i] % 32);
+                float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
+                glBegin(GL_QUADS);                     
+                    glColor4f(1.0, 1.0, 1.0, 1.0);
+                    /* Texture Coord */
+                    glTexCoord2f(Xo,Yo);
+                    glVertex3f(tX, tY, -1.0f);            
+                    /* Texture Coord */
+                    glTexCoord2f(Xo+0.030,Yo);
+                    glVertex3f(tX+0.05f, tY, -1.0f);              
+                    /* Texture Coord */
+                    glTexCoord2f(Xo+0.030,Yo+0.030);
+                    glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
+                    /* Texture Coord */
+                    glTexCoord2f(Xo, Yo+0.030);
+                    glVertex3f(tX, tY+0.05f, -1.0f);                  
+                glEnd();
+            }
+        }
+        break;
+
+        default:
+
+        break;        
+    }
+    
+    glEnable(GL_LIGHTING);
+}
+
 /* Here all stuff related with new room/stage goes here */
-void eventSystem_newRoom(int roomNum) {
+void eventSystem_newRoom() {
     char bss[0xFF];
     char rdt[0xFF];
+    
+    /* Disable rotation and moviment */
+    mainPlayer.setPlayerInRotate(false);
+    mainPlayer.setPlayerInMove(false);
 
-    sprintf(rdt, "resource/stages/re1/ROOM%X%02X0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
-        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
+    /* Fade black effect */
+    if (inFadeBlack) {
+        if (fadeBlackNormal) {
+            if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                if (fadeBlackEffect <= 1.0) {
+                    fadeBlackEffect += 0.1;
+                } else {
+                    fadeBlackNormal  = false;
+                    fadeBlackReverse = true;
+                    sprintf(rdt, "resource/stages/re1/ROOM%X%02X0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+                        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
-    sprintf(bss, "resource/stages/re1/ROOM%X%02X.BSS", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
-        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
+                    sprintf(bss, "resource/stages/re1/ROOM%X%02X.BSS", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
+                        ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
 
-    std::cout << bss << std::endl;
-    std::cout << rdt << std::endl;
+                    std::cout << bss << std::endl;
+                    std::cout << rdt << std::endl;
 
-    /* Load BSS and RDT */
-    background_Loader(bss);
-    /* Set Player new X,Y,Z */
-    mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
-    mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
-    mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
-    playerRDT.rdtRE1LoadFile(rdt);
-    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
+                    /* Load BSS and RDT */
+                    background_Loader(bss);
+                    /* Set Player new X,Y,Z */
+                    mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
+                    mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
+                    mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
+                    playerRDT.rdtRE1LoadFile(rdt);
+                    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
+
+                }
+                timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+            }    
+        } else {
+            if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                if (fadeBlackEffect >  0.0) {
+                    fadeBlackEffect -= 0.1;
+                } else {
+                    fadeBlackEffect = 0.0;
+                    fadeBlackReverse = false;
+                    fadeBlackNormal  = false;
+                    inFadeBlack = false;
+                    gameState = STATE_IN_GAME;
+                }
+
+                timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+            }
+        }
+    }
 
     std::cout << "New X: " << playerRDT.door_set_re1[roomNum].next_x << std::endl;
     std::cout << "New Y: " << playerRDT.door_set_re1[roomNum].next_y << std::endl;
     std::cout << "New Z: " << playerRDT.door_set_re1[roomNum].next_z << std::endl;
-
 
 }
 
@@ -355,7 +478,6 @@ void eventSystem_upKey(int key, int x, int y) {
                 case GLUT_KEY_LEFT:
                     mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
                     mainPlayer.setPlayerInRotate(false);
-                  
                 break;
 
                 case GLUT_KEY_RIGHT:
@@ -401,10 +523,18 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
                     if (mathEngine.collisionDetect(1, playerRDT.door_set_re1[i].x, playerRDT.door_set_re1[i].y, 
                                playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
                                mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
-                        eventSystem_newRoom(i);
+                        gameState = STATE_IN_ROOM;
+                        roomNum = i;
+                        inFadeBlack = true;
+                        fadeBlackNormal = true;
+                        fadeBlackEffect = 0.0;
                         break;
                     }
                 }
+                break;
+
+                case 'c':
+                    wireFrameMode ^= 1;
                 break;
 
                 default:
@@ -446,10 +576,12 @@ void MainLoop(int t) {
     float x = 0, z = 0;
     bool canMove = true;
 
-    if (gameState == STATE_IN_GAME) {
+    if ((gameState == STATE_IN_GAME) || (gameState == STATE_IN_ROOM)) {
 
-        //std::cout << "X: " << mainPlayer.getPlayerX() << " - Z: " << mainPlayer.getPlayerZ() << std::endl;
-    
+        if (gameState == STATE_IN_ROOM) 
+            eventSystem_newRoom();
+
+
         /* Enemy AI Stuff */
         //enemyAI_followPlayer();
 
@@ -562,7 +694,6 @@ void MainLoop(int t) {
         }
     }
 
-
     glutPostRedisplay();   
     glutTimerFunc(33, MainLoop, 0);
 }
@@ -633,39 +764,6 @@ void gameCore::renderText(float x, float y, float z, std::string texto) {
  
 }   
 
-/* Resident Evil has a font-set, this function is used to render the font-set 
-from Resident Evil's */
-void renderText(float x, float y, float z, std::string text) {
-    glDepthMask(0);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
-
-    glLoadIdentity();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
-
-    float c = 0.060;
-    float a = 0.7150 + c;
-    float b = a+0.0655 + c;
-    /* RE 1 */
-    glBegin(GL_QUADS);                     
-        glColor4f(1.0, 1.0, 1.0, 1.0);
-        glTexCoord2f(a,b);
-        glVertex3f(-0.3f, 0.3f, -1.0f);              // Top Left
-        glTexCoord2f(b,b);
-        glVertex3f( 0.3f, 0.3f, -1.0f);              // Top Right
-        glTexCoord2f(b,a);
-        glVertex3f( 0.3f,-0.3f, -1.0f);              // Bottom Right
-        glTexCoord2f(a,a);
-        glVertex3f(-0.3f,-0.3f, -1.0f);              // Bottom Left        
-    glEnd();
-
-
-
-    glDisable(GL_TEXTURE_2D);
-    glEnable(GL_LIGHTING);
-    glDepthMask(1);
-}
 
 /* I had some problems with collision, so I decide to draw the collisions wire-frame
 it will help me to figure if the collions boundaries are right or wrong */
@@ -1104,7 +1202,15 @@ void renderGame() {
     /* Enemy Render 
     renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), 
               gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());*/
-    renderCollision();
+
+    if (wireFrameMode)
+        renderCollision();
+
+    char coord[0xFF];
+
+    sprintf(coord, "X:%d-Y:%d-Z:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ());
+
+    renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
 }
 
 
@@ -1126,6 +1232,8 @@ void renderScene( void ) {
             renderInventary();
         break;
 
+
+        case STATE_IN_ROOM:
         case STATE_IN_GAME:
             renderGame();
         break;
@@ -1148,7 +1256,9 @@ void renderScene( void ) {
     // decidir o que vai ser renderizado no momento certo, como menu, menu de start
     // ou qualquer outro, mas por enquanto fica apenas esse bool =)
  
-    renderText(100.0f, 100.0f, 100.0f, "QKWOEKQWOEKWQO");
+
+
+    /* Debug Menu */
 
     // Fade Black Effect
     if (inFadeBlack) {
