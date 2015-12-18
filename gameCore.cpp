@@ -61,9 +61,13 @@ unsigned int roomNum = -1;
 /* Debug Menu Features */
 bool wireFrameMode = false;
 
-
 SDL_Surface *bg[0xFF];
 
+    
+/* Debug Room */
+debugRoom debugR[0xFF];
+bool jumpToRun = false;
+int debug_jRoomNum = 0;
 
 gameCore::gameCore(int argc, char** argv) {
     /* start glut */
@@ -245,6 +249,20 @@ void gameCore::renderLoadResource() {
     gameEnemy.setEMD(1);
     gameEnemy.setAngle(0);
 
+
+    /* Hardcoded Debug Room X,Y,Z,RoomNum and RoomName !*/
+
+    debugR[0].roomName = "Main Hall";
+    debugR[0].roomNum  = 6;
+    debugR[0].x = 17060.0f;
+    debugR[0].y = 0.0f;
+    debugR[0].z = 11933.0f;
+
+    debugR[1].roomName = "Testee ha!";
+    debugR[1].roomNum  = 5;
+    debugR[1].x        = 30900.0f;
+    debugR[1].y        = 0.0f;
+    debugR[1].z        = 8300.0f;
 }
 
 
@@ -275,25 +293,26 @@ void renderText(float x, float y, float z, int type, std::string text) {
             float tX = -0.77+x;
             float tY =  0.48-y;
 
-            for (unsigned int i = 0; i < text.size(); i++, tX += 0.11) {
-
-                float Xo = 0.055 * (text[i] % 18);
-                float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
-                glBegin(GL_QUADS);                     
-                    glColor4f(1.0, 1.0, 1.0, 1.0);
-                    /* Texture Coord */
-                    glTexCoord2f(Xo,Yo);
-                    glVertex3f(tX, tY, -1.0f);            
-                    /* Texture Coord */
-                    glTexCoord2f(Xo+0.053,Yo);
-                    glVertex3f(tX+0.1f, tY, -1.0f);              
-                    /* Texture Coord */
-                    glTexCoord2f(Xo+0.053,Yo+0.053);
-                    glVertex3f(tX+0.1f,tY+0.1f, -1.0f);              
-                    /* Texture Coord */
-                    glTexCoord2f(Xo, Yo+0.053);
-                    glVertex3f(tX, tY+0.1f, -1.0f);                  
-                glEnd();
+            for (unsigned int i = 0; i < text.size(); i++, tX += 0.07) {
+                if (text[i] != ' ') {
+                    float Xo = 0.055 * (text[i] % 18);
+                    float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
+                    glBegin(GL_QUADS);                     
+                        glColor4f(1.0, 1.0, 1.0, 1.0);
+                        /* Texture Coord */
+                        glTexCoord2f(Xo,Yo);
+                        glVertex3f(tX, tY, -1.0f);            
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.053,Yo);
+                        glVertex3f(tX+0.08f, tY, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.053,Yo+0.053);
+                        glVertex3f(tX+0.08f,tY+0.08f, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo, Yo+0.053);
+                        glVertex3f(tX, tY+0.08f, -1.0f);                  
+                    glEnd();
+                }
             }
         }
         
@@ -302,23 +321,25 @@ void renderText(float x, float y, float z, int type, std::string text) {
             float tY =  0.48-y;
 
             for (unsigned int i = 0; i < text.size(); i++, tX += 0.05) {
-                float Xo = 0.03123 * (text[i] % 32);
-                float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
-                glBegin(GL_QUADS);                     
-                    glColor4f(1.0, 1.0, 1.0, 1.0);
-                    /* Texture Coord */
-                    glTexCoord2f(Xo,Yo);
-                    glVertex3f(tX, tY, -1.0f);            
-                    /* Texture Coord */
-                    glTexCoord2f(Xo+0.030,Yo);
-                    glVertex3f(tX+0.05f, tY, -1.0f);              
-                    /* Texture Coord */
-                    glTexCoord2f(Xo+0.030,Yo+0.030);
-                    glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
-                    /* Texture Coord */
-                    glTexCoord2f(Xo, Yo+0.030);
-                    glVertex3f(tX, tY+0.05f, -1.0f);                  
-                glEnd();
+                if (text[i] != ' ') {
+                    float Xo = 0.03123 * (text[i] % 32);
+                    float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
+                    glBegin(GL_QUADS);                     
+                        glColor4f(1.0, 1.0, 1.0, 1.0);
+                        /* Texture Coord */
+                        glTexCoord2f(Xo,Yo);
+                        glVertex3f(tX, tY, -1.0f);            
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.030,Yo);
+                        glVertex3f(tX+0.05f, tY, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.030,Yo+0.030);
+                        glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo, Yo+0.030);
+                        glVertex3f(tX, tY+0.05f, -1.0f);                  
+                    glEnd();
+                }
             }
         }
         break;
@@ -329,6 +350,91 @@ void renderText(float x, float y, float z, int type, std::string text) {
     }
     
     glEnable(GL_LIGHTING);
+}
+
+/* All stuff related with debug menu goes here */
+void eventSystem_debugMenu() {
+    char jump_to[20];
+
+    renderText(0.42, 0.30, 0.0f, TEXT_TYPE_LITTLE, "--Debug Menu--");
+
+
+    sprintf(jump_to, "Jump %03x %s",debugR[debug_jRoomNum].roomNum, debugR[debug_jRoomNum].roomName.c_str());
+
+    renderText(0.35, 0.35, 0.0f, TEXT_TYPE_LITTLE, jump_to);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glLoadIdentity();
+
+
+    glBegin(GL_QUADS);
+        glColor4f(0.0f, 1.0f, 0.0f, 0.5f);
+
+        glVertex3f(-0.64f, 0.25f, -1.0f);          
+        glVertex3f( 0.64f, 0.25f, -1.0f);             
+        glVertex3f( 0.64f,-0.25f, -1.0f);              
+        glVertex3f(-0.64f,-0.25f, -1.0f);              
+
+    glEnd();
+    glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_LIGHTING);
+}
+
+void eventSystem_debugJumpToRun() {
+    char bss[0xFF];
+    char rdt[0xFF];
+
+    /* Disable rotation and moviment */
+    mainPlayer.setPlayerInRotate(false);
+    mainPlayer.setPlayerInMove(false);
+
+    /* Fade black effect */
+    if (inFadeBlack) {
+        if (fadeBlackNormal) {
+            if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                if (fadeBlackEffect <= 1.0) {
+                    fadeBlackEffect += 0.1;
+                } else {
+                    fadeBlackNormal  = false;
+                    fadeBlackReverse = true;
+                    sprintf(rdt, "resource/stages/re1/ROOM%X%02X0.RDT", (STAGE(debugR[debug_jRoomNum].roomNum) > 0 ? STAGE(debugR[debug_jRoomNum].roomNum) : 1),
+                        ROOM(debugR[debug_jRoomNum].roomNum));
+
+                    sprintf(bss, "resource/stages/re1/ROOM%X%02X.BSS", (STAGE(debugR[debug_jRoomNum].roomNum) > 0 ? STAGE(debugR[debug_jRoomNum].roomNum) : 1),
+                        ROOM(debugR[debug_jRoomNum].roomNum));
+                    std::cout << bss << std::endl;
+                    std::cout << rdt << std::endl;
+
+                    /* Load BSS and RDT */
+                    background_Loader(bss);
+                    /* Set Player new X,Y,Z */
+                    mainPlayer.setPlayerX(debugR[debug_jRoomNum].x);
+                    mainPlayer.setPlayerY(debugR[debug_jRoomNum].y);
+                    mainPlayer.setPlayerZ(debugR[debug_jRoomNum].z);
+                    playerRDT.rdtRE1LoadFile(rdt);
+                    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
+
+                }
+                timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+            }    
+        } else {
+            if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
+                if (fadeBlackEffect >  0.0) {
+                    fadeBlackEffect -= 0.1;
+                } else {
+                    fadeBlackEffect = 0.0;
+                    fadeBlackReverse = false;
+                    fadeBlackNormal  = false;
+                    inFadeBlack = false;
+                    jumpToRun = false;
+                    gameState = STATE_IN_GAME;
+                }
+
+                timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
+            }
+        }
+    }
 }
 
 /* Here all stuff related with new room/stage goes here */
@@ -349,6 +455,7 @@ void eventSystem_newRoom() {
                 } else {
                     fadeBlackNormal  = false;
                     fadeBlackReverse = true;
+                    printf("valor que eu quero: %d\n", playerRDT.door_set_re1[roomNum].next_stage_and_room);
                     sprintf(rdt, "resource/stages/re1/ROOM%X%02X0.RDT", (STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) > 0 ? STAGE(playerRDT.door_set_re1[roomNum].next_stage_and_room) : 1),
                         ROOM(playerRDT.door_set_re1[roomNum].next_stage_and_room));
 
@@ -387,11 +494,6 @@ void eventSystem_newRoom() {
             }
         }
     }
-
-    std::cout << "New X: " << playerRDT.door_set_re1[roomNum].next_x << std::endl;
-    std::cout << "New Y: " << playerRDT.door_set_re1[roomNum].next_y << std::endl;
-    std::cout << "New Z: " << playerRDT.door_set_re1[roomNum].next_z << std::endl;
-
 }
 
 
@@ -399,6 +501,24 @@ void eventSystem_downKey(int key, int x, int y) {
     switch (gameState) {
         case STATE_MAIN_MENU:
 
+        break;
+
+        case STATE_IN_DEBUG:
+            switch (key) {
+                case GLUT_KEY_LEFT:
+                    if (debug_jRoomNum > 0) 
+                        debug_jRoomNum--;
+                break;
+
+                case GLUT_KEY_RIGHT:
+                    if (debug_jRoomNum < 2)
+                        debug_jRoomNum++;
+                break;
+
+                default:
+
+                break;
+            }
         break;
 
         case STATE_IN_GAME:
@@ -422,11 +542,18 @@ void eventSystem_downKey(int key, int x, int y) {
                 break;
 
                 case GLUT_KEY_LEFT:
-                if (mainPlayer.getPlayerRunning()) {
-                    mainPlayer.setPlayerInRotatePos(1);
-                    mainPlayer.setPlayerInRotate(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(1);
+                if (mainPlayer.getPlayerInMove()) {
+                    if (mainPlayer.getPlayerRunning()) {
+                        mainPlayer.setPlayerInRotatePos(1);
+                        mainPlayer.setPlayerInRotate(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(1);
+                    } else {
+                        mainPlayer.setPlayerInRotatePos(1);
+                        mainPlayer.setPlayerInRotate(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(0);
+                    }
                 } else {
                     mainPlayer.setPlayerInRotatePos(1);
                     mainPlayer.setPlayerInRotate(true);
@@ -436,16 +563,23 @@ void eventSystem_downKey(int key, int x, int y) {
                 break;
 
                 case GLUT_KEY_RIGHT:
-                if (mainPlayer.getPlayerRunning()) {
-                    mainPlayer.setPlayerInRotatePos(0);
-                    mainPlayer.setPlayerInRotate(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(1);
+                if (mainPlayer.getPlayerInMove()) {
+                    if (mainPlayer.getPlayerRunning()) {
+                        mainPlayer.setPlayerInRotatePos(0);
+                        mainPlayer.setPlayerInRotate(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(1);
+                    } else {
+                        mainPlayer.setPlayerInRotatePos(0);
+                        mainPlayer.setPlayerInRotate(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(0);
+                    }
                 } else {
-                    mainPlayer.setPlayerInRotatePos(0);
-                    mainPlayer.setPlayerInRotate(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(0);
+                        mainPlayer.setPlayerInRotatePos(0);
+                        mainPlayer.setPlayerInRotate(true);
+                        mainPlayer.setPlayerAnimSection(1);
+                        mainPlayer.setPlayerAnim(0);
                 }
                 break;
 
@@ -508,6 +642,26 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
             }
         break;
 
+
+        case STATE_IN_DEBUG:
+            switch (key) {
+                case 'z':
+                    gameState = STATE_IN_GAME;
+                break;
+
+                case 'x':
+                    inFadeBlack = true;
+                    fadeBlackNormal = true;
+                    fadeBlackEffect = 0.0;
+                    jumpToRun = true;
+                break;
+
+                default:
+
+                break;
+            }
+        break;
+
         case STATE_IN_GAME:
             switch (key) {
                 case 'x':
@@ -537,6 +691,10 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
                     wireFrameMode ^= 1;
                 break;
 
+                case 'a':
+                    gameState = STATE_IN_DEBUG;
+                break;
+
                 default:
 
                 break;
@@ -560,8 +718,6 @@ void eventSystem_keyboardUp(unsigned char key, int x, int y) {
         case 'x':
             if (mainPlayer.getPlayerRunning()) {
                 mainPlayer.setPlayerRunning(false);     
-                mainPlayer.setPlayerAnimSection(1);
-                mainPlayer.setPlayerAnim(0);       
             }
         break;
 
@@ -571,6 +727,70 @@ void eventSystem_keyboardUp(unsigned char key, int x, int y) {
     }
 }
 
+/* All stuff related with animation goes here */
+void engineAnimation() {
+    /* Verify if player is stopped and start the animation */
+    if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
+        mainPlayer.setPlayerAnimSection(1);
+        mainPlayer.setPlayerAnim(2);
+    }
+
+    /* Crapy shoot animation, will be removed soon */
+    if (mainPlayer.getPlayerInShoot() == true) {
+            mainPlayer.setPlayerAnim(10);
+    } 
+
+   /* Here where the magic happens !
+       Verify the animation count, store the EMD Animation Frame
+       everything related with EMD Animation goes here ! */
+    switch (mainPlayer.getPlayerAnim()) {
+        case ANIM_TYPE_WALK:
+            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+            else {
+                mainPlayer.setPlayerAnimCount(0);
+            }
+
+            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+        break;
+
+        case ANIM_TYPE_RUNNING:
+            if (!mainPlayer.getPlayerRunning()) {
+                if (mainPlayer.getPlayerAnimCount() < 8)
+                    mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                else {
+                    mainPlayer.setPlayerAnim(ANIM_TYPE_WALK);
+                }
+            } else {
+                if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                    mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                else {
+                    mainPlayer.setPlayerAnimCount(0);
+                }
+            }
+
+            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+        break;
+
+        case ANIM_TYPE_STOPPED:
+
+            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+            else {
+                mainPlayer.setPlayerAnimCount(0);
+            }
+
+            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+        break;
+
+        default:
+
+        break;
+    }
+
+
+
+}
 
 void MainLoop(int t) {
     float x = 0, z = 0;
@@ -585,14 +805,8 @@ void MainLoop(int t) {
         /* Enemy AI Stuff */
         //enemyAI_followPlayer();
 
-        if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
-            mainPlayer.setPlayerAnimSection(1);
-            mainPlayer.setPlayerAnim(2);
-        }
 
-        if (mainPlayer.getPlayerInShoot() == true) {
-                mainPlayer.setPlayerAnim(10);
-        } 
+        engineAnimation();
 
         if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 1)) {
             mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() - 5), 360.0));
@@ -670,28 +884,6 @@ void MainLoop(int t) {
             }
 
         }
-
-
-
-        /* Here is the animation stuff */
-        if ((mainPlayer.getPlayerAnimSection()) == 0) {
-            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
-                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
-            else {
-                mainPlayer.setPlayerAnimCount(0);
-            }
-
-            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec2Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
-        } else {
-            
-            if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
-                mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
-            else {
-                mainPlayer.setPlayerAnimCount(0);
-            }
-
-            mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
-        }
     }
 
     glutPostRedisplay();   
@@ -721,6 +913,7 @@ void gameCore::renderInit() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_NORMALIZE);
     glEnable(GL_BLEND); 
+    glEnable(GL_ALPHA_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Permite utilização de textura 2D
     glEnable(GL_TEXTURE_2D);
@@ -1211,6 +1404,13 @@ void renderGame() {
     sprintf(coord, "X:%d-Y:%d-Z:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ());
 
     renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
+
+    if (gameState == STATE_IN_DEBUG) {
+        if (jumpToRun) 
+            eventSystem_debugJumpToRun();
+        else 
+            eventSystem_debugMenu();
+    }
 }
 
 
@@ -1218,6 +1418,8 @@ void renderScene( void ) {
     
     // Limpa a cor do buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glAlphaFunc(GL_GREATER,0.1);
+
 
     // Reseta a matriz ModelView
     glMatrixMode(GL_MODELVIEW);
@@ -1232,7 +1434,7 @@ void renderScene( void ) {
             renderInventary();
         break;
 
-
+        case STATE_IN_DEBUG:
         case STATE_IN_ROOM:
         case STATE_IN_GAME:
             renderGame();

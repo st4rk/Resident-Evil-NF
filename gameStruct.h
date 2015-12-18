@@ -57,6 +57,7 @@
 #define STATE_INVENTARY   3
 #define STATE_IN_GAME     4
 #define STATE_IN_ROOM     5
+#define STATE_IN_DEBUG    6
 
 
 // MainMenu sub-menus
@@ -72,6 +73,13 @@
 // Text Type
 #define TEXT_TYPE_NORMAL       0x0
 #define TEXT_TYPE_LITTLE       0x1
+
+
+// Animation Stuff 
+
+#define ANIM_TYPE_WALK         0x0
+#define ANIM_TYPE_RUNNING      0x1
+#define ANIM_TYPE_STOPPED      0x2
 
 class playerClass {
 public:
@@ -144,8 +152,6 @@ private:
 
    // Player EMD Animation
    EMD_SEC2_DATA_T anim;
-
-
 
    // Rotation position
    unsigned char inRotatePos;
@@ -242,5 +248,14 @@ private:
 
 };
 
+/* Debug Stuff to room jump */
+typedef struct debugRoom {
+   float x;
+   float y;
+   float z;
+   int roomNum;
+   std::string roomName;
+
+} debugRoom;
 
 #endif

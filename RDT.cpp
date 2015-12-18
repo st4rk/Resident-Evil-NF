@@ -240,20 +240,6 @@ void RDT::rdtRE1_sca() {
 				/* Here is stored the door informations */
 				door_set_re1[door_set_len] = *(script_door_set_re1*)(&RDT_RE1_SCD_DATA[i]);
 
-				/* DEBUG PURPOSE */
-				/*
-				printf("id: 0x%X\n", door_set_re1[door_set_len].id);
-				printf("x:  %x\n", door_set_re1[door_set_len].x);
-				printf("y:  %x\n", door_set_re1[door_set_len].y);
-				printf("w:  %x\n", door_set_re1[door_set_len].w);
-				printf("h:  %x\n", door_set_re1[door_set_len].h);
-				printf("next x:    %d\n", door_set_re1[door_set_len].next_x);
-				printf("next y:    %d\n", door_set_re1[door_set_len].next_y);
-				printf("next z:    %d\n", door_set_re1[door_set_len].next_z);
-				printf("next dir:  %d\n", door_set_re1[door_set_len].next_dir);
-				printf("room: %d\n", ROOM(door_set_re1[door_set_len].next_stage_and_room));
-				printf("stage: %d\n", STAGE(door_set_re1[door_set_len].next_stage_and_room));
-				*/
 				door_set_len++;
 				i+= 26;
 			break;
