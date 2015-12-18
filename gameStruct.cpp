@@ -148,7 +148,7 @@ bmp_loader_24bpp::~bmp_loader_24bpp() {
 	bmpBuffer = NULL;
 }
 
-void bmp_loader_24bpp::bmpLoaderFile(std::string fileName) {
+void bmp_loader_24bpp::bmpLoaderFile(std::string fileName, int type) {
 	FILE *bmpFile = NULL;
 
 	bmpFile = fopen(fileName.c_str(), "rb");
@@ -179,9 +179,31 @@ void bmp_loader_24bpp::bmpLoaderFile(std::string fileName) {
 	bmpWidth    = *(int*)&(bmpHeader[0x12]);
 	bmpHeight   = *(int*)&(bmpHeader[0x16]);
 
-	bmpBuffer = new unsigned char [bmpSize];
+	if (type == 1) {
+		bmpBuffer = new unsigned char [bmpHeight * bmpWidth * 4];
 
-	fread(bmpBuffer, 1, bmpSize, bmpFile);
+		unsigned char *buffer = new unsigned char[bmpSize];
+		fread(buffer, 1, bmpSize, bmpFile);
+
+		unsigned int j = 0;
+		for (unsigned int i = 0; i < bmpSize; i+=3, j+= 4) {
+
+			if ((buffer[i] == 0) && (buffer[i+1] == 0) && (buffer[i+2] == 0)) {
+				bmpBuffer[j]   = 0;
+				bmpBuffer[j+1] = 0;
+				bmpBuffer[j+2] = 0;
+				bmpBuffer[j+3] = 0;
+			} else {
+				bmpBuffer[j]   = buffer[i];
+				bmpBuffer[j+1] = buffer[i+1];
+				bmpBuffer[j+2] = buffer[i+2];
+				bmpBuffer[j+3] = 255;
+			}
+		}
+	} else {
+		bmpBuffer = new unsigned char [bmpSize];
+		fread(bmpBuffer, 1, bmpSize, bmpFile);
+	}
 
 	fclose (bmpFile);
 }

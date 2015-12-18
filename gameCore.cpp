@@ -209,14 +209,14 @@ void gameCore::renderLoadResource() {
     modelList[2].emdLoadFile("modelos/EMD04.EMD");
 
     // Algumas imagens carregadas na memória
-    engineThisGame.bmpLoaderFile("resource/intro_01.bmp");
-    engineMainMenu.bmpLoaderFile("resource/intro_00.bmp");
-    engineCreditos.bmpLoaderFile("creditos.bmp");
+    engineThisGame.bmpLoaderFile("resource/intro_01.bmp",0);
+    engineMainMenu.bmpLoaderFile("resource/intro_00.bmp",0);
+    engineCreditos.bmpLoaderFile("creditos.bmp",0);
 
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
 
-    engineFont.bmpLoaderFile("resource/texture/1.bmp");
+    engineFont.bmpLoaderFile("resource/texture/1.bmp",1);
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setPlayerEMD(0);
@@ -255,7 +255,7 @@ void renderText(float x, float y, float z, int type, std::string text) {
 
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_RGBA, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
 
 
     /* 
@@ -270,13 +270,13 @@ void renderText(float x, float y, float z, int type, std::string text) {
 
     */
 
-
     switch(type) {
         case TEXT_TYPE_NORMAL: {
             float tX = -0.77+x;
             float tY =  0.48-y;
 
             for (unsigned int i = 0; i < text.size(); i++, tX += 0.11) {
+
                 float Xo = 0.055 * (text[i] % 18);
                 float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
                 glBegin(GL_QUADS);                     

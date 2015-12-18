@@ -231,7 +231,7 @@ public:
 	bmp_loader_24bpp();
 	~bmp_loader_24bpp();
 
-	void bmpLoaderFile(std::string fileName);
+	void bmpLoaderFile(std::string fileName, int type);
 	unsigned char *bmpBuffer;
 	int bmpHeight;
 	int bmpWidth;
