@@ -23,9 +23,10 @@ gameSound::~gameSound() {
 
 	Mix_FreeChunk( gunEffect );
 	Mix_FreeChunk( walkEffect );
-
-	gunEffect  = NULL;
-	walkEffect = NULL;
+	Mix_FreeChunk( clickEffect );
+	clickEffect = NULL;
+	gunEffect   = NULL;
+	walkEffect  = NULL;
 	SDL_Quit();
 	Mix_Quit();
 }
@@ -38,11 +39,15 @@ bool gameSound::engineSoundInit() {
 	}
 
 	// Inicializa o MIX de Áudio com o samplerate de 44100hz
-	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+	if (Mix_OpenAudio(20050, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
 		std::cout << "SDL_Mixer não foi inicializado!" << Mix_GetError() << std::endl;
 		return false;
 	}
 
+	// Som do click
+	clickEffect     = Mix_LoadWAV("resource/sfx/click.wav");
+	// Som do click
+	titleEffect     = Mix_LoadWAV("resource/sfx/title.wav");
 	// É aqui onde fica armazenada a música de background
 	// Inicializa o ponteiro com NULL
 	backgroundMusic = NULL;
@@ -70,11 +75,12 @@ void gameSound::engineStopSound() {
 }
 
 void gameSound::enginePlayerSoundEffect() {
-
+	Mix_PlayChannel(-1, clickEffect, 0);
 }
 
 void gameSound::engineStopSoundEffect() {
-
+	Mix_PlayChannel(-1, titleEffect, 0);
 }
+
 
 int  gameSound::enginePlayingMusic() { return (Mix_PlayingMusic()); }

@@ -31,6 +31,8 @@ private:
 
 	Mix_Chunk *gunEffect;
 	Mix_Chunk *walkEffect;
+	Mix_Chunk *clickEffect;
+	Mix_Chunk *titleEffect;
 	
 };
 

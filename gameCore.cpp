@@ -13,8 +13,10 @@
 // It will handle all possibles menus, ie: "inGame, MainMenu, Credits [...]"
 int gameState = 0;
 
-// Main Menu
+/* This is the main menu machine state */
 unsigned char mainMenu = 0x0;
+/* This is used by Main Menu Selection */
+unsigned char menuArrow = 0x0;
 // In Game
 unsigned char inGame   = 0x0;
 
@@ -48,7 +50,7 @@ bmp_loader_24bpp engineFont;
 bmp_loader_24bpp engineThisGame;
 bmp_loader_24bpp engineMainMenu;
 bmp_loader_24bpp engineCreditos;
-
+bmp_loader_24bpp engineLogo;
 
 playerClass mainPlayer;
 gameMath    mathEngine;
@@ -213,8 +215,9 @@ void gameCore::renderLoadResource() {
     modelList[2].emdLoadFile("modelos/EMD04.EMD");
 
     // Algumas imagens carregadas na memória
-    engineThisGame.bmpLoaderFile("resource/intro_01.bmp",0);
-    engineMainMenu.bmpLoaderFile("resource/intro_00.bmp",0);
+    engineThisGame.bmpLoaderFile("resource/menus/intro_2.bmp",0);
+    engineLogo.bmpLoaderFile("resource/menus/intro_1.bmp",0);
+    engineMainMenu.bmpLoaderFile("resource/menus/mainMenu.bmp",0);
     engineCreditos.bmpLoaderFile("creditos.bmp",0);
 
     // Carrega o background com número 5
@@ -268,7 +271,7 @@ void gameCore::renderLoadResource() {
 
 /* Resident Evil has a font-set, this function is used to render the font-set 
 from Resident Evil's */
-void renderText(float x, float y, float z, int type, std::string text) {
+void renderText(float x, float y, float z, int type, std::string text, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0) {
     glDisable(GL_LIGHTING);
 
     glLoadIdentity();
@@ -298,7 +301,7 @@ void renderText(float x, float y, float z, int type, std::string text) {
                     float Xo = 0.055 * (text[i] % 18);
                     float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
                     glBegin(GL_QUADS);                     
-                        glColor4f(1.0, 1.0, 1.0, 1.0);
+                        glColor4f(r,g,b,a);
                         /* Texture Coord */
                         glTexCoord2f(Xo,Yo);
                         glVertex3f(tX, tY, -1.0f);            
@@ -325,7 +328,7 @@ void renderText(float x, float y, float z, int type, std::string text) {
                     float Xo = 0.03123 * (text[i] % 32);
                     float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
                     glBegin(GL_QUADS);                     
-                        glColor4f(1.0, 1.0, 1.0, 1.0);
+                        glColor4f(r,g,b,a);
                         /* Texture Coord */
                         glTexCoord2f(Xo,Yo);
                         glVertex3f(tX, tY, -1.0f);            
@@ -500,7 +503,25 @@ void eventSystem_newRoom() {
 void eventSystem_downKey(int key, int x, int y) {
     switch (gameState) {
         case STATE_MAIN_MENU:
+            if (mainMenu == MAIN_MENU_START) {
+                switch (key) {
+                    case GLUT_KEY_UP:
+                        soundEngine.enginePlayerSoundEffect();
+                        if (menuArrow == 1)
+                            menuArrow = 0;
+                    break;
 
+                    case GLUT_KEY_DOWN:
+                        soundEngine.enginePlayerSoundEffect();
+                        if (menuArrow == 0)
+                            menuArrow = 1;
+                    break;
+
+                    default:
+
+                    break;
+                }
+            }
         break;
 
         case STATE_IN_DEBUG:
@@ -635,9 +656,14 @@ void eventSystem_keyboardDown(unsigned char key, int x, int y) {
         case STATE_MAIN_MENU:
             if (mainMenu == MAIN_MENU_START) {
                 if (key == 'x') {
-                    mainMenu    = MAIN_MENU_GAME;
-                    inFadeBlack = true;
-                    glutIgnoreKeyRepeat(1);    
+                    if (menuArrow == 0) {
+                        soundEngine.engineStopSoundEffect();
+                        mainMenu    = MAIN_MENU_GAME;
+                        inFadeBlack = true;
+                        glutIgnoreKeyRepeat(1);    
+                    } else if (menuArrow == 1) {
+                        exit(0);
+                    }
                 }
             }
         break;
@@ -1170,7 +1196,7 @@ void engineLight() {
 
 
 void drawMapBackground() {
-    glDepthMask(0);
+    glDepthMask(GL_FALSE);
     glDisable(GL_LIGHTING);
     
     glLoadIdentity();
@@ -1191,7 +1217,8 @@ void drawMapBackground() {
     glEnd();
 
     glEnable(GL_LIGHTING);
-    glDepthMask(1);
+    glDepthMask(GL_TRUE);
+
     
 }
 
@@ -1204,7 +1231,37 @@ void drawCreditos() {
     glDepthMask(1);
 }
 
+/*
+ * This function render a square with a bitmap texture
+ */
+void renderSquareWithTexture(bmp_loader_24bpp *texture) {
+    glPushMatrix();
+        glDisable(GL_LIGHTING);
+        /*
+         * This API is used to setup a texture to object
+         */
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texture->bmpWidth, texture->bmpHeight, 0,GL_BGR, GL_UNSIGNED_BYTE, texture->bmpBuffer);
+
+        glBegin(GL_QUADS);                     
+            glColor3f(1.0, 1.0, 1.0);
+            glTexCoord2i(0,1);
+            glVertex3f(-0.77f, 0.58f, -1.0f);   
+            glTexCoord2i(1,1);
+            glVertex3f( 0.77f, 0.58f, -1.0f);  
+            glTexCoord2i(1,0);
+            glVertex3f( 0.77f,-0.58f, -1.0f); 
+            glTexCoord2i(0,0);
+            glVertex3f(-0.77f,-0.58f, -1.0f);     
+        glEnd();
+
+        glEnable(GL_LIGHTING);
+    glPopMatrix();
+}
+
 void renderMainMenu() {
+    /* Enable Depth Buffer */
+    glDepthMask(GL_FALSE);
 
     // FadeBlack Reverse
    switch (mainMenu) {
@@ -1212,10 +1269,7 @@ void renderMainMenu() {
         case MAIN_MENU_LOGO:
             if (inFadeBlack) {
                 // First Game Logo
-                glDepthMask(0);
-                glDrawPixels(engineThisGame.bmpWidth, engineThisGame.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineThisGame.bmpBuffer );
-                glPixelZoom(2.5,2.5);   
-                glDepthMask(1);
+                renderSquareWithTexture(&engineLogo);
                 if (fadeBlackNormal) {
                     // Timer
                     if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
@@ -1253,10 +1307,7 @@ void renderMainMenu() {
         case MAIN_MENU_ENGINE_LOGO:
             if (inFadeBlack) {
                 // First Game Logo
-                glDepthMask(0);
-                glDrawPixels(engineThisGame.bmpWidth, engineThisGame.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineThisGame.bmpBuffer );
-                glPixelZoom(2.5,2.5);   
-                glDepthMask(1);
+                renderSquareWithTexture(&engineThisGame);
                 if (fadeBlackNormal) {
                     // Timer
                     if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
@@ -1294,10 +1345,14 @@ void renderMainMenu() {
         case MAIN_MENU_START:
             if (inFadeBlack) {
                 // MainMenu Background
-                glDepthMask(0);
-                glDrawPixels(engineMainMenu.bmpWidth, engineMainMenu.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineMainMenu.bmpBuffer );
-                glPixelZoom(2.5,2.5);
-                glDepthMask(1);
+                renderSquareWithTexture(&engineMainMenu);
+                if (menuArrow == 0) {
+                    renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME", 0.0f, 1.0f, 0.0f, 1.0f);
+                    renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT");
+                } else if (menuArrow == 1) {
+                    renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT", 0.0f, 1.0f, 0.0f, 1.0f);
+                    renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
+                }
                 if (fadeBlackNormal) {
                     // Timer
                     if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
@@ -1322,11 +1377,8 @@ void renderMainMenu() {
 
        case MAIN_MENU_GAME:
             if (inFadeBlack) {
-                glDepthMask(0);
-                glDrawPixels(engineMainMenu.bmpWidth, engineMainMenu.bmpHeight, GL_BGR, GL_UNSIGNED_BYTE, engineMainMenu.bmpBuffer );
-                glPixelZoom(2.5,2.5);
-                glDepthMask(1);
-
+                // MainMenu Background
+                renderSquareWithTexture(&engineMainMenu);
                 if (fadeBlackNormal) {
                     // Timer
                     if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
@@ -1354,7 +1406,7 @@ void renderMainMenu() {
        break;
    }
 
-    
+   glDepthMask(GL_TRUE);
 }
 
 
@@ -1425,6 +1477,9 @@ void renderScene( void ) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    /* 
+     * Game state machine 
+     */
     switch (gameState) {
         case STATE_MAIN_MENU:
             renderMainMenu();
@@ -1459,8 +1514,6 @@ void renderScene( void ) {
     // ou qualquer outro, mas por enquanto fica apenas esse bool =)
  
 
-
-    /* Debug Menu */
 
     // Fade Black Effect
     if (inFadeBlack) {
