@@ -5,8 +5,8 @@
 ** Nightmare Fiction Engine - NFE                                         **
 ***************************************************************************/
 
-#ifndef RENDERCORE_H
-#define RENDERCORE_H
+#ifndef GAMECORE_H
+#define GAMECORE_H
 
 #include <iostream>
 #include <cstdio>
@@ -42,19 +42,25 @@ public:
 	~gameCore();
 
 	void renderInit();
-	void renderText(float, float, float, std::string);
+	void renderText(float, float, float, int, std::string, float, float, float, float);
 	void renderLoadResource();
-
-
+	void renderMainMenu();
+	void renderGame();
+	void eventSystem_debugMenu();
+	void renderStateMachine();
+	static void renderSetObj(gameCore *obj);
+	static void renderCallback();
 private:
 
 	GLuint fontTexture;
 	char GAME_NAME[20];
+
 
 };
 
 
 void renderScene( void );
 
+extern gameCore *mainGame;
 
 #endif

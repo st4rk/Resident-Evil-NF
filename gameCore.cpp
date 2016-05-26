@@ -71,6 +71,8 @@ debugRoom debugR[0xFF];
 bool jumpToRun = false;
 int debug_jRoomNum = 0;
 
+gameCore *core;
+
 gameCore::gameCore(int argc, char** argv) {
     /* start glut */
     glutInit(&argc, argv);
@@ -92,7 +94,11 @@ gameCore::~gameCore() {
 }
 
 
-/* Okay, I want to remove you soon */
+/*
+ * background_Loader
+ * This function is a crapy .bss loader
+ * thanks to EPSX Emulator
+ */
 void background_Loader(std::string roomName) {
     // TESTE NOW ROOM109.BSS
 
@@ -159,15 +165,15 @@ void enemyAI_followPlayer() {
 
     /* Crappy AI, it's only follow the player, without path find obvious */
     if (mainPlayer.getPlayerX() > gameEnemy.getX()) {
-        gameEnemy.setX(gameEnemy.getX() + 50);
+        gameEnemy.setX(gameEnemy.getX() + 5);
     } else {
-        gameEnemy.setX(gameEnemy.getX() - 50);
+        gameEnemy.setX(gameEnemy.getX() - 5);
     }
 
     if (mainPlayer.getPlayerZ() > gameEnemy.getZ()) {
-        gameEnemy.setZ(gameEnemy.getZ() + 50);
+        gameEnemy.setZ(gameEnemy.getZ() + 5);
     } else {
-        gameEnemy.setZ(gameEnemy.getZ() - 50);        
+        gameEnemy.setZ(gameEnemy.getZ() - 5);        
     }
 
 
@@ -186,12 +192,14 @@ void enemyAI_followPlayer() {
     gameEnemy.setAngle((angle-90)); 
 }
 
-/* Hardcode game init */
+/*
+ * renderLoadResource
+ * This function is the hardcoded game initialization
+ */
 void gameCore::renderLoadResource() {
 
     // Clear Timer
     timer1_start = 0;
-
 
     // The game should start on Main Menu
     gameState       = STATE_MAIN_MENU;
@@ -212,7 +220,7 @@ void gameCore::renderLoadResource() {
     // Alguns gráficos que são carregados na memória
     modelList[0].emdLoadFile("modelos/BetaLeon.EMD");
     modelList[1].emdLoadFile("modelos/EMD21.EMD");
-    modelList[2].emdLoadFile("modelos/EMD04.EMD");
+    modelList[2].emdLoadFile("modelos/EMD05.EMD");
 
     // Algumas imagens carregadas na memória
     engineThisGame.bmpLoaderFile("resource/menus/intro_2.bmp",0);
@@ -227,10 +235,16 @@ void gameCore::renderLoadResource() {
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setPlayerEMD(0);
-
+    /*
     mainPlayer.setPlayerX(18391);
     mainPlayer.setPlayerZ(12901);
     mainPlayer.setPlayerY(0);
+    */
+    mainPlayer.setPlayerX(0);
+    mainPlayer.setPlayerZ(0);
+    mainPlayer.setPlayerY(0);
+
+
     mainPlayer.setPlayerCam(1);
     mainPlayer.setPlayerAngle(90.0);
 
@@ -246,10 +260,10 @@ void gameCore::renderLoadResource() {
 
     /* Init teste enemy */
 
-    gameEnemy.setX(18400);
-    gameEnemy.setZ(13000);
+    gameEnemy.setX(0);
+    gameEnemy.setZ(-10000.0f);
     gameEnemy.setY(0);
-    gameEnemy.setEMD(1);
+    gameEnemy.setEMD(2);
     gameEnemy.setAngle(0);
 
 
@@ -269,9 +283,14 @@ void gameCore::renderLoadResource() {
 }
 
 
-/* Resident Evil has a font-set, this function is used to render the font-set 
-from Resident Evil's */
-void renderText(float x, float y, float z, int type, std::string text, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0) {
+/*
+ * renderText
+ * This function is used to draw text on Screen
+ * There are two different charset
+ * CHAR_SET_1 TEXT_TYPE_NORMAL
+ * CHAR_SET_2 TEXT_TYPE_LITTLE
+ */
+void gameCore::renderText(float x, float y, float z, int type, std::string text, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0) {
     glDisable(GL_LIGHTING);
 
     glLoadIdentity();
@@ -356,7 +375,7 @@ void renderText(float x, float y, float z, int type, std::string text, float r =
 }
 
 /* All stuff related with debug menu goes here */
-void eventSystem_debugMenu() {
+void gameCore::eventSystem_debugMenu() {
     char jump_to[20];
 
     renderText(0.42, 0.30, 0.0f, TEXT_TYPE_LITTLE, "--Debug Menu--");
@@ -753,7 +772,10 @@ void eventSystem_keyboardUp(unsigned char key, int x, int y) {
     }
 }
 
-/* All stuff related with animation goes here */
+/* 
+ * engineAnimation
+ * Handle all player animation and does the linear interpolartion necessary
+ */
 void engineAnimation() {
     /* Verify if player is stopped and start the animation */
     if (((mainPlayer.getPlayerInMove()) == false) && (mainPlayer.getPlayerInShoot() == false) && (mainPlayer.getPlayerInRotate() == false)) {
@@ -766,9 +788,6 @@ void engineAnimation() {
             mainPlayer.setPlayerAnim(10);
     } 
 
-   /* Here where the magic happens !
-       Verify the animation count, store the EMD Animation Frame
-       everything related with EMD Animation goes here ! */
     switch (mainPlayer.getPlayerAnim()) {
         case ANIM_TYPE_WALK:
             if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
@@ -814,8 +833,6 @@ void engineAnimation() {
         break;
     }
 
-
-
 }
 
 void MainLoop(int t) {
@@ -829,9 +846,11 @@ void MainLoop(int t) {
 
 
         /* Enemy AI Stuff */
-        //enemyAI_followPlayer();
+        enemyAI_followPlayer();
 
-
+        /*
+         * Player Animation
+         */
         engineAnimation();
 
         if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 1)) {
@@ -852,7 +871,7 @@ void MainLoop(int t) {
                 z = sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0;
             }
 
-            /* Collision Detection RE 1 */
+            /* Collision Detection RE 1 
             for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
                     if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
                                              playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ() - z) == true) {
@@ -865,6 +884,7 @@ void MainLoop(int t) {
                         printf("Z2: %d\n",playerRDT.rdtRE1ColissionArray[i].z2);
                 }
             } 
+            */
 
             /* Colision Detection RDT 1.5 and 2.0
             for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
@@ -889,7 +909,7 @@ void MainLoop(int t) {
             }
             */
 
-            /* Camera Switch Zone/Camera Position RE 1.0 */
+            /* Camera Switch Zone/Camera Position RE 1.0 
             for (unsigned int i = 0; i < playerRDT.rdtRE1CameraSwitch.size(); i++) {
                 if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
                                          playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
@@ -900,7 +920,7 @@ void MainLoop(int t) {
 
                 } 
             }                    
-
+            */
 
 
             if (canMove == true) {
@@ -966,7 +986,7 @@ void gameCore::renderInit() {
 
     // Função que vai ser chamada cada vez que for fazer a renderização
 
-    glutDisplayFunc(renderScene);
+    glutDisplayFunc(renderCallback);
     glutSpecialFunc( eventSystem_downKey );
     glutSpecialUpFunc ( eventSystem_upKey );
     glutKeyboardFunc( eventSystem_keyboardDown );
@@ -978,10 +998,6 @@ void gameCore::renderInit() {
     glutMainLoop();
 
 }
-
-void gameCore::renderText(float x, float y, float z, std::string texto) {
- 
-}   
 
 
 /* I had some problems with collision, so I decide to draw the collisions wire-frame
@@ -1039,12 +1055,18 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
         glRotatef(animFrame.vector[var2].z, 0.0f, 0.0f, 1.0f);
     }
 
+
+     if (var > 14) return;
+
      for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
         renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
      }
 }
 
-/* This functions is responsible for all emd rendering used by the game */
+/*
+ * renderEMD
+ * Resident Evil 1.5 and Resident Evil 2 model render
+ */
 void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum, EMD_SEC2_DATA_T animFrame) {
     float width_t  = (float) (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2);
     float height_t = (float)  modelList[emdNum].emdTimTexture.timTexture.imageHeight;
@@ -1060,16 +1082,40 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
         
         glLoadIdentity();        
         
-        /* Camera Position from RDT 1.5 and 2.0
+        /*
+         * Resident Evil 1.5 and 2 Cameras
+         */
+        /*
         gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionZ,
                        playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetZ,   
                        0.0f,   -0.1f,   0.0f);
         */
 
-        gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
+        /*
+         * Resident Evil 1 Camera
+         */
+        /*  gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
                        playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
                        0.0f,   -0.1f,   0.0f);
-   
+         */
+
+        /*
+         * Resident Evil Extreme Battle Camera System
+         * Cam 1
+         * Written by St4rk
+         */
+
+        float camX = mainPlayer.getPlayerX()  - sin((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
+        float camZ = mainPlayer.getPlayerZ()  - cos((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
+        float distX = -cos((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
+        float distZ =  sin((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
+        float distY = -3000.0f;
+        gluLookAt(     camX + distX,  distY, camZ + distZ,
+                       camX, -2500.0f, camZ,   
+                       0.0f, -0.1f, 0.0f);
+ 
+
+
         glTranslatef(m_x, m_y, m_z);  
 
         glRotatef(angle, 0.0f, 1.0f, 0.0f);
@@ -1194,7 +1240,10 @@ void engineLight() {
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor2);
 }
 
-
+/*
+ * renderMapBackground
+ * This function render a square with .bss texture of the current camera
+ */
 void drawMapBackground() {
     glDepthMask(GL_FALSE);
     glDisable(GL_LIGHTING);
@@ -1259,7 +1308,7 @@ void renderSquareWithTexture(bmp_loader_24bpp *texture) {
     glPopMatrix();
 }
 
-void renderMainMenu() {
+void gameCore::renderMainMenu() {
     /* Enable Depth Buffer */
     glDepthMask(GL_FALSE);
 
@@ -1414,12 +1463,10 @@ void renderCredits() {
 
 }
 
-void renderInventary() {
 
-}
 
 // All in game stuff related with rendering is done here
-void renderGame() {
+void gameCore::renderGame() {
 
     if (inGame == IN_GAME_BEGIN) {
         if (timer1_start < glutGet(GLUT_ELAPSED_TIME)) {
@@ -1438,22 +1485,23 @@ void renderGame() {
 
 
     /* .BSS Background stuff */
-    drawMapBackground();
+    //drawMapBackground();
 
     /* All model rendering is done by renderEMD Function */
     /* Player Rendering */
     renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
               mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
-    /* Enemy Render 
-    renderEMD(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ(), 
-              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());*/
+    /* Enemy Rendering */
+    renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
+              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
+
 
     if (wireFrameMode)
         renderCollision();
 
     char coord[0xFF];
 
-    sprintf(coord, "X:%d-Y:%d-Z:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ());
+    sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ(), (int)mainPlayer.getPlayerAngle());
 
     renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
@@ -1465,8 +1513,26 @@ void renderGame() {
     }
 }
 
+/*
+ * renderCallBack
+ * This function is the display callback
+ */
+void gameCore::renderCallback() {
+    core->renderStateMachine();
+}
 
-void renderScene( void ) {
+/*
+ * This function set the gameCore obj 
+ * used by static functions
+ */
+void gameCore::renderSetObj(gameCore *obj) { core = obj; }
+
+/*
+ * renderStateMachine
+ * This function is used to handle the game state machine
+ * each state has a different scene to draw
+ */
+void gameCore::renderStateMachine() {
     
     // Limpa a cor do buffer (background)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1486,7 +1552,7 @@ void renderScene( void ) {
         break;
 
         case STATE_INVENTARY:
-            renderInventary();
+          //  renderInventory();
         break;
 
         case STATE_IN_DEBUG:
@@ -1497,10 +1563,6 @@ void renderScene( void ) {
 
         case STATE_CREDITS:
             renderCredits();
-        break;
-
-        default:
-            std::cout << "meh" << std::endl;
         break;
     }
   
@@ -1537,5 +1599,3 @@ void renderScene( void ) {
     // Buffers de renderização
     glutSwapBuffers();
 }
-
-

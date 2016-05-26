@@ -1,3 +1,4 @@
+
 /********************************************************************************************************************
  ** 					Nightmare Fiction Engine - NFE                                                             **
  **  NFE é uma engine desenvolvida por Lucas P. Stark com a finalidade de aprender mais sobre o ambiente 3D        **
@@ -14,10 +15,22 @@
 #include "gameCore.h"
 
 int main(int argc, char **argv) {
-	gameCore myRender(argc, argv);
-
-	myRender.renderLoadResource();
-	myRender.renderInit();
+	/* 
+	 * Amazing macgyver to work Class with GLUT
+	 */
+	gameCore mGame(argc, argv);
+	/*
+	 * Load game resource and hardcoded things
+	 */
+	mGame.renderLoadResource();
+	/*
+	 * Initialize the OpenGL and GLUT Library
+	 */
+	mGame.renderInit();
+	/*
+	 * This the gameCore obj to static members
+	 */
+	gameCore::renderSetObj(&mGame);
 
 	return 0;
 }
