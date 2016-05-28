@@ -33,6 +33,7 @@ private:
 	Mix_Chunk *walkEffect;
 	Mix_Chunk *clickEffect;
 	Mix_Chunk *titleEffect;
+	Mix_Chunk *nextEffect;
 	
 };
 

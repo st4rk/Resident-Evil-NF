@@ -20,6 +20,10 @@ int main(int argc, char **argv) {
 	 */
 	gameCore mGame(argc, argv);
 	/*
+	 * This the gameCore obj to static members
+	 */
+	gameCore::renderSetObj(&mGame);
+	/*
 	 * Load game resource and hardcoded things
 	 */
 	mGame.renderLoadResource();
@@ -27,10 +31,6 @@ int main(int argc, char **argv) {
 	 * Initialize the OpenGL and GLUT Library
 	 */
 	mGame.renderInit();
-	/*
-	 * This the gameCore obj to static members
-	 */
-	gameCore::renderSetObj(&mGame);
 
 	return 0;
 }

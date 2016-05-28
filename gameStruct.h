@@ -54,7 +54,7 @@
 // All possible menus, dunno af
 #define STATE_MAIN_MENU   1
 #define STATE_CREDITS     2
-#define STATE_INVENTARY   3
+#define STATE_SEL_CHAR    3
 #define STATE_IN_GAME     4
 #define STATE_IN_ROOM     5
 #define STATE_IN_DEBUG    6
@@ -65,6 +65,10 @@
 #define MAIN_MENU_ENGINE_LOGO  0x1
 #define MAIN_MENU_START        0x2
 #define MAIN_MENU_GAME         0x3
+
+//
+#define SEL_PLAYER_BEGIN       0x0
+#define SEL_PLAYER_START       0x1
 
 // InGame sub-menus/status
 #define IN_GAME_BEGIN          0x0
@@ -90,7 +94,7 @@ public:
    void setPlayerX(float x);
    void setPlayerY(float y);
    void setPlayerZ(float z);
-   void setPlayerAnim(unsigned char num);
+   void setPlayerAnim(unsigned char num, bool repeat = true);
    void setPlayerAnimSection(unsigned char sec);
    void setPlayerInMove(bool mov);
    void setPlayerInRotate(bool rot);
@@ -115,6 +119,7 @@ public:
    bool getPlayerInShoot();
    bool getPlayerIsAmount(int slotNum);
    bool getPlayerRunning();
+   bool getPlayerRepeatAnim();
    
    unsigned char  getPlayerAnim();
    unsigned char  getPlayerCam();
@@ -152,6 +157,9 @@ private:
 
    // Player EMD Animation
    EMD_SEC2_DATA_T anim;
+
+   // Repeat Animation ?
+   bool animRepeat;
 
    // Rotation position
    unsigned char inRotatePos;

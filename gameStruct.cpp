@@ -48,8 +48,9 @@ void playerClass::setPlayerAnimCount(int n) {
 	animCount = n;
 }
 
-void playerClass::setPlayerAnim(unsigned char num) {
+void playerClass::setPlayerAnim(unsigned char num, bool repeat) {
 	playerAnimNum = num;
+	animRepeat = repeat;
 }
 
 void playerClass::setPlayerAnimSection(unsigned char sec) {
@@ -97,6 +98,7 @@ bool playerClass::getPlayerInRotate() { return inRotate; }
 bool playerClass::getPlayerInShoot() { return inShoot; }
 bool playerClass::getPlayerRunning() { return running; }
 bool playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
+bool playerClass::getPlayerRepeatAnim() { return animRepeat; }
 
 int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
 int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }

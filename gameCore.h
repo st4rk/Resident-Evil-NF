@@ -23,7 +23,7 @@
 #include "gameSound.h"
 #include "gameMath.h"
 #include "gameEvent.h"
-
+#include "gameMisc.h"
 
 #include "depack_vlc.h"
 #include "depack_mdec.h"
@@ -46,11 +46,28 @@ public:
 	void renderLoadResource();
 	void renderMainMenu();
 	void renderGame();
+	void renderSelectChar();
+	void renderCamera();
 	void eventSystem_debugMenu();
 	void renderStateMachine();
+	void eventSystem_downKey(int key, int x, int y);
+	void eventSystem_upKey(int key, int x, int y);
+	void eventSystem_keyboardDown(unsigned char key, int x, int y);
+	void eventSystem_keyboardUp(unsigned char key, int x, int y);
 	static void renderSetObj(gameCore *obj);
 	static void renderCallback();
+	static void eventSystemUpCallBack(int key, int x, int y) ;
+	static void eventSystemDownCallBack(int key, int x, int y) ;
+	static void eventSystemKeyboardUpCallBack(unsigned char key, int x, int y);
+	static void eventSystemKeyboardDownCallBack(unsigned char key, int x, int y);
+
+
+	/*
+	 * animation timer
+	 */
+	unsigned int coreTmr_anim; 
 private:
+
 
 	GLuint fontTexture;
 	char GAME_NAME[20];
