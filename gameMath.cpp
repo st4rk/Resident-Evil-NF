@@ -10,13 +10,6 @@
 #include <cstdio>
 #include <cstdlib>
 
-typedef struct Point {
-	int X;
-	int Y;
-} Point;
-
-#define COL_TYPE_RECTANGLE 1
-#define COL_TYPE_TRIANGLE  3
 
 gameMath::gameMath() {
 
@@ -26,61 +19,15 @@ gameMath::~gameMath() {
 
 }
 
-bool IsPointInPolygon( Point p, Point* polygon ) {
-    int minX = polygon[ 0 ].X;
-    int maxX = polygon[ 0 ].X;
-    int minY = polygon[ 0 ].Y;
-    int maxY = polygon[ 0 ].Y;
-
-    for ( int i = 1 ; i < 4 ; i++ )
-    {
-        Point q = polygon[ i ];
-        minX = std::min( q.X, minX );
-        maxX = std::max( q.X, maxX );
-        minY = std::min( q.Y, minY );
-        maxY = std::max( q.Y, maxY );
-    }
-
-    if ( p.X < minX || p.X > maxX || p.Y < minY || p.Y > maxY )
-    {
-        return false;
-    }
-
-    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-    bool inside = false;
-    for ( int i = 0, j = 4- 1 ; i < 4 ; j = i++ )
-    {
-        if ( ( polygon[ i ].Y > p.Y ) != ( polygon[ j ].Y > p.Y ) &&
-             p.X < ( polygon[ j ].X - polygon[ i ].X ) * ( p.Y - polygon[ i ].Y ) / ( polygon[ j ].Y - polygon[ i ].Y ) + polygon[ i ].X )
-        {
-            inside = !inside;
-        }
-    }
-
-    return inside;
+/*
+ * Interpolation between two values
+ */
+int gameMath::interpolation(int n1, int n2, int p) {
+	return (n1 + (p * (n2-n1)));
 }
 
+
 bool gameMath::mapSwitch(signed int x, signed int z, signed int x1, signed int z1, signed int x2, signed int z2, signed int x3, signed int z3, signed int x4, signed int z4) {
-	Point P;
-	Point V[4];
-
-	P.X = x;
-	P.Y = z;
-
-	V[0].X = x1;
-	V[0].Y = z1;
-
-	V[1].X = x2;
-	V[1].Y = z2;
-
-
-	V[2].X = x3;
-	V[2].Y = z3;
-
-	V[3].X = x4;
-	V[3].Y = z4;
-
-	return (IsPointInPolygon(P, V));
 
 }
 
@@ -90,7 +37,7 @@ bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z
 
 	switch (colType) {
 
-		case COL_TYPE_RECTANGLE:
+		case COLLISION_TYPE_RECTANGLE:
 			if ((x1 <= x) && (x <= (x1+x2))) {
 				if ((z1 <= z) && (z <= (z1+z2))) {
 					return true;
@@ -98,7 +45,7 @@ bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z
 			}
 		break;
 
-		case COL_TYPE_TRIANGLE: {
+		case COLLISION_TYPE_ELLIPSE: {
 			double RayX = (x2 - x1) / 2;
 			double RayZ = (z2 - z1) / 2;
 			double cX = x1 + RayX;

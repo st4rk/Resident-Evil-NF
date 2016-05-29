@@ -13,7 +13,8 @@
 // que o personagem se encontra, como o número da animação, como também o modelo
 
 playerClass::playerClass() {
-	inMove = false;
+	inMove        = false;
+	playerAnimNum = 0;
 }
 
 playerClass::~playerClass() {

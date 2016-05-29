@@ -97,12 +97,15 @@ public:
 	/*
 	 * key Pressed
 	 */
-	 
+
 	bool keyList[0x10];
 private:
 
 	std::vector<Mix_Chunk*> mixList;
-
+	std::vector<EMD_SEC2_DATA_T> interAnimation;
+	unsigned int inInterpolation;
+	unsigned int oldAnim;
+	unsigned int oldSection;
 
 	
 	GLuint fontTexture;
