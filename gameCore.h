@@ -35,12 +35,26 @@
 #define MAX_MODEL  20
 
 
+enum EVENT_SYSTEM_KEY {
+	EVENT_SYSTEM_KEY_UP    = 0,
+	EVENT_SYSTEM_KEY_DOWN  = 1,
+	EVENT_SYSTEM_KEY_LEFT  = 2,
+	EVENT_SYSTEM_KEY_RIGHT = 3,
+	EVENT_SYSTEM_KEY_X     = 4,
+	EVENT_SYSTEM_KEY_Z     = 5,
+	EVENT_SYSTEM_KEY_C     = 6
+};
+
+
 class gameCore {
 
 public:
 	gameCore(int, char**);
 	~gameCore();
 
+	/*
+	 * OpenGL, GLUT and Texture Stuff
+	 */
 	void renderInit();
 	void renderText(float, float, float, int, std::string, float, float, float, float);
 	void renderLoadResource();
@@ -48,12 +62,26 @@ public:
 	void renderGame();
 	void renderSelectChar();
 	void renderCamera();
-	void eventSystem_debugMenu();
 	void renderStateMachine();
+
+	/*
+	 * Input
+	 */
+	void eventSystem_debugMenu();
 	void eventSystem_downKey(int key, int x, int y);
 	void eventSystem_upKey(int key, int x, int y);
 	void eventSystem_keyboardDown(unsigned char key, int x, int y);
 	void eventSystem_keyboardUp(unsigned char key, int x, int y);
+	void eventSystem_gameAction(unsigned int key, bool pressed);
+
+	/* 
+	 * Animation
+	 */
+	void engineAnimation();
+	
+	/*
+	 * System callback's and related
+	 */	
 	static void renderSetObj(gameCore *obj);
 	static void renderCallback();
 	static void eventSystemUpCallBack(int key, int x, int y) ;
@@ -66,9 +94,17 @@ public:
 	 * animation timer
 	 */
 	unsigned int coreTmr_anim; 
+	/*
+	 * key Pressed
+	 */
+	 
+	bool keyList[0x10];
 private:
 
+	std::vector<Mix_Chunk*> mixList;
 
+
+	
 	GLuint fontTexture;
 	char GAME_NAME[20];
 

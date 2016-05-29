@@ -8,12 +8,7 @@
 #include "gameSound.h"
 
 gameSound::gameSound() {
-	// Limpa o ponteiro do buffer da música
-	backgroundMusic = NULL;
-	// Efeito da Arma
-	gunEffect       = NULL;
-	// Efeito do passo
-	walkEffect      = NULL;
+
 }
 
 gameSound::~gameSound() {
@@ -21,12 +16,6 @@ gameSound::~gameSound() {
 	Mix_FreeMusic( backgroundMusic );
 	backgroundMusic = NULL;
 
-	Mix_FreeChunk( gunEffect );
-	Mix_FreeChunk( walkEffect );
-	Mix_FreeChunk( clickEffect );
-	clickEffect = NULL;
-	gunEffect   = NULL;
-	walkEffect  = NULL;
 	SDL_Quit();
 	Mix_Quit();
 }
@@ -44,11 +33,7 @@ bool gameSound::engineSoundInit() {
 		return false;
 	}
 
-	// Som do click
-	clickEffect     = Mix_LoadWAV("resource/sfx/click.wav");
-	// Som do click
-	titleEffect     = Mix_LoadWAV("resource/sfx/title3.wav");
-	nextEffect      = Mix_LoadWAV("resource/sfx/next.wav");
+
 	// É aqui onde fica armazenada a música de background
 	// Inicializa o ponteiro com NULL
 	backgroundMusic = NULL;
@@ -75,12 +60,8 @@ void gameSound::engineStopSound() {
 	Mix_HaltMusic();
 }
 
-void gameSound::enginePlayerSoundEffect() {
-	Mix_PlayChannel(-1, clickEffect, 0);
-}
-
-void gameSound::engineStopSoundEffect() {
-	Mix_PlayChannel(-1, titleEffect, 0);
+void gameSound::enginePlaySoundEffect(Mix_Chunk *node) {
+	Mix_PlayChannel(-1, node, 0);
 }
 
 

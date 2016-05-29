@@ -38,6 +38,8 @@ RDT playerRDT;
 PLD modelList_2[MAX_MODEL];
 EMD modelList[MAX_MODEL];
 
+
+
 // engineBackground é utilizado para carregar os backgrounds de cada .RDT
 // que o player se encontra.
 // engineFont é a fonte utilizad para desenhar textos, como so dedos
@@ -91,11 +93,19 @@ gameCore::gameCore(int argc, char** argv) {
     for (int i = 0; i < 0xFF; i++) 
         bg[i] = NULL;
 
+
+    for (int i = 0; i < 0x10; i++)
+        keyList[i] = false;
+
 }
 
 gameCore::~gameCore() {
     for (int i = 0; i < 0xFF; i++)
         SDL_FreeSurface(bg[i]);
+
+    for (unsigned int i = 0; i < mixList.size(); i++) {
+        Mix_FreeChunk(mixList[i]);
+    }
 }
 
 
@@ -202,7 +212,7 @@ void enemyAI_followPlayer() {
  * This function is the hardcoded game initialization
  */
 void gameCore::renderLoadResource() {
-
+    Mix_Chunk *node = NULL;
     // Clear Timer
     timer1_start = 0;
 
@@ -223,9 +233,22 @@ void gameCore::renderLoadResource() {
 
     // Alguns gráficos que são carregados na memória
     modelList[0].emdLoadFile("resource/models/Leon_sel_1.EMD");
-    modelList[1].emdLoadFile("modelos/EMD21.EMD");
-    modelList[2].emdLoadFile("modelos/EMD05.EMD");
+    /* Leon S. Kennedy RE2 */
+    modelList[1].emdLoadFile("resource/models/EM050.EMD");
+    /* Chris Redfield  RE2 */
+    modelList[2].emdLoadFile("resource/models/2.EMD");
     modelList[3].emdLoadFile("resource/models/PL0BCH.EMD");
+
+    /*
+     * Load all sound effects
+     */
+    // Som do click
+    node = Mix_LoadWAV("resource/sfx/click.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/title3.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/next.wav");
+    mixList.push_back(node);
 
     // Algumas imagens carregadas na memória
     engineThisGame.bmpLoaderFile  ("resource/menus/intro_2.bmp",0);
@@ -416,9 +439,6 @@ void gameCore::eventSystem_debugMenu() {
 void eventSystem_debugJumpToRun() {
 
 
-    /* Disable rotation and moviment */
-    mainPlayer.setPlayerInRotate(false);
-    mainPlayer.setPlayerInMove(false);
 
     /* Fade black effect 
     if (inFadeBlack) {
@@ -472,10 +492,6 @@ void eventSystem_debugJumpToRun() {
 /* Here all stuff related with new room/stage goes here */
 void eventSystem_newRoom() {
 
-    
-    /* Disable rotation and moviment */
-    mainPlayer.setPlayerInRotate(false);
-    mainPlayer.setPlayerInMove(false);
 
     /* Fade black effect 
     if (inFadeBlack) {
@@ -536,13 +552,13 @@ void gameCore::eventSystem_downKey(int key, int x, int y) {
             if (mainMenu == MAIN_MENU_START) {
                 switch (key) {
                     case GLUT_KEY_UP:
-                        soundEngine.enginePlayerSoundEffect();
+                        soundEngine.enginePlaySoundEffect(mixList[0]);
                         if (menuArrow == 1)
                             menuArrow = 0;
                     break;
 
                     case GLUT_KEY_DOWN:
-                        soundEngine.enginePlayerSoundEffect();
+                        soundEngine.enginePlaySoundEffect(mixList[0]);
                         if (menuArrow == 0)
                             menuArrow = 1;
                     break;
@@ -561,19 +577,23 @@ void gameCore::eventSystem_downKey(int key, int x, int y) {
 
         case STATE_SEL_CHAR: {
             case GLUT_KEY_LEFT:
-            if (!nextCharTransition) { 
-                soundEngine.enginePlayerSoundEffect();
-                menuArrow ^= 1;
-                nextCharTransition = true;
-            }
+                if (!charNextStep) {
+                    if (!nextCharTransition) { 
+                        soundEngine.enginePlaySoundEffect(mixList[2]);
+                        menuArrow ^= 1;
+                        nextCharTransition = true;
+                    }
+                }
             break;
 
             case GLUT_KEY_RIGHT:
-            if (!nextCharTransition) {
-                soundEngine.enginePlayerSoundEffect();
-                menuArrow ^= 1;
-                nextCharTransition = true;
-            }
+                if (!charNextStep) {
+                    if (!nextCharTransition) {
+                        soundEngine.enginePlaySoundEffect(mixList[2]);
+                        menuArrow ^= 1;
+                        nextCharTransition = true;
+                    }
+                }
             break;            
         }
         break;
@@ -598,67 +618,22 @@ void gameCore::eventSystem_downKey(int key, int x, int y) {
         break;
 
         case STATE_IN_GAME:
-            // Todo o movimento do personagem(principal) será controlado por aqui
-            // Andar, subir, pegar objetos etc.
             switch (key) {
                 case GLUT_KEY_UP:
-                if (mainPlayer.getPlayerRunning()) {
-                    mainPlayer.setPlayerInMove(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(1);
-                } else {
-                    mainPlayer.setPlayerInMove(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(0);           
-                }
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_UP, true);
                 break;
 
                 case GLUT_KEY_DOWN:
-
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_DOWN, true);                    
                 break;
 
                 case GLUT_KEY_LEFT:
-                if (mainPlayer.getPlayerInMove()) {
-                    if (mainPlayer.getPlayerRunning()) {
-                        mainPlayer.setPlayerInRotatePos(1);
-                        mainPlayer.setPlayerInRotate(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(1);
-                    } else {
-                        mainPlayer.setPlayerInRotatePos(1);
-                        mainPlayer.setPlayerInRotate(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(0);
-                    }
-                } else {
-                    mainPlayer.setPlayerInRotatePos(1);
-                    mainPlayer.setPlayerInRotate(true);
-                    mainPlayer.setPlayerAnimSection(1);
-                    mainPlayer.setPlayerAnim(0);
-                }
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_LEFT, true);
                 break;
 
                 case GLUT_KEY_RIGHT:
-                if (mainPlayer.getPlayerInMove()) {
-                    if (mainPlayer.getPlayerRunning()) {
-                        mainPlayer.setPlayerInRotatePos(0);
-                        mainPlayer.setPlayerInRotate(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(1);
-                    } else {
-                        mainPlayer.setPlayerInRotatePos(0);
-                        mainPlayer.setPlayerInRotate(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(0);
-                    }
-                } else {
-                        mainPlayer.setPlayerInRotatePos(0);
-                        mainPlayer.setPlayerInRotate(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(0);
-                }
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_RIGHT, true);
                 break;
-
             }
         break;
 
@@ -678,21 +653,19 @@ void gameCore::eventSystem_upKey(int key, int x, int y) {
         case STATE_IN_GAME:
            switch (key) {
                 case GLUT_KEY_UP:
-                    mainPlayer.setPlayerInMove(false);
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_UP, false);
                 break;
 
                 case GLUT_KEY_DOWN:
-
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_DOWN, false);                    
                 break;
 
                 case GLUT_KEY_LEFT:
-                    mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
-                    mainPlayer.setPlayerInRotate(false);
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_LEFT, false);
                 break;
 
                 case GLUT_KEY_RIGHT:
-                    mainPlayer.setPlayerInRotatePos(2); // 2 = DISABLE
-                    mainPlayer.setPlayerInRotate(false);
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_RIGHT, false);
                 break;
 
             }
@@ -716,7 +689,7 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
             if (mainMenu == MAIN_MENU_START) {
                 if (key == 'x') {
                     if (menuArrow == 0) {
-                        soundEngine.engineStopSoundEffect();
+                        soundEngine.enginePlaySoundEffect(mixList[1]);
                         mainMenu = MAIN_MENU_GAME;
                         miscStuff.setupFadeEffect(TYPE_FADE_SPECIAL, 0, 0, 0, 70);
                         glutIgnoreKeyRepeat(1);    
@@ -763,32 +736,19 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
         case STATE_IN_GAME:
             switch (key) {
                 case 'x':
-                    if (!mainPlayer.getPlayerRunning()) {
-                        mainPlayer.setPlayerRunning(true);
-                        mainPlayer.setPlayerAnimSection(1);
-                        mainPlayer.setPlayerAnim(1);
-                    }
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_X, true);
                 break;
 
                 case 'z':
-                for(unsigned int i = 0; i < playerRDT.door_set_len; i++) {
-                    if (mathEngine.collisionDetect(1, playerRDT.door_set_re1[i].x, playerRDT.door_set_re1[i].y, 
-                               playerRDT.door_set_re1[i].h, playerRDT.door_set_re1[i].w, 
-                               mainPlayer.getPlayerX(), mainPlayer.getPlayerZ())) {
-                        gameState = STATE_IN_ROOM;
-                        roomNum = i;
-
-                        break;
-                    }
-                }
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_Z, true);
                 break;
 
                 case 'c':
-                    wireFrameMode ^= 1;
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_C, true);
                 break;
 
                 case 'a':
-                    gameState = STATE_IN_DEBUG;
+
                 break;
 
                 default:
@@ -812,9 +772,7 @@ void gameCore::eventSystem_keyboardUp(unsigned char key, int x, int y) {
         break;
 
         case 'x':
-            if (mainPlayer.getPlayerRunning()) {
-                mainPlayer.setPlayerRunning(false);     
-            }
+
         break;
 
         default:
@@ -825,36 +783,154 @@ void gameCore::eventSystem_keyboardUp(unsigned char key, int x, int y) {
 
 /* 
  * engineAnimation
- * Handle all player animation and does the linear interpolartion necessary
+ * Here all game animation is handled
  */
-void engineAnimation() {
-    if (core->coreTmr_anim <= SDL_GetTicks()) {
-        core->coreTmr_anim = SDL_GetTicks() + 20;
-        if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
-            mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
-        else {
-            if (mainPlayer.getPlayerRepeatAnim())
-                mainPlayer.setPlayerAnimCount(0);
-        }
+void gameCore::engineAnimation() {
+    if (coreTmr_anim <= SDL_GetTicks()) {
+        coreTmr_anim = SDL_GetTicks() + 20;
 
-        mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec2Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+         switch (mainPlayer.getPlayerAnimSection()) {
+            case EMD_SECTION_2: {
+                if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                    mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                else {
+                    if (mainPlayer.getPlayerRepeatAnim()) {
+                        mainPlayer.setPlayerAnimCount(0);
+                    }
+                }
+
+                mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec2Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+            }
+            break;
+
+            case EMD_SECTION_4: {
+                if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                    mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                else {
+                    if (mainPlayer.getPlayerRepeatAnim()) {
+                        mainPlayer.setPlayerAnimCount(0);
+                    }
+                }
+
+                mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+            }
+            break;
+         }
+
+
     }
 }
 
 void MainLoop() {
-    float x = 0, z = 0;
     bool canMove = true;
 
     if (tmr60FPS < SDL_GetTicks()) {
         tmr60FPS = (SDL_GetTicks() + (1000/60));
 
+        switch (gameState) {
+            case STATE_SEL_CHAR:
+                core->engineAnimation();
+            break;
+
+            case STATE_IN_GAME: {
+                core->engineAnimation();
+                /* Enemy AI Stuff */
+                enemyAI_followPlayer();
+
+
+                switch (mainPlayer.getPlayerInRotation()) {
+                    case PLAYER_ACTION_R_LEFT:
+                        mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() - 2), 360.0));
+                    break;
+
+                    case PLAYER_ACTION_R_RIGHT:
+                        mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() + 2), 360.0));
+                    break;
+
+                    case PLAYER_ACTION_R_NONE:
+
+                    break;
+
+                }
+
+                if ((core->keyList[0] == true)) {
+                    if (mainPlayer.getPlayerAnim() == STAND_SEC4_ANIM_WALK) {
+                        mainPlayer.setPlayerX(mainPlayer.getPlayerX() + cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                        mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() - sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                    }
+                } else if ((core->keyList[1] == true)) {
+                    if (mainPlayer.getPlayerAnim() == STAND_SEC2_ANIM_BACKWARD) {
+                        mainPlayer.setPlayerX(mainPlayer.getPlayerX() - cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                        mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() + sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                    }
+                }
+
+                    /* Collision Detection RE 1 
+                    for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
+                            if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
+                                                     playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ() - z) == true) {
+                                canMove = false;
+
+                                printf("Type: %d\n", playerRDT.rdtRE1ColissionArray[i].type);
+                                printf("X1: %d\n",playerRDT.rdtRE1ColissionArray[i].x1);
+                                printf("Z1: %d\n",playerRDT.rdtRE1ColissionArray[i].z1);
+                                printf("X2: %d\n",playerRDT.rdtRE1ColissionArray[i].x2);
+                                printf("Z2: %d\n",playerRDT.rdtRE1ColissionArray[i].z2);
+                        }
+                    } 
+                    */
+
+                    /* Colision Detection RDT 1.5 and 2.0
+                    for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
+                        if (mathEngine.collisionDetect(0, playerRDT.rdtColissionArray[i].X, playerRDT.rdtColissionArray[i].Z, 
+                                                 playerRDT.rdtColissionArray[i].W, playerRDT.rdtColissionArray[i].D, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
+                            canMove = false;
+                        } 
+                    }
+                    */
+                    
+                    /* Camera Switch RDT 1.5 and 2.0
+                    for (unsigned int i = 0; i < playerRDT.rdtCameraSwitch.size(); i++) {
+                        if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
+                                                 playerRDT.rdtCameraSwitch[i].x3, playerRDT.rdtCameraSwitch[i].z3, playerRDT.rdtCameraSwitch[i].x4, playerRDT.rdtCameraSwitch[i].z4)) {
+                            
+                            if (playerRDT.rdtCameraSwitch[i].cam1 != 0) {//|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
+                                   backgroundNow = playerRDT.rdtCameraSwitch[i].cam1;// background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
+                                   mainPlayer.setPlayerCam(backgroundNow);
+                            }
+                        
+                        } 
+                    }
+                    */
+
+                    /* Camera Switch Zone/Camera Position RE 1.0 
+                    for (unsigned int i = 0; i < playerRDT.rdtRE1CameraSwitch.size(); i++) {
+                        if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
+                                                 playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
+                            
+                                if (playerRDT.rdtRE1CameraSwitch[i].to != 9) {
+                                     mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].to);
+                                }
+
+                        } 
+                    }                    
+                    */
+
+
+            }
+            break;
+
+            default:
+
+            break;
+        }
 
         if (gameState  == STATE_SEL_CHAR) {
 
             /*
              * Player Animation
              */
-            engineAnimation();
+            core->engineAnimation();
         }
 
         if ((gameState == STATE_IN_GAME) || (gameState == STATE_IN_ROOM)) {
@@ -862,88 +938,6 @@ void MainLoop() {
             if (gameState == STATE_IN_ROOM) 
                 eventSystem_newRoom();
 
-
-            /* Enemy AI Stuff */
-            enemyAI_followPlayer();
-
-
-            if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 1)) {
-                mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() - 5), 360.0));
-            }
-
-            if (mainPlayer.getPlayerInRotate() && (mainPlayer.getPlayerInRotatePos() == 0)) {
-                mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() + 5), 360.0));
-            }
-
-            if (((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == false)) 
-                || ((mainPlayer.getPlayerInMove() == true) && (mainPlayer.getPlayerInRotate() == true))) {
-                if (mainPlayer.getPlayerRunning()) {
-                    x = cos((mainPlayer.getPlayerAngle() * PI/180)) * 180.0;
-                    z = sin((mainPlayer.getPlayerAngle() * PI/180)) * 180.0;
-                } else {
-                    x = cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0;
-                    z = sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0;
-                }
-
-                /* Collision Detection RE 1 
-                for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
-                        if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
-                                                 playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ() - z) == true) {
-                            canMove = false;
-
-                            printf("Type: %d\n", playerRDT.rdtRE1ColissionArray[i].type);
-                            printf("X1: %d\n",playerRDT.rdtRE1ColissionArray[i].x1);
-                            printf("Z1: %d\n",playerRDT.rdtRE1ColissionArray[i].z1);
-                            printf("X2: %d\n",playerRDT.rdtRE1ColissionArray[i].x2);
-                            printf("Z2: %d\n",playerRDT.rdtRE1ColissionArray[i].z2);
-                    }
-                } 
-                */
-
-                /* Colision Detection RDT 1.5 and 2.0
-                for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
-                    if (mathEngine.collisionDetect(0, playerRDT.rdtColissionArray[i].X, playerRDT.rdtColissionArray[i].Z, 
-                                             playerRDT.rdtColissionArray[i].W, playerRDT.rdtColissionArray[i].D, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
-                        canMove = false;
-                    } 
-                }
-                */
-                
-                /* Camera Switch RDT 1.5 and 2.0
-                for (unsigned int i = 0; i < playerRDT.rdtCameraSwitch.size(); i++) {
-                    if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
-                                             playerRDT.rdtCameraSwitch[i].x3, playerRDT.rdtCameraSwitch[i].z3, playerRDT.rdtCameraSwitch[i].x4, playerRDT.rdtCameraSwitch[i].z4)) {
-                        
-                        if (playerRDT.rdtCameraSwitch[i].cam1 != 0) {//|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
-                               backgroundNow = playerRDT.rdtCameraSwitch[i].cam1;// background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
-                               mainPlayer.setPlayerCam(backgroundNow);
-                        }
-                    
-                    } 
-                }
-                */
-
-                /* Camera Switch Zone/Camera Position RE 1.0 
-                for (unsigned int i = 0; i < playerRDT.rdtRE1CameraSwitch.size(); i++) {
-                    if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
-                                             playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
-                        
-                            if (playerRDT.rdtRE1CameraSwitch[i].to != 9) {
-                                 mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].to);
-                            }
-
-                    } 
-                }                    
-                */
-
-
-                if (canMove == true) {
-
-                    mainPlayer.setPlayerX(mainPlayer.getPlayerX() + x);
-                    mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() - z);
-                }
-
-            }
         }
         glutPostRedisplay();   
     }
@@ -1009,8 +1003,88 @@ void gameCore::renderCamera() {
     }
 }
 
+/*
+ * eventSystem -> gameAction
+ * this function is used to handle the keys pressed that change the player animation as well as 
+ * the game actions
+ */
 
+void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
+    switch (key) {
 
+        case EVENT_SYSTEM_KEY_UP: {
+            if (pressed) {
+                keyList[0] = true;
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+            } else {
+                keyList[0] = false;
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+            }
+        }
+        break;
+
+        case EVENT_SYSTEM_KEY_DOWN:
+            if (pressed) {
+                keyList[1] = true;
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_2);
+                mainPlayer.setPlayerAnim(STAND_SEC2_ANIM_BACKWARD);
+            } else {
+                keyList[1] = false;
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+            }
+        break;
+
+        case EVENT_SYSTEM_KEY_LEFT:
+            if (pressed) {
+                if ((keyList[0] == false) && (keyList[1] == false)) {
+                    mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_LEFT);
+                } else {
+                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_LEFT);
+                }
+            } else {
+                if ((keyList[0] == false) && (keyList[1] == false)) 
+                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                
+                mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_NONE);
+            }
+        break;
+
+        case EVENT_SYSTEM_KEY_RIGHT:
+            if (pressed) {
+                if ((keyList[0] == false) && (keyList[1] == false)) {
+                    mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_RIGHT);
+                } else {
+                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_RIGHT);
+                }
+            } else {
+                if ((keyList[0] == false) && (keyList[1] == false)) 
+                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                
+                mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_NONE);
+            }
+        break;
+
+        case EVENT_SYSTEM_KEY_X:
+
+        break;
+
+        case EVENT_SYSTEM_KEY_Z:
+
+        break;
+
+        case EVENT_SYSTEM_KEY_C:
+
+        break;
+
+    }
+}
 
 /* I had some problems with collision, so I decide to draw the collisions wire-frame
 it will help me to figure if the collions boundaries are right or wrong */
@@ -1251,9 +1325,11 @@ void drawMapBackground() {
     
 }
 
+/*
+ * renderMainMenu
+ * This function is used to render all image and text stuff used on intro
+ */
 void gameCore::renderMainMenu() {
-
-
 
        switch (mainMenu) {
             case MAIN_MENU_ENGINE_LOGO:
@@ -1514,8 +1590,15 @@ void gameCore::renderSelectChar() {
                 }
 
                 miscStuff.renderSquareWithTexture(&engineCharMenu, true);        
-            } else 
-                miscStuff.renderSquareWithColor(0, 0, 0, 1);
+            } else {
+                gameState = STATE_IN_GAME;
+                inGame    = IN_GAME_BEGIN;
+                mainPlayer.setPlayerEMD(menuArrow + 1);
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+                soundEngine.engineStopSound();
+                miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
+            }
         }
         break;
 
@@ -1529,34 +1612,68 @@ void gameCore::renderSelectChar() {
 // All in game stuff related with rendering is done here
 void gameCore::renderGame() {
 
+    switch (inGame) {
+        case IN_GAME_BEGIN:
+            if(!miscStuff.isInFade()) {
+                switch (charMusicNum) {
+                    case 0:
+                        soundEngine.engineLoadSound("resource/ost/0.mp3");
+                    break;
 
-    /* .BSS Background stuff */
-    //drawMapBackground();
+                    case 1:
+                        soundEngine.engineLoadSound("resource/ost/1.mp3");
+                    break;
 
-    /* All model rendering is done by renderEMD Function */
-    /* Player Rendering */
-    renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
-              mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
-    /* Enemy Rendering */
-    renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
-              gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
+                    case 2:
+
+                    break;
+
+                    case 3:
+
+                    break;
+
+                    default:
+
+                    break;
+                }
+                soundEngine.enginePlaySound(1);
+                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                inGame = IN_GAME_NORMAL;
+            }
+        break;
+
+        case IN_GAME_NORMAL:
+            /* .BSS Background stuff */
+            //drawMapBackground();
+
+            /* All model rendering is done by renderEMD Function */
+            /* Player Rendering */
+            renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
+                      mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
+            /* Enemy Rendering */
+            renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
+                      gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
 
 
-    if (wireFrameMode)
-        renderCollision();
+            if (wireFrameMode)
+                renderCollision();
 
-    char coord[0xFF];
+            char coord[0xFF];
 
-    sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ(), (int)mainPlayer.getPlayerAngle());
+            sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ(), (int)mainPlayer.getPlayerAngle());
 
-    renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
+            renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
-    if (gameState == STATE_IN_DEBUG) {
-        if (jumpToRun) 
-            eventSystem_debugJumpToRun();
-        else 
-            eventSystem_debugMenu();
+            if (gameState == STATE_IN_DEBUG) {
+                if (jumpToRun) 
+                    eventSystem_debugJumpToRun();
+                else 
+                    eventSystem_debugMenu();
+            }
+        break;
     }
+
 }
 
 /*

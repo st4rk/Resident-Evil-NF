@@ -57,10 +57,6 @@ void playerClass::setPlayerAnimSection(unsigned char sec) {
 	animSection = sec;
 }
 
-void playerClass::setPlayerInRotatePos(unsigned char pos) {
-	inRotatePos = pos;
-}
-
 void playerClass::setPlayerRDT(unsigned int RDT) {
 	rdtNum = RDT;
 }
@@ -73,30 +69,23 @@ void  playerClass::setPlayerItemAmount(int slotNum, int amount) {
 
 }
 
-
-void playerClass::setPlayerRunning(bool value) { running = value; }
-void playerClass::setPlayerInMove(bool mov) { inMove = mov; }
-void playerClass::setPlayerInRotate(bool rot) { inRotate = rot; }
-void playerClass::setPlayerInShoot(bool shoot) { inShoot = shoot; }
 void playerClass::setPlayerEMDAnim(EMD_SEC2_DATA_T n) { anim = n; }
+void playerClass::setPlayerInRotation(unsigned char inRotation) { this->inRotation = inRotation; }
 
 float playerClass::getPlayerX() { return playerX; }
 float playerClass::getPlayerY() { return playerY; }
 float playerClass::getPlayerZ() { return playerZ; }
 float playerClass::getPlayerAngle() { return p; }
 
-unsigned char playerClass::getPlayerCam() { return camNum; }
-unsigned char playerClass::getPlayerAnim() { return playerAnimNum; }
-unsigned char playerClass::getPlayerAnimSection() { return animSection; }
-unsigned char playerClass::getPlayerInRotatePos() { return inRotatePos; }
+unsigned char  playerClass::getPlayerCam() { return camNum; }
+unsigned char  playerClass::getPlayerAnim() { return playerAnimNum; }
+unsigned char  playerClass::getPlayerAnimSection() { return animSection; }
+unsigned char  playerClass::getPlayerInRotation() { return inRotation; }
+
 unsigned short playerClass::getPlayerEMD() { return playerEMD; }
-unsigned int playerClass::getPlayerRDT() { return rdtNum; }
+unsigned int   playerClass::getPlayerRDT() { return rdtNum; }
 unsigned int   playerClass::getPlayerAnimCount() { return animCount; }
 
-bool playerClass::getPlayerInMove() { return inMove; }
-bool playerClass::getPlayerInRotate() { return inRotate; }
-bool playerClass::getPlayerInShoot() { return inShoot; }
-bool playerClass::getPlayerRunning() { return running; }
 bool playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
 bool playerClass::getPlayerRepeatAnim() { return animRepeat; }
 

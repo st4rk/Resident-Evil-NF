@@ -8,46 +8,143 @@
 #ifndef GAME_STRUCT_H
 #define GAME_STRUCT_H
 
-/* Leon 1.5 Special Custom .EMD Animações
-** emdSec2Data
-** 1º Andando para trás
-** 2º Andando meio lento para trás
-** 3º Morte
-** 4º Ataque, provavelmente ataque de chefe ou inimigos grandes
-** 5º Ataque(de costas), provavelmente '' '' '''
-** 6º Ataque(de frente, certeira), ''
-** 7º Pegar item no chão
-** 8º Início do empurrar
-** 9º Empurrando objeto
-** 10º Andando cambaliando
-** emdSec4Data
-** 1º Caminhando
-** 2º Correndo
-** 3º Parado com movimento corporal
-** 4º Machucado andando
-** 5º Machucado correndo
-** 6º Parado com mão na sintura
-** 7º Cambaliando andando meio lento
-** 8º cambaliando correndo(EHUEHUHEUE)
-** 9º Cambaliado parado
-** 10º Preparando para atirar(pra frente)
-** 11º Atirando pra frente
-*/
-
-// Necessário para o calculo do SEN/COS para sabermos em que direção o player deve andar
-// O Personagem no Resident Evil move em 360º quando você pressiona o botão de esquerda e 
-// direita, enquanto para cima ele apenas vai para a posição que ele parou entre 0 a 360
-// Como estamos trabalhando em 3 dimensões, apenas utilizamos o X/Z para movimento, onde o
-// Y vai ser para mover o personagem para cima ou para baixo, como queremos apenas os valores
-// a serem adiciona a X e Y, a gente utiliza COS/SEN, dependendo do quadrante que ele se encontra
-// Saberemos quanto diminuir ou somar.
-
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 #include "EMD.h"
+
+/*
+ * EMD Animation Section
+ */
+
+enum EMD_SECTION_LIST {
+   EMD_SECTION_2 = 0,
+   EMD_SECTION_4 = 1
+};
+
+/*
+ * Player EMD Animation
+ * emdSec2 Standard Data
+ * emdSec4 Standard Data
+ */
+enum STANDARD_SEC2_ANIMATION {
+   STAND_SEC2_ANIM_BACKWARD  = 0,
+   STAND_SEC2_ANIM_SBACKWARD = 1,
+   STAND_SEC2_ANIM_DEATH     = 2,
+   STAND_SEC2_ANIM_HIT       = 3,
+   STAND_SEC2_ANIM_BACK_HIT  = 4,
+   STAND_SEC2_ANIM_HIT_2     = 5,
+   STAND_SEC2_ANIM_GET_ITEM  = 6,
+   STAND_SEC2_ANIM_PUSH      = 7,
+   STAND_SEC2_ANIM_PUSHING   = 8,
+   STAND_SEC2_ANIM_INJU_WALK = 9
+};
+
+enum STANDARD_SEC4_ANIMATION {
+   STAND_SEC4_ANIM_WALK      = 0,
+   STAND_SEC4_ANIM_RUNNING   = 1,
+   STAND_SEC4_ANIM_IDLE      = 2,
+   STAND_SEC4_ANIM_INJU_WALK = 3,
+   STAND_SEC4_ANIM_INJU_RUNN = 4,
+   STAND_SEC4_ANIM_INJU_IDLE = 5,
+   STAND_SEC4_ANIM_TINJ_WALK = 6,
+   STAND_SEC4_ANIM_TINJ_RUNN = 7,
+   STAND_SEC4_ANIM_TINJ_IDLE = 8,
+   STAND_SEC4_ANIM_S_SHOOT   = 9,
+   STAND_SEC4_ANIM_SHOOTING  = 10,
+   STAND_SEC4_ANIM_AIM       = 11,
+   STAND_SEC4_ANIM_USHOOTING = 12,
+   STAND_SEC4_ANIM_UAIM      = 13,
+   STAND_SEC4_ANIM_DSHOOTING = 14,
+   STAND_SEC4_ANIM_DAIM      = 15,
+   STAND_SEC4_ANIM_AMMO      = 16
+};
+
+/*
+ * Special EMD Animation
+ * emdSec2Data
+ * emdSec4Data
+ */
+
+enum SPECIAL_SEC2_ANIMATION {
+   SPECIAL_SEC2_ANIM_START    = 0,
+   SPECIAL_SEC2_ANIM_POSE     = 1,
+   SPECIAL_SEC2_ANIM_CHOICE   = 3
+};
+
+enum SPECIAL_SEC4_ANIMATION {
+   SPECIAL_SEC4_ANIM_BHIT     = 0,
+   SPECIAL_SEC4_ANIM_UP_SHAKE = 1,
+   SPECIAL_SEC4_ANIM_BHIT_2   = 2,
+   SPECIAL_SEC4_ANIM_BHIT_3   = 3,
+   SPECIAL_SEC4_ANIM_EXAUSTED = 4,
+   SPECIAL_SEC4_ANIM_FALL     = 5,
+   SPECIAL_SEC4_ANIM_RISE     = 6,
+   SPECIAL_SEC4_ANIM_DOWNFALL = 7
+};
+
+/* 
+ * Resident Evil 2 - Zombie EMD Standard
+ * emdSec2Data
+ * emdSec4Data
+ */
+
+enum ZOMBIE_SEC2_ANIMATION {
+   ZOMBIE_SEC2_ANIM_WALK     = 0,
+   ZOMBIE_SEC2_ANIM_RUN      = 1,
+   ZOMBIE_SEC2_ANIM_SWALK    = 2,
+   ZOMBIE_SEC2_ANIM_SSWALK   = 3,
+   ZOMBIE_SEC2_ANIM_AWALK    = 4,
+   ZOMBIE_SEC2_ANIM_ARUN     = 5,
+   ZOMBIE_SEC2_ANIM_ASWALK   = 6,
+   ZOMBIE_SEC2_ANIM_ARUN2    = 7
+};
+
+enum ZOMBIE_SEC4_ANIMATION {
+   ZOMBIE_SEC4_ANIM_IDLE     = 0,
+   ZOMBIE_SEC4_ANIM_DEATH_1  = 1,
+   ZOMBIE_SEC4_ANIM_DEATH_2  = 2,
+   ZOMBIE_SEC4_ANIM_PUSH_1   = 3,
+   ZOMBIE_SEC4_ANIM_PUSH_2   = 4,
+   ZOMBIE_SEC4_ANIM_DRAGGING = 5,
+   ZOMBIE_SEC4_ANIM_HIT_DRAG = 6,
+   ZOMBIE_SEC4_ANIM_D_DEATH  = 7,
+   ZOMBIE_SEC4_ANIM_RISE_1   = 8,
+   ZOMBIE_SEC4_ANIM_RISE_2   = 9,
+   ZOMBIE_SEC4_ANIM_FALL_1   = 10,
+   ZOMBIE_SEC4_ANIM_W_HIT    = 11,
+   ZOMBIE_SEC4_ANIM_W_ATTACK = 12,
+   ZOMBIE_SEC4_ANIM_W_PUSH   = 13,
+   ZOMBIE_SEC4_ANIM_D_GET    = 14,
+   ZOMBIE_SEC4_ANIM_D_ATTACK = 15,
+   ZOMBIE_SEC4_ANIM_D_PUSH   = 16,
+   ZOMBIE_SEC4_ANIM_IDLE_HIT = 17,
+   ZOMBIE_SEC4_ANIM_EATING_1 = 18,
+   ZOMBIE_SEC4_ANIM_EATING_2 = 19,
+   ZOMBIE_SEC4_ANIM_E_HIT    = 20,
+   ZOMBIE_SEC4_ANIM_E_RISE   = 21,
+   ZOMBIE_SEC4_ANIM_G_HIT_1  = 22,
+   ZOMBIE_SEC4_ANIM_G_HIT_2  = 23,
+   ZOMBIE_SEC4_ANIM_F_EAT    = 24,
+   ZOMBIE_SEC4_ANIM_S_WARLK  = 25,
+   ZOMBIE_SEC4_ANIM_S_NOT    = 26,
+   ZOMBIE_SEC4_ANIM_S_STOP   = 27,
+   ZOMBIE_SEC4_ANIM_A_HIT_1  = 28,
+   ZOMBIE_SEC4_ANIM_A_HIT_2  = 29,
+   ZOMBIE_SEC4_ANIM_A_HIT_3  = 30
+};
+
+/*
+ * Player Stuff
+ */ 
+
+enum PLAYER_ACTION {
+   PLAYER_ACTION_R_NONE  = 0,
+   PLAYER_ACTION_R_LEFT  = 1,
+   PLAYER_ACTION_R_RIGHT = 2
+};
 
 // Math 
 #define PI 3.14159265
@@ -96,35 +193,27 @@ public:
    void setPlayerZ(float z);
    void setPlayerAnim(unsigned char num, bool repeat = true);
    void setPlayerAnimSection(unsigned char sec);
-   void setPlayerInMove(bool mov);
-   void setPlayerInRotate(bool rot);
-   void setPlayerInRotatePos(unsigned char pos);
-   void setPlayerInShoot(bool shoot);
    void setPlayerRDT(unsigned int RDT);
    void setPlayerCam(unsigned char num);
    void setPlayerItem(int slotNum, int id);
    void setPlayerItemAmount(int slotNum, int amount);
-   void setPlayerRunning(bool);
    void setPlayerAngle(float n);
    void setPlayerAnimCount(int n);
    void setPlayerEMDAnim(EMD_SEC2_DATA_T n);
+   void setPlayerInRotation(unsigned char inRotation);
 
    float getPlayerX();
    float getPlayerY();
    float getPlayerZ();
    float getPlayerAngle();
 	
-   bool getPlayerInMove();
-   bool getPlayerInRotate();
-   bool getPlayerInShoot();
    bool getPlayerIsAmount(int slotNum);
-   bool getPlayerRunning();
    bool getPlayerRepeatAnim();
    
    unsigned char  getPlayerAnim();
    unsigned char  getPlayerCam();
    unsigned char  getPlayerAnimSection();
-   unsigned char  getPlayerInRotatePos();
+   unsigned char  getPlayerInRotation();
    unsigned short getPlayerEMD();
    unsigned int   getPlayerRDT();
    unsigned int   getPlayerAnimCount();
@@ -190,6 +279,11 @@ private:
 
    // Player angle
    float p;
+
+   /*
+    * verify if player is in rotation
+    */
+   unsigned char inRotation;
 
 };
 

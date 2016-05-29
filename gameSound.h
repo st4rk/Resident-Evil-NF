@@ -23,18 +23,13 @@ public:
 	void engineLoadSound(std::string soundName);
 	void enginePlaySound(int rept);
 	void engineStopSound();
-	void enginePlayerSoundEffect();
-	void engineStopSoundEffect();
+	void enginePlaySoundEffect(Mix_Chunk *node);
 	int  enginePlayingMusic();
 private:
 	Mix_Music *backgroundMusic;
-
-	Mix_Chunk *gunEffect;
-	Mix_Chunk *walkEffect;
-	Mix_Chunk *clickEffect;
-	Mix_Chunk *titleEffect;
-	Mix_Chunk *nextEffect;
 	
 };
 
 #endif
+
+
