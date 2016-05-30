@@ -22,13 +22,13 @@ gameMath::~gameMath() {
 /*
  * Interpolation between two values
  */
-int gameMath::interpolation(int n1, int n2, int p) {
-	return (n1 + (p * (n2-n1)));
+float gameMath::interpolation(float n1, float n2, float p) {
+	return (n1 + p*(n2-n1));
 }
 
 
 bool gameMath::mapSwitch(signed int x, signed int z, signed int x1, signed int z1, signed int x2, signed int z2, signed int x3, signed int z3, signed int x4, signed int z4) {
-
+	return 0;
 }
 
 bool gameMath::collisionDetect(unsigned int colType, signed int x1, signed int z1, 

@@ -196,13 +196,13 @@ void enemyAI_followPlayer() {
 
 
     /* AI Animation */
-    if (gameEnemy.getAnimCount() < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animCount-1))
+    if (gameEnemy.getAnimCount() < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[0].animCount-1))
         gameEnemy.setAnimCount(gameEnemy.getAnimCount() + 1);
     else {
         gameEnemy.setAnimCount(0);
     }
 
-    gameEnemy.setAnim(modelList[gameEnemy.getEMD()].emdSec2Data[gameEnemy.getAnimCount()+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[1].animStart]);
+    gameEnemy.setAnim(modelList[gameEnemy.getEMD()].emdSec2Data[gameEnemy.getAnimCount()+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[0].animStart]);
     
 
     /* Angle between two vect, to know the player position */
@@ -241,6 +241,7 @@ void gameCore::renderLoadResource() {
     /* Chris Redfield  RE2 */
     modelList[2].emdLoadFile("resource/models/2.EMD");
     modelList[3].emdLoadFile("resource/models/PL0BCH.EMD");
+    modelList[4].emdLoadFile("resource/models/EMD05.EMD");
 
     /*
      * Load all sound effects
@@ -295,7 +296,7 @@ void gameCore::renderLoadResource() {
     gameEnemy.setX(0);
     gameEnemy.setZ(-10000.0f);
     gameEnemy.setY(0);
-    gameEnemy.setEMD(2);
+    gameEnemy.setEMD(4);
     gameEnemy.setAngle(0);
 
 
@@ -712,8 +713,8 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
             if (key == 'x') {
                 if (!charNextStep) {
                     miscStuff.setupFadeEffect(TYPE_FADE_SPECIAL, 0, 0, 0, 70);
-                    mainPlayer.setPlayerAnimCount(0);
-                    mainPlayer.setPlayerAnim(2, false);
+                    mainPlayer.setPlayerAnimSection(EMD_SECTION_2);
+                    mainPlayer.setPlayerAnim(SPECIAL_SEC2_ANIM_CHOICE, false);
                     selectState = SEL_PLAYER_START;
                     charNextStep = true;
                 }
@@ -790,7 +791,7 @@ void gameCore::eventSystem_keyboardUp(unsigned char key, int x, int y) {
  */
 void gameCore::engineAnimation() {
     if (coreTmr_anim <= SDL_GetTicks()) {
-        coreTmr_anim = SDL_GetTicks() + 20;
+        coreTmr_anim = SDL_GetTicks() + 24;
 
         /*
          * Verify if is the same animation, if not, should interpolate the animation
@@ -798,9 +799,14 @@ void gameCore::engineAnimation() {
 
         if ((inInterpolation == 0) && ((oldAnim != mainPlayer.getPlayerAnim()) 
                           || (oldSection != mainPlayer.getPlayerAnimSection()))) {
-             inInterpolation = 1;
-        }
 
+            if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
+                if ((mainPlayer.getPlayerAnim() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getPlayerAnimSection() == EMD_SECTION_2)) {
+                   // inInterpolation = 1;
+                }
+            }
+
+        }
 
         switch (inInterpolation) {
             /*
@@ -845,13 +851,15 @@ void gameCore::engineAnimation() {
                 switch (oldSection) {
                     case EMD_SECTION_2: {
 
-                        EMD_SEC2_DATA_T  node;
-                        EMD_SEC2_DATA_T *node_2;
-                        EMD_SEC2_DATA_T *node_3;
-                        unsigned int     i_2    = 0;
-                        float p = (1/((modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1) - mainPlayer.getPlayerAnimCount()));
+                        EMD_SEC2_DATA_T  node;   // new animation (interpolated)
+                        EMD_SEC2_DATA_T *node_2; // old animation
+                        EMD_SEC2_DATA_T *node_3; // new animation
+                        unsigned int     i_2      = 0;
 
-                        for (unsigned int i = mainPlayer.getPlayerAnimCount(); i < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p+=p) {
+                        float p_factor = (1.0f / ((modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1) - mainPlayer.getPlayerAnimCount()));
+                        float p = 0.0f;
+
+                        for (unsigned int i = mainPlayer.getPlayerAnimCount(); i < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p += p_factor) {
                             node_2 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animStart];
                             
                             switch (mainPlayer.getPlayerAnimSection()) {
@@ -859,7 +867,7 @@ void gameCore::engineAnimation() {
                                     node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart];
 
                                     for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
-                                       
+
                                        node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
                                        node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
                                        node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
@@ -898,13 +906,15 @@ void gameCore::engineAnimation() {
                     break;
 
                     case EMD_SECTION_4: {
-                        EMD_SEC2_DATA_T  node;
-                        EMD_SEC2_DATA_T *node_2;
-                        EMD_SEC2_DATA_T *node_3;
+                        EMD_SEC2_DATA_T  node;   // new animation (interpolated)
+                        EMD_SEC2_DATA_T *node_2; // old animation
+                        EMD_SEC2_DATA_T *node_3; // new animation
                         unsigned int     i_2    = 0;
-                        float p = (1/((modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[oldAnim].animCount-1) - mainPlayer.getPlayerAnimCount()));
+                        float p_factor = (1.0f / 3);
+                        float p = 0.0f;
 
-                        for (unsigned int i = mainPlayer.getPlayerAnimCount(); i < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[oldAnim].animCount-1); i++, p+=p) {
+                        printf("p_factor: %.2f\n", p_factor);
+                        for (unsigned int i = 0; i <= 3; i++, p += p_factor) {
                             node_2 = &modelList[mainPlayer.getPlayerEMD()].emdSec4Data[i+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[oldAnim].animStart];
                             
                             switch (mainPlayer.getPlayerAnimSection()) {
@@ -912,9 +922,12 @@ void gameCore::engineAnimation() {
                                     node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart];
 
                                     for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
+                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, 0.01f);
+                                       printf("node.x: %.2f node_2.x %.2f node_3.x %.2f p: %.2f\n", node.vector[t].x, node_2->vector[t].x, node_3->vector[t].x, p);
+                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, 0.01f);
+                                       printf("node.y: %.2f node_2.y %.2f node_3.y %.2f p: %.2f\n", node.vector[t].y, node_2->vector[t].y, node_3->vector[t].y, p);
+                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, 0.01f);
+                                       printf("node.z: %.2f node_2.z %.2f node_3.z %.2f p: %.2f\n", node.vector[t].z, node_2->vector[t].z, node_3->vector[t].z, p);    
                                     }
 
                                     if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
@@ -930,10 +943,10 @@ void gameCore::engineAnimation() {
                                     node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec4Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart];
             
                                     for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
-                                    }
+                                       node.vector[t].x = mathEngine.interpolation(node_3->vector[t].x, node_2->vector[t].x, p);
+                                       node.vector[t].y = mathEngine.interpolation(node_3->vector[t].y, node_2->vector[t].y, p);
+                                       node.vector[t].z = mathEngine.interpolation(node_3->vector[t].z, node_2->vector[t].z, p);
+                                        }
 
                                     if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
                                         i_2++;
@@ -957,9 +970,10 @@ void gameCore::engineAnimation() {
              * play the interpolated animation
              */
             case 2:
-                if (mainPlayer.getPlayerAnimCount() < interAnimation.size())
+            if (mainPlayer.getPlayerAnimCount() < interAnimation.size())
                     mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
                 else {
+      
                     oldAnim         = mainPlayer.getPlayerAnim();
                     oldSection      = mainPlayer.getPlayerAnimSection();
                     inInterpolation = 0;
@@ -976,9 +990,10 @@ void gameCore::engineAnimation() {
                             }
                         break;
                     }
-                }
+               
+                }     
 
-                mainPlayer.setPlayerEMDAnim(interAnimation[mainPlayer.getPlayerAnimCount()]);
+                mainPlayer.setPlayerEMDAnim(interAnimation[mainPlayer.getPlayerAnim()]);
             break;
 
 
@@ -1307,11 +1322,14 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
     }
 
 
-     if (var > 14) return;
 
-     for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
+    /*
+     * need to fix this bug
+     */
+
+    for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
         renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
-     }
+    }
 }
 
 /*
@@ -1761,7 +1779,9 @@ void gameCore::renderSelectChar() {
                 inGame    = IN_GAME_BEGIN;
                 mainPlayer.setPlayerEMD(menuArrow + 1);
                 mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                oldSection = EMD_SECTION_4;
+                oldAnim    = STAND_SEC4_ANIM_IDLE;
                 soundEngine.engineStopSound();
                 miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
             }
@@ -1803,8 +1823,6 @@ void gameCore::renderGame() {
                     break;
                 }
                 soundEngine.enginePlaySound(1);
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
                 inGame = IN_GAME_NORMAL;
             }
         break;

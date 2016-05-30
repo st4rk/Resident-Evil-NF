@@ -8,9 +8,108 @@
 #include "gameStruct.h"
 
 
-// Classe do personagem principal, todas as informações a serem utilizadas por 
-// ele vai ficar nessa classe, aqui você pode pegar informações do eixo x,y,z
-// que o personagem se encontra, como o número da animação, como também o modelo
+entity::entity() {
+	modelNum       = 0;
+	animSection    = 0;
+	animCount      = 0;
+	animOldSection = 0;
+	animOldCount   = 0;
+	animType       = 0;
+	animRepeat     = true;
+
+}
+
+entity::~entity() {
+	modelNum       = 0;
+	animSection    = 0;
+	animCount      = 0;
+	animOldSection = 0;
+	animOldCount   = 0;
+	animType       = 0;
+	animRepeat     = true;
+}
+
+
+void entity::setModel(unsigned int modelNum) {
+	this->modelNum = modelNum;
+}
+
+void entity::setAnimSection(unsigned int animSection) {
+	this->animSection = animSection;
+}
+
+void entity::setAnimType(unsigned int animType, bool animRepeat) {
+	this->animType   = animType;
+	this->animRepeat = animRepeat;
+}
+
+void entity::setAnimCount(unsigned int animCount) {
+	this->animCount = animCount;
+}
+
+void entity::setAnimFrame(EMD_SEC2_DATA_T animFrame) {
+	this->animFrame = animFrame;
+}
+
+void entity::setX(float x) {
+	this->x = x;
+}
+
+void entity::setY(float y) {
+	this->y = y;
+}
+
+void entity::setZ(float z) {
+	this->z = z;
+}
+
+void entity::setAngle(float angle) {
+	this->angle = angle;
+}
+
+
+unsigned int      entity::getModel()             { return modelNum;       }
+ 
+unsigned int      entity::getAnimSection()       { return animSection;    }
+unsigned int      entity::getAnimType()          { return animType;       }
+unsigned int      entity::getAnimCount()         { return animCount;      }
+unsigned int      entity::getAnimOldSection()    { return animOldSection; }
+unsigned int      entity::getAnimOldCount()      { return animOldCount;   }
+EMD_SEC2_DATA_T   entity::getAnimFrame()         { return animFrame;      }
+bool              entity::getAnimRepeat()        { return animRepeat;     }
+
+float  entity::getX()     { return x; }
+float  entity::getY()     { return y; }
+float  entity::getZ()     { return z; }
+float  entity::getAngle() { return angle; }
+
+
+player::player() {
+	for (int i = 0; i < 8; i++) {
+		iID[i] = 0x0;
+	}
+}
+
+player::~player() {
+	for (int i = 0; i < 8; i++) {
+		iID[i] = 0x0;
+	}
+}
+
+
+void player::setItemID(unsigned char slot, unsigned int iID) {
+	if (slot >= 8) 
+		return;
+
+	this->iID[slot] = iID;
+}
+
+unsigned int player::getItemID(unsigned char slot) {
+	if (slot >= 8)
+		return -1;
+
+	return iID[slot];
+}
 
 playerClass::playerClass() {
 	inMove        = false;

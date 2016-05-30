@@ -71,7 +71,7 @@ enum STANDARD_SEC4_ANIMATION {
 enum SPECIAL_SEC2_ANIMATION {
    SPECIAL_SEC2_ANIM_START    = 0,
    SPECIAL_SEC2_ANIM_POSE     = 1,
-   SPECIAL_SEC2_ANIM_CHOICE   = 3
+   SPECIAL_SEC2_ANIM_CHOICE   = 2
 };
 
 enum SPECIAL_SEC4_ANIMATION {
@@ -181,6 +181,75 @@ enum PLAYER_ACTION {
 #define ANIM_TYPE_WALK         0x0
 #define ANIM_TYPE_RUNNING      0x1
 #define ANIM_TYPE_STOPPED      0x2
+
+class entity {
+public:
+      entity();
+     ~entity();
+
+      void setModel(unsigned int modelNum);
+      
+      void setAnimSection(unsigned int animSection);
+      void setAnimType(unsigned int animType, bool animRepeat = true);
+      void setAnimCount(unsigned int animCount);
+      void setAnimFrame(EMD_SEC2_DATA_T animFrame);
+
+      void setX(float x);
+      void setY(float y);
+      void setZ(float z);
+      void setAngle(float angle);
+
+
+      unsigned int      getModel();
+
+      unsigned int      getAnimSection();
+      unsigned int      getAnimType();
+      unsigned int      getAnimCount();
+      unsigned int      getAnimOldSection();
+      unsigned int      getAnimOldCount();
+      EMD_SEC2_DATA_T   getAnimFrame();
+      bool              getAnimRepeat();
+
+      float  getX();
+      float  getY();
+      float  getZ();
+      float  getAngle();
+
+private:
+      
+      unsigned int    modelNum;
+
+      unsigned int    animSection;
+      unsigned int    animCount;
+      unsigned int    animOldSection;
+      unsigned int    animOldCount;
+      unsigned int    animType;
+      EMD_SEC2_DATA_T animFrame;
+      bool            animRepeat;
+
+      float x;
+      float y;
+      float z;
+      float angle;
+
+
+};
+
+
+class player : public entity {
+public:
+   player();
+  ~player();
+
+  void setItemID(unsigned char slot, unsigned int iID);
+
+
+  unsigned int getItemID(unsigned char slot);
+
+private:
+
+   unsigned int iID[8];
+};
 
 class playerClass {
 public:
