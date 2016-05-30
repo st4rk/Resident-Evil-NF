@@ -23,7 +23,7 @@ gameMath::~gameMath() {
  * Interpolation between two values
  */
 float gameMath::interpolation(float n1, float n2, float p) {
-	return (n1 + p*(n2-n1));
+	return ((n1 * p) + (n2 * (1.0f - p)));
 }
 
 

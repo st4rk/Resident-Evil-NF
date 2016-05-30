@@ -802,7 +802,7 @@ void gameCore::engineAnimation() {
 
             if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
                 if ((mainPlayer.getPlayerAnim() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getPlayerAnimSection() == EMD_SECTION_2)) {
-                   // inInterpolation = 1;
+                    inInterpolation = 1;
                 }
             }
 
