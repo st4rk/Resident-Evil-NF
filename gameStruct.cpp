@@ -41,6 +41,7 @@ void entity::setAnimSection(unsigned int animSection) {
 void entity::setAnimType(unsigned int animType, bool animRepeat) {
 	this->animType   = animType;
 	this->animRepeat = animRepeat;
+	this->animCount  = 0;
 }
 
 void entity::setAnimCount(unsigned int animCount) {
@@ -49,6 +50,10 @@ void entity::setAnimCount(unsigned int animCount) {
 
 void entity::setAnimFrame(EMD_SEC2_DATA_T animFrame) {
 	this->animFrame = animFrame;
+}
+
+void entity::setAnimRotationDir(unsigned int animRotationDir) {
+	this->animRotationDir = animRotationDir;
 }
 
 void entity::setX(float x) {
@@ -68,15 +73,16 @@ void entity::setAngle(float angle) {
 }
 
 
-unsigned int      entity::getModel()             { return modelNum;       }
+unsigned int      entity::getModel()             { return modelNum;        }
  
-unsigned int      entity::getAnimSection()       { return animSection;    }
-unsigned int      entity::getAnimType()          { return animType;       }
-unsigned int      entity::getAnimCount()         { return animCount;      }
-unsigned int      entity::getAnimOldSection()    { return animOldSection; }
-unsigned int      entity::getAnimOldCount()      { return animOldCount;   }
-EMD_SEC2_DATA_T   entity::getAnimFrame()         { return animFrame;      }
-bool              entity::getAnimRepeat()        { return animRepeat;     }
+unsigned int      entity::getAnimSection()       { return animSection;     }
+unsigned int      entity::getAnimType()          { return animType;        }
+unsigned int      entity::getAnimCount()         { return animCount;       }
+unsigned int      entity::getAnimOldSection()    { return animOldSection;  }
+unsigned int      entity::getAnimOldCount()      { return animOldCount;    }
+unsigned char     entity::getAnimRotationDir()   { return animRotationDir; }
+EMD_SEC2_DATA_T   entity::getAnimFrame()         { return animFrame;       }
+bool              entity::getAnimRepeat()        { return animRepeat;      }
 
 float  entity::getX()     { return x; }
 float  entity::getY()     { return y; }
@@ -104,6 +110,8 @@ void player::setItemID(unsigned char slot, unsigned int iID) {
 	this->iID[slot] = iID;
 }
 
+void player::setCam(unsigned int cam) { this->cam = cam; }
+
 unsigned int player::getItemID(unsigned char slot) {
 	if (slot >= 8)
 		return -1;
@@ -111,90 +119,7 @@ unsigned int player::getItemID(unsigned char slot) {
 	return iID[slot];
 }
 
-playerClass::playerClass() {
-	inMove        = false;
-	playerAnimNum = 0;
-}
-
-playerClass::~playerClass() {
-
-}
-
-void playerClass::setPlayerCam(unsigned char num) {
-	camNum = num;
-}
-
-void playerClass::setPlayerEMD(unsigned short num) {
-	playerEMD = num;
-}
-
-void playerClass::setPlayerX(float x) {
-	playerX = x;
-}
-
-void playerClass::setPlayerY(float y) {
-	playerY = y;
-}
-
-void playerClass::setPlayerZ(float z) {
-	playerZ = z;
-}
-
-void playerClass::setPlayerAngle(float n) {
-	p = n;
-}
-
-void playerClass::setPlayerAnimCount(int n) {
-	animCount = n;
-}
-
-void playerClass::setPlayerAnim(unsigned char num, bool repeat) {
-	playerAnimNum = num;
-	animRepeat = repeat;
-}
-
-void playerClass::setPlayerAnimSection(unsigned char sec) {
-	animSection = sec;
-}
-
-void playerClass::setPlayerRDT(unsigned int RDT) {
-	rdtNum = RDT;
-}
-
-void  playerClass::setPlayerItem(int slotNum, int id) {
-
-}
-
-void  playerClass::setPlayerItemAmount(int slotNum, int amount) {
-
-}
-
-void playerClass::setPlayerEMDAnim(EMD_SEC2_DATA_T n) { anim = n; }
-void playerClass::setPlayerInRotation(unsigned char inRotation) { this->inRotation = inRotation; }
-
-float playerClass::getPlayerX() { return playerX; }
-float playerClass::getPlayerY() { return playerY; }
-float playerClass::getPlayerZ() { return playerZ; }
-float playerClass::getPlayerAngle() { return p; }
-
-unsigned char  playerClass::getPlayerCam() { return camNum; }
-unsigned char  playerClass::getPlayerAnim() { return playerAnimNum; }
-unsigned char  playerClass::getPlayerAnimSection() { return animSection; }
-unsigned char  playerClass::getPlayerInRotation() { return inRotation; }
-
-unsigned short playerClass::getPlayerEMD() { return playerEMD; }
-unsigned int   playerClass::getPlayerRDT() { return rdtNum; }
-unsigned int   playerClass::getPlayerAnimCount() { return animCount; }
-
-bool playerClass::getPlayerIsAmount(int slotNum) { return item[slotNum].isAmount; }
-bool playerClass::getPlayerRepeatAnim() { return animRepeat; }
-
-int   playerClass::getPlayerItemID(int slotNum) { return item[slotNum].id; }
-int   playerClass::getPlayerItemAmount(int slotNum) { return item[slotNum].amount; }
-
-
-EMD_SEC2_DATA_T playerClass::getPlayerEMDAnim() { return anim; }
-
+unsigned int player::getCam() { return cam; }
 
 
 /****************

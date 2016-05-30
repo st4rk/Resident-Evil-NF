@@ -193,6 +193,7 @@ public:
       void setAnimType(unsigned int animType, bool animRepeat = true);
       void setAnimCount(unsigned int animCount);
       void setAnimFrame(EMD_SEC2_DATA_T animFrame);
+      void setAnimRotationDir(unsigned int animRotationDir);
 
       void setX(float x);
       void setY(float y);
@@ -207,6 +208,7 @@ public:
       unsigned int      getAnimCount();
       unsigned int      getAnimOldSection();
       unsigned int      getAnimOldCount();
+      unsigned char     getAnimRotationDir();
       EMD_SEC2_DATA_T   getAnimFrame();
       bool              getAnimRepeat();
 
@@ -224,6 +226,7 @@ private:
       unsigned int    animOldSection;
       unsigned int    animOldCount;
       unsigned int    animType;
+      unsigned char   animRotationDir;
       EMD_SEC2_DATA_T animFrame;
       bool            animRepeat;
 
@@ -243,119 +246,16 @@ public:
 
   void setItemID(unsigned char slot, unsigned int iID);
 
+  void setCam(unsigned int cam);
+
+  unsigned int getCam();
 
   unsigned int getItemID(unsigned char slot);
 
 private:
-
+   unsigned int cam;
    unsigned int iID[8];
 };
-
-class playerClass {
-public:
-	playerClass();
-   ~playerClass();
-
-   void setPlayerEMD(unsigned short num);
-   void setPlayerX(float x);
-   void setPlayerY(float y);
-   void setPlayerZ(float z);
-   void setPlayerAnim(unsigned char num, bool repeat = true);
-   void setPlayerAnimSection(unsigned char sec);
-   void setPlayerRDT(unsigned int RDT);
-   void setPlayerCam(unsigned char num);
-   void setPlayerItem(int slotNum, int id);
-   void setPlayerItemAmount(int slotNum, int amount);
-   void setPlayerAngle(float n);
-   void setPlayerAnimCount(int n);
-   void setPlayerEMDAnim(EMD_SEC2_DATA_T n);
-   void setPlayerInRotation(unsigned char inRotation);
-
-   float getPlayerX();
-   float getPlayerY();
-   float getPlayerZ();
-   float getPlayerAngle();
-	
-   bool getPlayerIsAmount(int slotNum);
-   bool getPlayerRepeatAnim();
-   
-   unsigned char  getPlayerAnim();
-   unsigned char  getPlayerCam();
-   unsigned char  getPlayerAnimSection();
-   unsigned char  getPlayerInRotation();
-   unsigned short getPlayerEMD();
-   unsigned int   getPlayerRDT();
-   unsigned int   getPlayerAnimCount();
-
-   int   getPlayerItemID(int slotNum);
-   int   getPlayerItemAmount(int slotNum);
-
-   EMD_SEC2_DATA_T getPlayerEMDAnim();
-
-private:
-
-   // Player Item Structure
-   typedef struct pItem {
-      int id;
-      bool isAmount;
-      int amount;
-   } pItem;
-	
-   // Player EMD(Model)
-	unsigned short playerEMD;
-
-   // Animation Section
-   unsigned char animSection;
-
-   // Player Animation Num
-	unsigned char playerAnimNum;
-
-   // Player Animation Count
-   unsigned int animCount;
-
-   // Player EMD Animation
-   EMD_SEC2_DATA_T anim;
-
-   // Repeat Animation ?
-   bool animRepeat;
-
-   // Rotation position
-   unsigned char inRotatePos;
-   
-   // CAM 
-   unsigned char camNum;
-
-   // RDT
-   unsigned int rdtNum;
-
-   // Some stuff to verify what the player is doing
-   bool inRotate;
-   bool inMove;
-   bool inShoot;
-
-   bool running;
-
-   // Player Coord
-	float playerX;
-   float playerY;
-   float playerZ;
-
-   // PlayerHP
-   unsigned short playerHP;
-
-   // Player Items
-   pItem item[8];
-
-   // Player angle
-   float p;
-
-   /*
-    * verify if player is in rotation
-    */
-   unsigned char inRotation;
-
-};
-
 
 class enemyClass {
 public:

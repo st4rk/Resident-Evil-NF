@@ -54,7 +54,7 @@ bmp_loader_24bpp engineLogo;
 bmp_loader_24bpp engineSelectChar;
 bmp_loader_24bpp engineCharMenu;
 
-playerClass mainPlayer;
+player      mainPlayer;
 gameMath    mathEngine;
 gameSound   soundEngine;
 enemyClass  gameEnemy;
@@ -182,13 +182,13 @@ void background_Loader(std::string roomName) {
 void enemyAI_followPlayer() {
 
     /* Crappy AI, it's only follow the player, without path find obvious */
-    if (mainPlayer.getPlayerX() > gameEnemy.getX()) {
+    if (mainPlayer.getX() > gameEnemy.getX()) {
         gameEnemy.setX(gameEnemy.getX() + 5);
     } else {
         gameEnemy.setX(gameEnemy.getX() - 5);
     }
 
-    if (mainPlayer.getPlayerZ() > gameEnemy.getZ()) {
+    if (mainPlayer.getZ() > gameEnemy.getZ()) {
         gameEnemy.setZ(gameEnemy.getZ() + 5);
     } else {
         gameEnemy.setZ(gameEnemy.getZ() - 5);        
@@ -206,7 +206,7 @@ void enemyAI_followPlayer() {
     
 
     /* Angle between two vect, to know the player position */
-    float angle = (atan2(((mainPlayer.getPlayerX() - gameEnemy.getX())), (mainPlayer.getPlayerZ() - gameEnemy.getZ())) / (M_PI / 180));
+    float angle = (atan2(((mainPlayer.getX() - gameEnemy.getX())), (mainPlayer.getZ() - gameEnemy.getZ())) / (M_PI / 180));
     gameEnemy.setAngle((angle-90)); 
 }
 
@@ -267,29 +267,19 @@ void gameCore::renderLoadResource() {
     engineFont.bmpLoaderFile("resource/texture/1.bmp",1);
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
-    mainPlayer.setPlayerEMD(0);
+    mainPlayer.setModel(0);
     /*
-    mainPlayer.setPlayerX(18391);
-    mainPlayer.setPlayerZ(12901);
-    mainPlayer.setPlayerY(0);
+    mainPlayer.setX(18391);
+    mainPlayer.setZ(12901);
+    mainPlayer.setY(0);
     */
-    mainPlayer.setPlayerX(0);
-    mainPlayer.setPlayerZ(0);
-    mainPlayer.setPlayerY(0);
+    mainPlayer.setX(0.0f);
+    mainPlayer.setY(0.0f);
+    mainPlayer.setZ(0.0f);
 
 
-    mainPlayer.setPlayerCam(1);
-    mainPlayer.setPlayerAngle(90.0);
-
-    // Player Item HardCode
-    mainPlayer.setPlayerItem(0, -1); // NO ITEM
-    mainPlayer.setPlayerItem(1, -1); // NO ITEM
-    mainPlayer.setPlayerItem(2, -1); // NO ITEM
-    mainPlayer.setPlayerItem(3, -1); // NO ITEM
-    mainPlayer.setPlayerItem(4, -1); // NO ITEM
-    mainPlayer.setPlayerItem(5, -1); // NO ITEM
-    mainPlayer.setPlayerItem(6, -1); // NO ITEM
-    mainPlayer.setPlayerItem(7, -1); // NO ITEM
+    mainPlayer.setCam(1);
+    mainPlayer.setAngle(90.0);
 
     /* Init teste enemy */
 
@@ -464,11 +454,11 @@ void eventSystem_debugJumpToRun() {
                      Load BSS and RDT 
                     background_Loader(bss);
                      Set Player new X,Y,Z 
-                    mainPlayer.setPlayerX(debugR[debug_jRoomNum].x);
-                    mainPlayer.setPlayerY(debugR[debug_jRoomNum].y);
-                    mainPlayer.setPlayerZ(debugR[debug_jRoomNum].z);
+                    mainPlayer.setX(debugR[debug_jRoomNum].x);
+                    mainPlayer.setY(debugR[debug_jRoomNum].y);
+                    mainPlayer.setZ(debugR[debug_jRoomNum].z);
                     playerRDT.rdtRE1LoadFile(rdt);
-                    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
+                    mainPlayer.setCam(playerRDT.rdtRE1CameraSwitch[0].from);
 
                 }
                 timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
@@ -520,11 +510,11 @@ void eventSystem_newRoom() {
                      Load BSS and RDT 
                     background_Loader(bss);
                      Set Player new X,Y,Z 
-                    mainPlayer.setPlayerX(playerRDT.door_set_re1[roomNum].next_x);
-                    mainPlayer.setPlayerY(playerRDT.door_set_re1[roomNum].next_y);
-                    mainPlayer.setPlayerZ(playerRDT.door_set_re1[roomNum].next_z);
+                    mainPlayer.setX(playerRDT.door_set_re1[roomNum].next_x);
+                    mainPlayer.setY(playerRDT.door_set_re1[roomNum].next_y);
+                    mainPlayer.setZ(playerRDT.door_set_re1[roomNum].next_z);
                     playerRDT.rdtRE1LoadFile(rdt);
-                    mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[0].from);
+                    mainPlayer.setCam(playerRDT.rdtRE1CameraSwitch[0].from);
 
                 }
                 timer1_start = (glutGet(GLUT_ELAPSED_TIME) + 50);
@@ -713,8 +703,8 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
             if (key == 'x') {
                 if (!charNextStep) {
                     miscStuff.setupFadeEffect(TYPE_FADE_SPECIAL, 0, 0, 0, 70);
-                    mainPlayer.setPlayerAnimSection(EMD_SECTION_2);
-                    mainPlayer.setPlayerAnim(SPECIAL_SEC2_ANIM_CHOICE, false);
+                    mainPlayer.setAnimSection(EMD_SECTION_2);
+                    mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_CHOICE, false);
                     selectState = SEL_PLAYER_START;
                     charNextStep = true;
                 }
@@ -770,17 +760,29 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
 
 
 void gameCore::eventSystem_keyboardUp(unsigned char key, int x, int y) {
-    switch (key) {
-        case 'z':
+    switch (gameState) {
+        case STATE_IN_GAME:
+            switch (key) {
+                case 'x':
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_X, false);
+                break;
 
-        break;
+                case 'z':
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_Z, false);
+                break;
 
-        case 'x':
+                case 'c':
+                    eventSystem_gameAction(EVENT_SYSTEM_KEY_C, false);
+                break;
 
-        break;
+                case 'a':
 
-        default:
+                break;
 
+                default:
+
+                break;
+            }
         break;
     }
 }
@@ -797,11 +799,11 @@ void gameCore::engineAnimation() {
          * Verify if is the same animation, if not, should interpolate the animation
          */
 
-        if ((inInterpolation == 0) && ((oldAnim != mainPlayer.getPlayerAnim()) 
-                          || (oldSection != mainPlayer.getPlayerAnimSection()))) {
+        if ((inInterpolation == 0) && ((oldAnim != mainPlayer.getAnimType()) 
+                          || (oldSection != mainPlayer.getAnimSection()))) {
 
             if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
-                if ((mainPlayer.getPlayerAnim() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getPlayerAnimSection() == EMD_SECTION_2)) {
+                if ((mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getAnimSection() == EMD_SECTION_2)) {
                     inInterpolation = 1;
                 }
             }
@@ -813,30 +815,35 @@ void gameCore::engineAnimation() {
              * play normal animations 
              */
             case 0: {
-                switch (mainPlayer.getPlayerAnimSection()) {
+                switch (mainPlayer.getAnimSection()) {
                     case EMD_SECTION_2: {
-                        if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
-                            mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                        if (mainPlayer.getAnimCount() < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
+                            mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
                         else {
-                            if (mainPlayer.getPlayerRepeatAnim()) {
-                                mainPlayer.setPlayerAnimCount(0);
+                            if (mainPlayer.getAnimRepeat()) {
+                                mainPlayer.setAnimCount(0);
                             }
                         }
 
-                        mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec2Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+                        mainPlayer.setAnimFrame(modelList[mainPlayer.getModel()].emdSec2Data[mainPlayer.getAnimCount()+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart]);
                     }
                     break;
 
                     case EMD_SECTION_4: {
-                        if (mainPlayer.getPlayerAnimCount() < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
-                            mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+                        if (mainPlayer.getAnimCount() < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
+                            mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
                         else {
-                            if (mainPlayer.getPlayerRepeatAnim()) {
-                                mainPlayer.setPlayerAnimCount(0);
+                            if (mainPlayer.getAnimRepeat()) {
+                                switch (mainPlayer.getAnimType()) {
+                                    case STAND_SEC4_ANIM_S_SHOOT:
+                                        mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
+                                    break;
+                                }
+                                mainPlayer.setAnimCount(0);
                             }
                         }
 
-                        mainPlayer.setPlayerEMDAnim(modelList[mainPlayer.getPlayerEMD()].emdSec4Data[mainPlayer.getPlayerAnimCount()+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart]);
+                        mainPlayer.setAnimFrame(modelList[mainPlayer.getModel()].emdSec4Data[mainPlayer.getAnimCount()+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart]);
                     }
                     break;
                  }
@@ -856,24 +863,24 @@ void gameCore::engineAnimation() {
                         EMD_SEC2_DATA_T *node_3; // new animation
                         unsigned int     i_2      = 0;
 
-                        float p_factor = (1.0f / ((modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1) - mainPlayer.getPlayerAnimCount()));
+                        float p_factor = (1.0f / ((modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animCount-1) - mainPlayer.getAnimCount()));
                         float p = 0.0f;
 
-                        for (unsigned int i = mainPlayer.getPlayerAnimCount(); i < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p += p_factor) {
-                            node_2 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[oldAnim].animStart];
+                        for (unsigned int i = mainPlayer.getAnimCount(); i < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p += p_factor) {
+                            node_2 = &modelList[mainPlayer.getModel()].emdSec2Data[i+modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animStart];
                             
-                            switch (mainPlayer.getPlayerAnimSection()) {
+                            switch (mainPlayer.getAnimSection()) {
                                 case EMD_SECTION_2:
-                                    node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart];
+                                    node_3 = &modelList[mainPlayer.getModel()].emdSec2Data[i_2+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart];
 
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
+                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
 
                                        node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
                                        node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
                                        node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
                                     }
 
-                                    if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
                                         i_2++;
                                     else
                                         i_2 = 0;
@@ -883,15 +890,15 @@ void gameCore::engineAnimation() {
                                 break;
 
                                 case EMD_SECTION_4:
-                                    node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec4Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart];
+                                    node_3 = &modelList[mainPlayer.getModel()].emdSec4Data[i_2+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart];
             
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
+                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
                                        node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
                                        node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
                                        node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
                                     }
 
-                                    if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
                                         i_2++;
                                     else
                                         i_2 = 0;
@@ -900,7 +907,7 @@ void gameCore::engineAnimation() {
                                 break;
                             }                    
                         }
-                        mainPlayer.setPlayerAnimCount(0);
+                        mainPlayer.setAnimCount(0);
                         inInterpolation = 2;
                     }
                     break;
@@ -910,27 +917,26 @@ void gameCore::engineAnimation() {
                         EMD_SEC2_DATA_T *node_2; // old animation
                         EMD_SEC2_DATA_T *node_3; // new animation
                         unsigned int     i_2    = 0;
-                        float p_factor = (1.0f / 3);
+                        float p_factor = (1.0f / 3.0f);
                         float p = 0.0f;
 
-                        printf("p_factor: %.2f\n", p_factor);
-                        for (unsigned int i = 0; i <= 3; i++, p += p_factor) {
-                            node_2 = &modelList[mainPlayer.getPlayerEMD()].emdSec4Data[i+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[oldAnim].animStart];
+                        for (unsigned int i = 0; i < 3; i++, p += p_factor) {
+                            node_2 = &modelList[mainPlayer.getModel()].emdSec4Data[i+modelList[mainPlayer.getModel()].emdSec4AnimInfo[oldAnim].animStart];
                             
-                            switch (mainPlayer.getPlayerAnimSection()) {
+                            switch (mainPlayer.getAnimSection()) {
                                 case EMD_SECTION_2:
-                                    node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec2Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animStart];
-
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, 0.01f);
+                                    node_3 = &modelList[mainPlayer.getModel()].emdSec2Data[i_2+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart];
+                                    // here
+                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
+                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
                                        printf("node.x: %.2f node_2.x %.2f node_3.x %.2f p: %.2f\n", node.vector[t].x, node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, 0.01f);
+                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
                                        printf("node.y: %.2f node_2.y %.2f node_3.y %.2f p: %.2f\n", node.vector[t].y, node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, 0.01f);
+                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
                                        printf("node.z: %.2f node_2.z %.2f node_3.z %.2f p: %.2f\n", node.vector[t].z, node_2->vector[t].z, node_3->vector[t].z, p);    
                                     }
 
-                                    if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
                                         i_2++;
                                     else
                                         i_2 = 0;
@@ -940,15 +946,15 @@ void gameCore::engineAnimation() {
                                 break;
 
                                 case EMD_SECTION_4:
-                                    node_3 = &modelList[mainPlayer.getPlayerEMD()].emdSec4Data[i_2+modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animStart];
+                                    node_3 = &modelList[mainPlayer.getModel()].emdSec4Data[i_2+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart];
             
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getPlayerEMD()].emdTotalObj; t++) {
+                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
                                        node.vector[t].x = mathEngine.interpolation(node_3->vector[t].x, node_2->vector[t].x, p);
                                        node.vector[t].y = mathEngine.interpolation(node_3->vector[t].y, node_2->vector[t].y, p);
                                        node.vector[t].z = mathEngine.interpolation(node_3->vector[t].z, node_2->vector[t].z, p);
                                         }
 
-                                    if (i_2 < (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1))
+                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
                                         i_2++;
                                     else
                                         i_2 = 0;
@@ -958,7 +964,7 @@ void gameCore::engineAnimation() {
                             }                    
                         }
 
-                        mainPlayer.setPlayerAnimCount(0);
+                        mainPlayer.setAnimCount(0);
                         inInterpolation = 2;
                     }
                     break;
@@ -970,30 +976,33 @@ void gameCore::engineAnimation() {
              * play the interpolated animation
              */
             case 2:
-            if (mainPlayer.getPlayerAnimCount() < interAnimation.size())
-                    mainPlayer.setPlayerAnimCount(mainPlayer.getPlayerAnimCount() + 1);
+            printf("size: %d\n", interAnimation.size());
+            if (mainPlayer.getAnimCount() < 3)
+                    mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
                 else {
+
+                    mainPlayer.setAnimCount(0);
       
-                    oldAnim         = mainPlayer.getPlayerAnim();
-                    oldSection      = mainPlayer.getPlayerAnimSection();
+/*                    oldAnim         = mainPlayer.getAnimType();
+                    oldSection      = mainPlayer.getAnimTypeSection();
                     inInterpolation = 0;
-                    switch (mainPlayer.getPlayerAnimSection()) {
+                    switch (mainPlayer.getAnimTypeSection()) {
                         case EMD_SECTION_2:
-                            if (mainPlayer.getPlayerAnimCount() > (modelList[mainPlayer.getPlayerEMD()].emdSec2AnimInfo[mainPlayer.getPlayerAnim()].animCount-1)) {
-                                mainPlayer.setPlayerAnimCount(0);
+                            if (mainPlayer.getAnimCount() > (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1)) {
+                                mainPlayer.setAnimCount(0);
                             }
                         break;
 
                         case EMD_SECTION_4:
-                            if (mainPlayer.getPlayerAnimCount() > (modelList[mainPlayer.getPlayerEMD()].emdSec4AnimInfo[mainPlayer.getPlayerAnim()].animCount-1)) {
-                                mainPlayer.setPlayerAnimCount(0);
+                            if (mainPlayer.getAnimCount() > (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1)) {
+                                mainPlayer.setAnimCount(0);
                             }
                         break;
                     }
-               
+*/
                 }     
 
-                mainPlayer.setPlayerEMDAnim(interAnimation[mainPlayer.getPlayerAnim()]);
+                mainPlayer.setAnimFrame(interAnimation[1]);
             break;
 
 
@@ -1019,13 +1028,13 @@ void MainLoop() {
                 enemyAI_followPlayer();
 
 
-                switch (mainPlayer.getPlayerInRotation()) {
+                switch (mainPlayer.getAnimRotationDir()) {
                     case PLAYER_ACTION_R_LEFT:
-                        mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() - 2), 360.0));
+                        mainPlayer.setAngle(fmod((mainPlayer.getAngle() - 2), 360.0));
                     break;
 
                     case PLAYER_ACTION_R_RIGHT:
-                        mainPlayer.setPlayerAngle(fmod((mainPlayer.getPlayerAngle() + 2), 360.0));
+                        mainPlayer.setAngle(fmod((mainPlayer.getAngle() + 2), 360.0));
                     break;
 
                     case PLAYER_ACTION_R_NONE:
@@ -1034,21 +1043,21 @@ void MainLoop() {
                 }
 
                 if ((core->keyList[0] == true)) {
-                    if (mainPlayer.getPlayerAnim() == STAND_SEC4_ANIM_WALK) {
-                        mainPlayer.setPlayerX(mainPlayer.getPlayerX() + cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
-                        mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() - sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                    if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
+                        mainPlayer.setX(mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0);
+                        mainPlayer.setZ(mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0);
                     }
                 } else if ((core->keyList[1] == true)) {
-                    if (mainPlayer.getPlayerAnim() == STAND_SEC2_ANIM_BACKWARD) {
-                        mainPlayer.setPlayerX(mainPlayer.getPlayerX() - cos((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
-                        mainPlayer.setPlayerZ(mainPlayer.getPlayerZ() + sin((mainPlayer.getPlayerAngle() * PI/180)) * 80.0);
+                    if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
+                        mainPlayer.setX(mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0);
+                        mainPlayer.setZ(mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0);
                     }
                 }
 
                     /* Collision Detection RE 1 
                     for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
                             if (mathEngine.collisionDetect(playerRDT.rdtRE1ColissionArray[i].type, playerRDT.rdtRE1ColissionArray[i].x1, playerRDT.rdtRE1ColissionArray[i].z1, 
-                                                     playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ() - z) == true) {
+                                                     playerRDT.rdtRE1ColissionArray[i].x2, playerRDT.rdtRE1ColissionArray[i].z2, mainPlayer.getX() + x, mainPlayer.getZ() - z) == true) {
                                 canMove = false;
 
                                 printf("Type: %d\n", playerRDT.rdtRE1ColissionArray[i].type);
@@ -1063,7 +1072,7 @@ void MainLoop() {
                     /* Colision Detection RDT 1.5 and 2.0
                     for (unsigned int i = 0; i < (playerRDT.rdtColisionHeader.arraySum -1); i++) {
                         if (mathEngine.collisionDetect(0, playerRDT.rdtColissionArray[i].X, playerRDT.rdtColissionArray[i].Z, 
-                                                 playerRDT.rdtColissionArray[i].W, playerRDT.rdtColissionArray[i].D, mainPlayer.getPlayerX() + x, mainPlayer.getPlayerZ()-z) == true) {
+                                                 playerRDT.rdtColissionArray[i].W, playerRDT.rdtColissionArray[i].D, mainPlayer.getX() + x, mainPlayer.getZ()-z) == true) {
                             canMove = false;
                         } 
                     }
@@ -1071,12 +1080,12 @@ void MainLoop() {
                     
                     /* Camera Switch RDT 1.5 and 2.0
                     for (unsigned int i = 0; i < playerRDT.rdtCameraSwitch.size(); i++) {
-                        if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
+                        if (mathEngine.mapSwitch(mainPlayer.getX(), mainPlayer.getZ(), playerRDT.rdtCameraSwitch[i].x1, playerRDT.rdtCameraSwitch[i].z1, playerRDT.rdtCameraSwitch[i].x2, playerRDT.rdtCameraSwitch[i].z2, 
                                                  playerRDT.rdtCameraSwitch[i].x3, playerRDT.rdtCameraSwitch[i].z3, playerRDT.rdtCameraSwitch[i].x4, playerRDT.rdtCameraSwitch[i].z4)) {
                             
                             if (playerRDT.rdtCameraSwitch[i].cam1 != 0) {//|| ((playerRDT.rdtCameraSwitch[i].cam1 == 0) && (playerRDT.rdtCameraSwitch[i].cam0 == 1)))
                                    backgroundNow = playerRDT.rdtCameraSwitch[i].cam1;// background_Loader(playerRDT.rdtCameraSwitch[i].cam1);
-                                   mainPlayer.setPlayerCam(backgroundNow);
+                                   mainPlayer.setCam(backgroundNow);
                             }
                         
                         } 
@@ -1085,11 +1094,11 @@ void MainLoop() {
 
                     /* Camera Switch Zone/Camera Position RE 1.0 
                     for (unsigned int i = 0; i < playerRDT.rdtRE1CameraSwitch.size(); i++) {
-                        if (mathEngine.mapSwitch(mainPlayer.getPlayerX(), mainPlayer.getPlayerZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
+                        if (mathEngine.mapSwitch(mainPlayer.getX(), mainPlayer.getZ(), playerRDT.rdtRE1CameraSwitch[i].x1, playerRDT.rdtRE1CameraSwitch[i].z1, playerRDT.rdtRE1CameraSwitch[i].x2, playerRDT.rdtRE1CameraSwitch[i].z2, 
                                                  playerRDT.rdtRE1CameraSwitch[i].x3, playerRDT.rdtRE1CameraSwitch[i].z3, playerRDT.rdtRE1CameraSwitch[i].x4, playerRDT.rdtRE1CameraSwitch[i].z4)) {
                             
                                 if (playerRDT.rdtRE1CameraSwitch[i].to != 9) {
-                                     mainPlayer.setPlayerCam(playerRDT.rdtRE1CameraSwitch[i].to);
+                                     mainPlayer.setCam(playerRDT.rdtRE1CameraSwitch[i].to);
                                 }
 
                         } 
@@ -1133,10 +1142,10 @@ void gameCore::renderCamera() {
     switch (gameState) {
         case STATE_SEL_CHAR: {
 
-            float camX = 0  - sin((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
-            float camZ = 0  - cos((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
-            float distX =    -cos((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
-            float distZ =     sin((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
+            float camX = 0  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
+            float camZ = 0  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
+            float distX =    -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
+            float distZ =     sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
             float distY = -2200.0f;
             gluLookAt(     camX + distX,  distY, camZ + distZ,
                            camX, -2600.0f, camZ,   
@@ -1151,16 +1160,16 @@ void gameCore::renderCamera() {
              * Resident Evil 1.5 and 2 Cameras
              */
             /*
-            gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].positionZ,
-                           playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getPlayerCam()].targetZ,   
+            gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionZ,
+                           playerRDT.rdtCameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetZ,   
                            0.0f,   -0.1f,   0.0f);
             */
 
             /*
              * Resident Evil 1 Camera
              */
-            /*  gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
-                           playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
+            /*  gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
+                           playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
                            0.0f,   -0.1f,   0.0f);
              */
 
@@ -1170,10 +1179,10 @@ void gameCore::renderCamera() {
              * Written by St4rk
              */
 
-            float camX = mainPlayer.getPlayerX()  - sin((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
-            float camZ = mainPlayer.getPlayerZ()  - cos((mainPlayer.getPlayerAngle() * PI/180)) * 800.0f;
-            float distX = -cos((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
-            float distZ =  sin((mainPlayer.getPlayerAngle() * PI/180))  * 3500.0;
+            float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
+            float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
+            float distX = -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
+            float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
             float distY = -3000.0f;
             gluLookAt(     camX + distX,  distY, camZ + distZ,
                            camX, -2500.0f, camZ,   
@@ -1194,65 +1203,102 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
 
         case EVENT_SYSTEM_KEY_UP: {
             if (pressed) {
-                keyList[0] = true;
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
+                keyList[EVENT_SYSTEM_KEY_UP] = true;
+                mainPlayer.setAnimSection(EMD_SECTION_4);
+                if (keyList[EVENT_SYSTEM_KEY_X] == true) {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_UAIM);
+                } else {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_WALK);
+                }
             } else {
-                keyList[0] = false;
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                keyList[EVENT_SYSTEM_KEY_UP] = false;
+                mainPlayer.setAnimSection(EMD_SECTION_4);
+                if (keyList[EVENT_SYSTEM_KEY_X] == true) {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
+                } else {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
+                }
             }
         }
         break;
 
         case EVENT_SYSTEM_KEY_DOWN:
             if (pressed) {
-                keyList[1] = true;
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_2);
-                mainPlayer.setPlayerAnim(STAND_SEC2_ANIM_BACKWARD);
+                keyList[EVENT_SYSTEM_KEY_DOWN] = true;
+
+                if (keyList[EVENT_SYSTEM_KEY_X] == true) {
+                    mainPlayer.setAnimSection(EMD_SECTION_4);
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_DAIM);
+                } else {
+                    mainPlayer.setAnimSection(EMD_SECTION_2);
+                    mainPlayer.setAnimType(STAND_SEC2_ANIM_BACKWARD);
+                }
             } else {
-                keyList[1] = false;
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                keyList[EVENT_SYSTEM_KEY_DOWN] = false;
+                mainPlayer.setAnimSection(EMD_SECTION_4);
+                if (keyList[EVENT_SYSTEM_KEY_X] == true) {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
+                } else {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
+                }
             }
         break;
 
         case EVENT_SYSTEM_KEY_LEFT:
             if (pressed) {
-                if ((keyList[0] == false) && (keyList[1] == false)) {
-                    mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
-                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_LEFT);
+                if ((keyList[EVENT_SYSTEM_KEY_UP] == false) && (keyList[EVENT_SYSTEM_KEY_DOWN] == false) &&
+                    (keyList[EVENT_SYSTEM_KEY_X]  == false)) { 
+                    mainPlayer.setAnimSection(EMD_SECTION_4);
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_WALK);
+                    mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_LEFT);
                 } else {
-                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_LEFT);
+                    mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_LEFT);
                 }
             } else {
-                if ((keyList[0] == false) && (keyList[1] == false)) 
-                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                if ((keyList[EVENT_SYSTEM_KEY_UP] == false) && (keyList[EVENT_SYSTEM_KEY_DOWN] == false) && 
+                    (keyList[EVENT_SYSTEM_KEY_X]  == false))      
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
                 
-                mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_NONE);
+                mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_NONE);
             }
         break;
 
         case EVENT_SYSTEM_KEY_RIGHT:
             if (pressed) {
-                if ((keyList[0] == false) && (keyList[1] == false)) {
-                    mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_WALK);
-                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_RIGHT);
+                if ((keyList[EVENT_SYSTEM_KEY_UP] == false) && (keyList[EVENT_SYSTEM_KEY_DOWN] == false) &&
+                    (keyList[EVENT_SYSTEM_KEY_X]  == false)) {
+                    mainPlayer.setAnimSection(EMD_SECTION_4);
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_WALK);
+
+                    mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_RIGHT);
                 } else {
-                    mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_RIGHT);
+                    mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_RIGHT);
                 }
             } else {
-                if ((keyList[0] == false) && (keyList[1] == false)) 
-                    mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                if ((keyList[EVENT_SYSTEM_KEY_UP] == false) && (keyList[EVENT_SYSTEM_KEY_DOWN] == false) && 
+                    (keyList[EVENT_SYSTEM_KEY_X]  == false)) 
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
                 
-                mainPlayer.setPlayerInRotation(PLAYER_ACTION_R_NONE);
+                mainPlayer.setAnimRotationDir(PLAYER_ACTION_R_NONE);
             }
         break;
 
         case EVENT_SYSTEM_KEY_X:
-
+            if (pressed) {
+                keyList[EVENT_SYSTEM_KEY_X] = true;
+                    mainPlayer.setAnimSection(EMD_SECTION_4);
+                if (keyList[EVENT_SYSTEM_KEY_UP]) {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_UAIM);
+                } else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_DAIM);
+                } else {
+                    mainPlayer.setAnimType(STAND_SEC4_ANIM_S_SHOOT);
+                }
+            } else {
+                keyList[EVENT_SYSTEM_KEY_X] = false;
+                mainPlayer.setAnimSection(EMD_SECTION_4);
+                mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
+            }
         break;
 
         case EVENT_SYSTEM_KEY_Z:
@@ -1273,8 +1319,8 @@ void renderCollision() {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLoadIdentity();
-    gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].positionZ,
-                   playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getPlayerCam()].targetZ,   
+    gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
+                   playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
                    0.0f,   -0.1f,   0.0f);
 
     // Enable wireframe mode
@@ -1297,10 +1343,10 @@ void renderCollision() {
     /* Wireframe collision */
     glBegin(GL_QUADS);      
         glColor3f(1.0f, 0.0f, 0.0f);                  
-        glVertex3f(mainPlayer.getPlayerX(), 0x0,  mainPlayer.getPlayerZ());             
-        glVertex3f((mainPlayer.getPlayerX() + 1280), 0x0,  mainPlayer.getPlayerZ());              
-        glVertex3f((mainPlayer.getPlayerX() + 1280), 0x0,  (mainPlayer.getPlayerZ() + 1280));   
-        glVertex3f(mainPlayer.getPlayerX(), 0x0,  (mainPlayer.getPlayerZ() + 1280));       
+        glVertex3f(mainPlayer.getX(), 0x0,  mainPlayer.getZ());             
+        glVertex3f((mainPlayer.getX() + 1280), 0x0,  mainPlayer.getZ());              
+        glVertex3f((mainPlayer.getX() + 1280), 0x0,  (mainPlayer.getZ() + 1280));   
+        glVertex3f(mainPlayer.getX(), 0x0,  (mainPlayer.getZ() + 1280));       
     glEnd();
 
     // disable wireframe
@@ -1450,21 +1496,21 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
 }
 
 void engineLight() {
-    GLfloat ambientColor[] = {(float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.R/255.0f)*1.0f + 1.0),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.G/255.0f)*1.0f + 1.0),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorAmbient.B/255.0f)*1.0f + 1.0),  1.0 };
-    GLfloat lightPos1[] = {(float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[0].X), 
-        (float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[0].Y), 
-        (float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[0].Z), 1.0};
-    GLfloat lightPos2[] = {(float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[1].X), 
-        (float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[1].Y), 
-        (float)(playerRDT.rdtLight[mainPlayer.getPlayerCam()].lightPos[1].Z), 1.0};
-    GLfloat lightColor1[] = {(float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[0].R/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[0].G/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[0].B/255.0f)*1.0f), 1.0};
-    GLfloat lightColor2[] = {(float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[1].R/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[1].G/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getPlayerCam()].colorLight[1].B/255.0f)*1.0f), 1.0};
+    GLfloat ambientColor[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.R/255.0f)*1.0f + 1.0),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.G/255.0f)*1.0f + 1.0),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.B/255.0f)*1.0f + 1.0),  1.0 };
+    GLfloat lightPos1[] = {(float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].X), 
+        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].Y), 
+        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].Z), 1.0};
+    GLfloat lightPos2[] = {(float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].X), 
+        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].Y), 
+        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].Z), 1.0};
+    GLfloat lightColor1[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].R/255.0f)*1.0f),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].G/255.0f)*1.0f),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].B/255.0f)*1.0f), 1.0};
+    GLfloat lightColor2[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].R/255.0f)*1.0f),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].G/255.0f)*1.0f),
+        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].B/255.0f)*1.0f), 1.0};
 
     glLoadIdentity();
     // Cor do ambiente, modifica de acordo com a camera
@@ -1487,7 +1533,7 @@ void drawMapBackground() {
     
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[mainPlayer.getPlayerCam()]->w, bg[mainPlayer.getPlayerCam()]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[mainPlayer.getPlayerCam()]->pixels);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, bg[mainPlayer.getCam()]->w, bg[mainPlayer.getCam()]->h, 0,GL_RGB, GL_UNSIGNED_BYTE, bg[mainPlayer.getCam()]->pixels);
 
     /* RE 1 */
     glBegin(GL_QUADS);                     
@@ -1558,8 +1604,8 @@ void gameCore::renderMainMenu() {
                     menuArrow   = 0x0;
                     oldAnim     = SPECIAL_SEC2_ANIM_POSE;
                     oldSection  = EMD_SECTION_2;
-                    mainPlayer.setPlayerAnimSection(EMD_SECTION_2);
-                    mainPlayer.setPlayerAnim(SPECIAL_SEC2_ANIM_POSE);
+                    mainPlayer.setAnimSection(EMD_SECTION_2);
+                    mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_POSE);
                     soundEngine.enginePlaySound(1);
                 }
            break;
@@ -1599,7 +1645,7 @@ void gameCore::renderSelectChar() {
                         else {
                             nextCharAngle += 4.0f;
                         }
-                        mainPlayer.setPlayerEMD(0);
+                        mainPlayer.setModel(0);
                     break;
 
                     case 1:
@@ -1608,7 +1654,7 @@ void gameCore::renderSelectChar() {
                         } else {
                             nextCharAngle += 4.0f;
                         }
-                        mainPlayer.setPlayerEMD(3);
+                        mainPlayer.setModel(3);
                     break;
 
                     default:
@@ -1629,7 +1675,7 @@ void gameCore::renderSelectChar() {
                         z = sin(((70 + nextCharAngle) * PI/180)) * 1500.0;
 
                         renderEMD(x-500, -150.0f,z, 
-                            230.0f + nextCharAngle, 0, mainPlayer.getPlayerEMDAnim());
+                            230.0f + nextCharAngle, 0, mainPlayer.getAnimFrame());
 
                         x = cos(((240 + nextCharAngle) * PI/180)) * 1000.0;
                         z = sin(((240 + nextCharAngle) * PI/180)) * 1500.0;
@@ -1665,7 +1711,7 @@ void gameCore::renderSelectChar() {
                          * Chris standard
                          */
                         renderEMD(x-500, -150.0f,z, 
-                            45.0f+ nextCharAngle, 3,  mainPlayer.getPlayerEMDAnim());
+                            45.0f+ nextCharAngle, 3,  mainPlayer.getAnimFrame());
 
                         renderText(0.70, 0.10, 0.0, TEXT_TYPE_LITTLE, "Chris Redfield", 1.0f, 1.0f, 1.0f, 1.0f);
                         renderText(0.80, 0.20, 0.0, TEXT_TYPE_LITTLE, "S.T.A.R.S. ", 1.0f, 1.0f, 1.0f, 1.0f);
@@ -1730,7 +1776,7 @@ void gameCore::renderSelectChar() {
                             z = sin(((70 + nextCharAngle) * PI/180)) * 1500.0;
 
                             renderEMD(x-500, -150.0f,z, 
-                                230.0f + nextCharAngle, 0, mainPlayer.getPlayerEMDAnim());
+                                230.0f + nextCharAngle, 0, mainPlayer.getAnimFrame());
 
                             x = cos(((240 + nextCharAngle) * PI/180)) * 1000.0;
                             z = sin(((240 + nextCharAngle) * PI/180)) * 1500.0;
@@ -1764,7 +1810,7 @@ void gameCore::renderSelectChar() {
                              * Chris standard
                              */
                             renderEMD(x-500, -150.0f,z, 
-                                45.0f+ nextCharAngle, 3,  mainPlayer.getPlayerEMDAnim());
+                                45.0f+ nextCharAngle, 3,  mainPlayer.getAnimFrame());
                     }
                     break;
 
@@ -1777,9 +1823,9 @@ void gameCore::renderSelectChar() {
             } else {
                 gameState = STATE_IN_GAME;
                 inGame    = IN_GAME_BEGIN;
-                mainPlayer.setPlayerEMD(menuArrow + 1);
-                mainPlayer.setPlayerAnimSection(EMD_SECTION_4);
-                mainPlayer.setPlayerAnim(STAND_SEC4_ANIM_IDLE);
+                mainPlayer.setModel(menuArrow + 1);
+                mainPlayer.setAnimSection(EMD_SECTION_4);
+                mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
                 oldSection = EMD_SECTION_4;
                 oldAnim    = STAND_SEC4_ANIM_IDLE;
                 soundEngine.engineStopSound();
@@ -1833,8 +1879,8 @@ void gameCore::renderGame() {
 
             /* All model rendering is done by renderEMD Function */
             /* Player Rendering */
-            renderEMD(mainPlayer.getPlayerX(), mainPlayer.getPlayerY(), mainPlayer.getPlayerZ(), 
-                      mainPlayer.getPlayerAngle(), mainPlayer.getPlayerEMD(), mainPlayer.getPlayerEMDAnim());
+            renderEMD(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(), 
+                      mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
             /* Enemy Rendering */
             renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
                       gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
@@ -1845,7 +1891,7 @@ void gameCore::renderGame() {
 
             char coord[0xFF];
 
-            sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getPlayerX(),(int)mainPlayer.getPlayerY(),(int)mainPlayer.getPlayerZ(), (int)mainPlayer.getPlayerAngle());
+            sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
 
             renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
