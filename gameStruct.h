@@ -146,26 +146,35 @@ enum PLAYER_ACTION {
    PLAYER_ACTION_R_RIGHT = 2
 };
 
-// Math 
-#define PI 3.14159265
-// All possible menus, dunno af
-#define STATE_MAIN_MENU   1
-#define STATE_CREDITS     2
-#define STATE_SEL_CHAR    3
-#define STATE_IN_GAME     4
-#define STATE_IN_ROOM     5
-#define STATE_IN_DEBUG    6
+enum PLAYER_CAMERA_STYLE {
+   CAMERA_STYLE_RE_1       = 0,
+   CAMERA_STYLE_RE_2       = 1,
+   CAMERA_STYLE_SPECIAL    = 2,
+   CAMERA_STYLE_SPECIAL_2  = 3
+};
 
+enum ENGINE_MENU_STATE {
+   STATE_MAIN_MENU = 1,
+   STATE_CREDITS   = 2,
+   STATE_SEL_CHAR  = 3,
+   STATE_IN_GAME   = 4,
+   STATE_IN_ROOM   = 5,
+   STATE_IN_DEBUG  = 6
+};
 
-// MainMenu sub-menus
-#define MAIN_MENU_LOGO         0x0
-#define MAIN_MENU_ENGINE_LOGO  0x1
-#define MAIN_MENU_START        0x2
-#define MAIN_MENU_GAME         0x3
+enum MAIN_MENU_SUB_MENU {
+   MAIN_MENU_LOGO         = 0,
+   MAIN_MENU_ENGINE_LOGO  = 1,
+   MAIN_MENU_START        = 2,
+   MAIN_MENU_GAME         = 3
+};
 
-//
-#define SEL_PLAYER_BEGIN       0x0
-#define SEL_PLAYER_START       0x1
+enum SEL_PLAYER_SUB_MENU {
+   SEL_PLAYER_BEGIN      = 0,
+   SEL_PLAYER_START      = 1
+};
+
+#define PI 3.14159265359
 
 // InGame sub-menus/status
 #define IN_GAME_BEGIN          0x0

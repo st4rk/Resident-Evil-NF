@@ -278,7 +278,7 @@ void gameCore::renderLoadResource() {
     mainPlayer.setZ(0.0f);
 
 
-    mainPlayer.setCam(1);
+    mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
     mainPlayer.setAngle(90.0);
 
     /* Init teste enemy */
@@ -976,13 +976,12 @@ void gameCore::engineAnimation() {
              * play the interpolated animation
              */
             case 2:
-            printf("size: %d\n", interAnimation.size());
             if (mainPlayer.getAnimCount() < 3)
                     mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
                 else {
 
                     mainPlayer.setAnimCount(0);
-      
+  
 /*                    oldAnim         = mainPlayer.getAnimType();
                     oldSection      = mainPlayer.getAnimTypeSection();
                     inInterpolation = 0;
@@ -1156,38 +1155,55 @@ void gameCore::renderCamera() {
 
         case STATE_IN_GAME: {
 
-            /*
-             * Resident Evil 1.5 and 2 Cameras
-             */
-            /*
-            gluLookAt(     playerRDT.rdtCameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionZ,
-                           playerRDT.rdtCameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetZ,   
-                           0.0f,   -0.1f,   0.0f);
-            */
 
-            /*
-             * Resident Evil 1 Camera
-             */
-            /*  gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
-                           playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
-                           0.0f,   -0.1f,   0.0f);
-             */
+            switch (mainPlayer.getCam()) {
+                case CAMERA_STYLE_RE_1:
+                gluLookAt(playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
+                          playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
+                          0.0f,   -0.1f,   0.0f);
+            
+                break;
 
-            /*
-             * Resident Evil Extreme Battle Camera System
-             * Cam 1
-             * Written by St4rk
-             */
+                case CAMERA_STYLE_RE_2:
+                gluLookAt(playerRDT.rdtCameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionZ,
+                          playerRDT.rdtCameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetZ,   
+                          0.0f,   -0.1f,   0.0f);
+                break;
 
-            float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
-            float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
-            float distX = -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
-            float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
-            float distY = -3000.0f;
-            gluLookAt(     camX + distX,  distY, camZ + distZ,
-                           camX, -2500.0f, camZ,   
-                           0.0f, -0.1f, 0.0f);
+                case CAMERA_STYLE_SPECIAL: {
+                    float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
+                    float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
+                    float distX = -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
+                    float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
+                    float distY = -3000.0f;
+                    gluLookAt(     camX + distX,  distY, camZ + distZ,
+                                   camX, -2500.0f, camZ,   
+                                   0.0f, -0.1f, 0.0f);
                 }
+
+                break;
+
+
+                case CAMERA_STYLE_SPECIAL_2: {
+                    float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 500.0f;
+                    float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 500.0f;
+                    float distX = -cos((mainPlayer.getAngle() * PI/180))  * 1000.0;
+                    float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 1000.0;
+                    float distY = -2800.0f;
+                    gluLookAt(     camX + distX,  distY, camZ + distZ,
+                                   camX, -2700.0f, camZ,   
+                                   0.0f, -0.1f, 0.0f);    
+                }
+                break;
+
+                default:
+
+                break;
+            }
+
+
+
+        }
         break;
     }
 }
@@ -1286,6 +1302,7 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
         case EVENT_SYSTEM_KEY_X:
             if (pressed) {
                 keyList[EVENT_SYSTEM_KEY_X] = true;
+                    mainPlayer.setCam(CAMERA_STYLE_SPECIAL_2);
                     mainPlayer.setAnimSection(EMD_SECTION_4);
                 if (keyList[EVENT_SYSTEM_KEY_UP]) {
                     mainPlayer.setAnimType(STAND_SEC4_ANIM_UAIM);
@@ -1298,6 +1315,7 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
                 keyList[EVENT_SYSTEM_KEY_X] = false;
                 mainPlayer.setAnimSection(EMD_SECTION_4);
                 mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
+                mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
             }
         break;
 
