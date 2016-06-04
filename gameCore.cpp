@@ -927,31 +927,31 @@ void MainLoop() {
                     break;
                 }
 
-                if ((core->keyList[0] == true)) {
-                    if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
-                        x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
-                        z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
+                    if ((core->keyList[0] == true)) {
+                        if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
+                            x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
+                            z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
+                            if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
+                                                              gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
+
+                                mainPlayer.setX(x);
+                                mainPlayer.setZ(z);
+
+                            } 
+                        }
+                    } else if ((core->keyList[1] == true)) {
+                        if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
+                            x = mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0;
+                            z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
+                        }
                         if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
                                                           gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
 
-                            mainPlayer.setX(x);
-                            mainPlayer.setZ(z);
+                                mainPlayer.setX(x);
+                                mainPlayer.setZ(z);
 
                         } 
-                    }
-                } else if ((core->keyList[1] == true)) {
-                    if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
-                        x = mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0;
-                        z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
-                    }
-                    if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
-                                                      gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
-
-                            mainPlayer.setX(x);
-                            mainPlayer.setZ(z);
-
                     } 
-                } 
 
 
 

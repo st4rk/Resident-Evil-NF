@@ -38,6 +38,11 @@ public:
   	bool collisionRectangle(int px, int py, int pz,
   							int nx, int ny, int nz);
 
+
+  	bool collisionRectangleHW(int px, int py, int pz,
+  							  int nx, int ny, int nz,
+  							  int h, int w);
+
   	float interpolation(float n1, float n2, float p);
 private:
 

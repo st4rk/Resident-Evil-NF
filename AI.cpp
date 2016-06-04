@@ -14,13 +14,46 @@ void AI::zombie_re_2(player* p, enemy *e) {
 	switch (e->getState()) {
 		case ZOMBIE_RE2_STATE_BEGIN:
 			e->setAnimSection(EMD_SECTION_4);
-			e->setAnimType(ZOMBIE_SEC4_ANIM_W_HIT);
+			e->setAnimType(ZOMBIE_SEC4_ANIM_IDLE);
 			e->setState(ZOMBIE_RE2_STATE_IDLE);
 		break;
 
-		case ZOMBIE_RE2_STATE_IDLE:
+		case ZOMBIE_RE2_STATE_IDLE: {
 
+			if (eMath.collisionRectangleHW(e->getX(), e->getY(), e->getZ(),
+										   p->getX(), p->getY(), p->getZ(),
+										   8192, 8192)) {
+
+				e->setAnimSection(EMD_SECTION_2);
+				e->setAnimType(ZOMBIE_SEC2_ANIM_AWALK);
+				e->setState(ZOMBIE_RE2_STATE_FOLLOW);
+			}
+
+		}
 		break;
+
+
+		case ZOMBIE_RE2_STATE_FOLLOW: {
+ 		if (!eMath.collisionRectangle(p->getX(), p->getY(), p->getZ(),
+ 			                          e->getX(), e->getY(), e->getZ())) {
+	
+	            if (p->getX() > e->getX()) {
+	                e->setX(e->getX() + 5);
+	            } else {
+	                e->setX(e->getX() - 5);
+	            }
+
+	            if (p->getZ() > e->getZ()) {
+	                e->setZ(e->getZ() + 5);
+	            } else {
+	                e->setZ(e->getZ() - 5);        
+	            }
+
+	            float angle = (atan2(((p->getX() - e->getX())), 
+	    					  (p->getZ() - e->getZ())) / (M_PI / 180));
+	    		e->setAngle((angle - 90));
+    		}
+		}
 	}
 }
 

@@ -7,10 +7,14 @@
  */
 
 
-#include "gameStruct.h"
 
 #ifndef AI_H
 #define AI_H
+
+#include "gameStruct.h"
+#include "gameMath.h"
+#include <cmath>
+
 
 /* 
  * Resident Evil 2 - Zombie EMD Standard
@@ -65,8 +69,9 @@ enum ZOMBIE_SEC4_ANIMATION {
 
 
 enum ZOMBIE_RE2_STATE {
-	ZOMBIE_RE2_STATE_BEGIN = 0,
-	ZOMBIE_RE2_STATE_IDLE  = 1
+	ZOMBIE_RE2_STATE_BEGIN  = 0,
+	ZOMBIE_RE2_STATE_IDLE   = 1,
+	ZOMBIE_RE2_STATE_FOLLOW = 2
 };
 
 enum AI_LIST {
@@ -84,7 +89,7 @@ public:
 
 private:
 
-
+	gameMath eMath;
 };
 
 
