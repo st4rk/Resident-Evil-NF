@@ -23,6 +23,7 @@ enum FADE_TYPE {
 	TYPE_FADE_SPECIAL    = 4
 };
 
+
 class gameMisc {
 public:
 	gameMisc();
@@ -33,6 +34,8 @@ public:
 	void setupFadeEffect(unsigned char type, float R, float G, float B, 
 					     unsigned int  timer);
 	void renderFadeEffect();
+	void renderText(float, float, float, int, std::string, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0);
+	void renderBoundingBox(float x, float y, float z);
 
 	bool isInFade();
 
@@ -51,6 +54,8 @@ private:
 
 	bool doubleMode;
 	unsigned char specialMode;
+
+	bmp_loader_24bpp engineFont;
 };
 
 

@@ -9,12 +9,109 @@ gameMisc::gameMisc() {
 	mEnable = false;
 	gTimer = 0;
 	mtype   = TYPE_FADE_NONE;
+
+    engineFont.bmpLoaderFile("resource/texture/1.bmp",1);
 }
 
 gameMisc::~gameMisc() {
 
 }
 
+
+
+
+
+/*
+ * renderText
+ * This function is used to draw text on Screen
+ * There are two different charset
+ * CHAR_SET_1 TEXT_TYPE_NORMAL
+ * CHAR_SET_2 TEXT_TYPE_LITTLE
+ */
+void gameMisc::renderText(float x, float y, float z, int type, std::string text, float r, float g, float b, float a) {
+    glDisable(GL_LIGHTING);
+
+    glLoadIdentity();
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_RGBA, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
+
+
+    /* 
+       Important information, character(big) Y(up) = 0.0532
+       Next Character(right), 0.055 * char_num
+       Note: what the hell is wrong with my coordinate system ? :|
+       ASCII Starts in 0x24(36)
+
+       There are 18(0x12) character per line
+       To know which charater draw in line, character_num mod 18
+       To know which line is, (character_num - 36) / 18
+
+    */
+
+    switch(type) {
+        case TEXT_TYPE_NORMAL: {
+            float tX = -0.77+x;
+            float tY =  0.48-y;
+
+            for (unsigned int i = 0; i < text.size(); i++, tX += 0.07) {
+                if (text[i] != ' ') {
+                    float Xo = 0.055 * (text[i] % 18);
+                    float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
+                    glBegin(GL_QUADS);                     
+                        glColor4f(r,g,b,a);
+                        /* Texture Coord */
+                        glTexCoord2f(Xo,Yo);
+                        glVertex3f(tX, tY, -1.0f);            
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.053,Yo);
+                        glVertex3f(tX+0.08f, tY, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.053,Yo+0.053);
+                        glVertex3f(tX+0.08f,tY+0.08f, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo, Yo+0.053);
+                        glVertex3f(tX, tY+0.08f, -1.0f);                  
+                    glEnd();
+                }
+            }
+        }
+        break;
+
+        case TEXT_TYPE_LITTLE: {
+            float tX = -0.77+x;
+            float tY =  0.48-y;
+
+            for (unsigned int i = 0; i < text.size(); i++, tX += 0.05) {
+                if (text[i] != ' ') {
+                    float Xo = 0.03123 * (text[i] % 32);
+                    float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
+                    glBegin(GL_QUADS);                     
+                        glColor4f(r,g,b,a);
+                        /* Texture Coord */
+                        glTexCoord2f(Xo,Yo);
+                        glVertex3f(tX, tY, -1.0f);            
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.030,Yo);
+                        glVertex3f(tX+0.05f, tY, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo+0.030,Yo+0.030);
+                        glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
+                        /* Texture Coord */
+                        glTexCoord2f(Xo, Yo+0.030);
+                        glVertex3f(tX, tY+0.05f, -1.0f);                  
+                    glEnd();
+                }
+            }
+        }
+        break;
+
+        default:
+
+        break;        
+    }
+    
+    glEnable(GL_LIGHTING);
+}
 
 /*
  * setupFadeEffect
@@ -245,3 +342,19 @@ void gameMisc::renderSquareWithTexture(bmp_loader_24bpp *texture, bool ARGB) {
 
 
 bool gameMisc::isInFade() { return mEnable; }
+
+
+
+void gameMisc::renderBoundingBox(float x, float y, float z) {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+	
+		glPointSize(100000);
+	glBegin(GL_POINTS);
+		glColor3f(1.0f, 0.0f, 1.0f);
+		glVertex3f(x,y,z);
+	glEnd();
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+}

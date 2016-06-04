@@ -146,13 +146,6 @@ enum PLAYER_ACTION {
    PLAYER_ACTION_R_RIGHT = 2
 };
 
-enum PLAYER_CAMERA_STYLE {
-   CAMERA_STYLE_RE_1       = 0,
-   CAMERA_STYLE_RE_2       = 1,
-   CAMERA_STYLE_SPECIAL    = 2,
-   CAMERA_STYLE_SPECIAL_2  = 3
-};
-
 enum ENGINE_MENU_STATE {
    STATE_MAIN_MENU = 1,
    STATE_CREDITS   = 2,
@@ -173,8 +166,6 @@ enum SEL_PLAYER_SUB_MENU {
    SEL_PLAYER_BEGIN      = 0,
    SEL_PLAYER_START      = 1
 };
-
-#define PI 3.14159265359
 
 // InGame sub-menus/status
 #define IN_GAME_BEGIN          0x0

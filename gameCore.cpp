@@ -47,7 +47,6 @@ EMD modelList[MAX_MODEL];
 // engineThisGame é a primeira imagem que aparece quando você abre o jogo
 // dizendo que o jogo contem cenas bla bla e o mainMenu é o menu de start
 bmp_loader_24bpp engineBackground;
-bmp_loader_24bpp engineFont;
 bmp_loader_24bpp engineThisGame;
 bmp_loader_24bpp engineMainMenu;
 bmp_loader_24bpp engineLogo;
@@ -182,18 +181,22 @@ void background_Loader(std::string roomName) {
 void enemyAI_followPlayer() {
 
     /* Crappy AI, it's only follow the player, without path find obvious */
-    if (mainPlayer.getX() > gameEnemy.getX()) {
-        gameEnemy.setX(gameEnemy.getX() + 5);
-    } else {
-        gameEnemy.setX(gameEnemy.getX() - 5);
-    }
 
-    if (mainPlayer.getZ() > gameEnemy.getZ()) {
-        gameEnemy.setZ(gameEnemy.getZ() + 5);
-    } else {
-        gameEnemy.setZ(gameEnemy.getZ() - 5);        
-    }
 
+    if (!mathEngine.collisionRectangle(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
+                                      gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ())) {
+            if (mainPlayer.getX() > gameEnemy.getX()) {
+                gameEnemy.setX(gameEnemy.getX() + 5);
+            } else {
+                gameEnemy.setX(gameEnemy.getX() - 5);
+            }
+
+            if (mainPlayer.getZ() > gameEnemy.getZ()) {
+                gameEnemy.setZ(gameEnemy.getZ() + 5);
+            } else {
+                gameEnemy.setZ(gameEnemy.getZ() - 5);        
+            }
+    }
 
     /* AI Animation */
     if (gameEnemy.getAnimCount() < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[0].animCount-1))
@@ -264,8 +267,6 @@ void gameCore::renderLoadResource() {
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
 
-    engineFont.bmpLoaderFile("resource/texture/1.bmp",1);
-
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setModel(0);
     /*
@@ -278,7 +279,7 @@ void gameCore::renderLoadResource() {
     mainPlayer.setZ(0.0f);
 
 
-    mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
+    mainPlayer.setCam(CAMERA_STYLE_SEL_CHAR);
     mainPlayer.setAngle(90.0);
 
     /* Init teste enemy */
@@ -310,107 +311,17 @@ void gameCore::renderLoadResource() {
 }
 
 
-/*
- * renderText
- * This function is used to draw text on Screen
- * There are two different charset
- * CHAR_SET_1 TEXT_TYPE_NORMAL
- * CHAR_SET_2 TEXT_TYPE_LITTLE
- */
-void gameCore::renderText(float x, float y, float z, int type, std::string text, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0) {
-    glDisable(GL_LIGHTING);
-
-    glLoadIdentity();
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, engineFont.bmpWidth, engineFont.bmpHeight, 0,GL_RGBA, GL_UNSIGNED_BYTE, engineFont.bmpBuffer);
-
-
-    /* 
-       Important information, character(big) Y(up) = 0.0532
-       Next Character(right), 0.055 * char_num
-       Note: what the hell is wrong with my coordinate system ? :|
-       ASCII Starts in 0x24(36)
-
-       There are 18(0x12) character per line
-       To know which charater draw in line, character_num mod 18
-       To know which line is, (character_num - 36) / 18
-
-    */
-
-    switch(type) {
-        case TEXT_TYPE_NORMAL: {
-            float tX = -0.77+x;
-            float tY =  0.48-y;
-
-            for (unsigned int i = 0; i < text.size(); i++, tX += 0.07) {
-                if (text[i] != ' ') {
-                    float Xo = 0.055 * (text[i] % 18);
-                    float Yo = 0.8332 - (0.0532 * ((text[i]-36)/18));
-                    glBegin(GL_QUADS);                     
-                        glColor4f(r,g,b,a);
-                        /* Texture Coord */
-                        glTexCoord2f(Xo,Yo);
-                        glVertex3f(tX, tY, -1.0f);            
-                        /* Texture Coord */
-                        glTexCoord2f(Xo+0.053,Yo);
-                        glVertex3f(tX+0.08f, tY, -1.0f);              
-                        /* Texture Coord */
-                        glTexCoord2f(Xo+0.053,Yo+0.053);
-                        glVertex3f(tX+0.08f,tY+0.08f, -1.0f);              
-                        /* Texture Coord */
-                        glTexCoord2f(Xo, Yo+0.053);
-                        glVertex3f(tX, tY+0.08f, -1.0f);                  
-                    glEnd();
-                }
-            }
-        }
-        
-        case TEXT_TYPE_LITTLE: {
-            float tX = -0.77+x;
-            float tY =  0.48-y;
-
-            for (unsigned int i = 0; i < text.size(); i++, tX += 0.05) {
-                if (text[i] != ' ') {
-                    float Xo = 0.03123 * (text[i] % 32);
-                    float Yo = 0.9695 - (0.0320 * ((text[i]-32)/32));
-                    glBegin(GL_QUADS);                     
-                        glColor4f(r,g,b,a);
-                        /* Texture Coord */
-                        glTexCoord2f(Xo,Yo);
-                        glVertex3f(tX, tY, -1.0f);            
-                        /* Texture Coord */
-                        glTexCoord2f(Xo+0.030,Yo);
-                        glVertex3f(tX+0.05f, tY, -1.0f);              
-                        /* Texture Coord */
-                        glTexCoord2f(Xo+0.030,Yo+0.030);
-                        glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
-                        /* Texture Coord */
-                        glTexCoord2f(Xo, Yo+0.030);
-                        glVertex3f(tX, tY+0.05f, -1.0f);                  
-                    glEnd();
-                }
-            }
-        }
-        break;
-
-        default:
-
-        break;        
-    }
-    
-    glEnable(GL_LIGHTING);
-}
-
 /* All stuff related with debug menu goes here */
 void gameCore::eventSystem_debugMenu() {
+     /*
     char jump_to[20];
 
-    renderText(0.42, 0.30, 0.0f, TEXT_TYPE_LITTLE, "--Debug Menu--");
+    miscStuff.renderText(0.42, 0.30, 0.0f, TEXT_TYPE_LITTLE, "--Debug Menu--");
 
 
     sprintf(jump_to, "Jump %03x %s",debugR[debug_jRoomNum].roomNum, debugR[debug_jRoomNum].roomName.c_str());
 
-    renderText(0.35, 0.35, 0.0f, TEXT_TYPE_LITTLE, jump_to);
+    miscStuff.renderText(0.35, 0.35, 0.0f, TEXT_TYPE_LITTLE, jump_to);
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLoadIdentity();
@@ -428,6 +339,8 @@ void gameCore::eventSystem_debugMenu() {
     glEnable(GL_TEXTURE_2D);
 
     glEnable(GL_LIGHTING);
+
+    */
 }
 
 void eventSystem_debugJumpToRun() {
@@ -804,7 +717,7 @@ void gameCore::engineAnimation() {
 
             if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
                 if ((mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getAnimSection() == EMD_SECTION_2)) {
-                    inInterpolation = 1;
+                //  inInterpolation = 1;
                 }
             }
 
@@ -1012,7 +925,8 @@ void gameCore::engineAnimation() {
 
 void MainLoop() {
     bool canMove = true;
-
+    float x = 0;
+    float z = 0;
     if (tmr60FPS < SDL_GetTicks()) {
         tmr60FPS = (SDL_GetTicks() + (1000/60));
 
@@ -1043,15 +957,32 @@ void MainLoop() {
 
                 if ((core->keyList[0] == true)) {
                     if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
-                        mainPlayer.setX(mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0);
-                        mainPlayer.setZ(mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0);
+                        x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
+                        z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
+                        if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
+                                                          gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
+
+                            mainPlayer.setX(x);
+                            mainPlayer.setZ(z);
+
+                        } 
                     }
                 } else if ((core->keyList[1] == true)) {
                     if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
-                        mainPlayer.setX(mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0);
-                        mainPlayer.setZ(mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0);
+                        x = mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0;
+                        z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
                     }
-                }
+                    if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
+                                                      gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
+
+                            mainPlayer.setX(x);
+                            mainPlayer.setZ(z);
+
+                    } 
+                } 
+
+
+
 
                     /* Collision Detection RE 1 
                     for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
@@ -1131,82 +1062,6 @@ void MainLoop() {
     }
 }
 
-
-/*
- * renderCamera
- * This function handle all cameras used in game
- */
-void gameCore::renderCamera() {
-
-    switch (gameState) {
-        case STATE_SEL_CHAR: {
-
-            float camX = 0  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
-            float camZ = 0  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
-            float distX =    -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
-            float distZ =     sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
-            float distY = -2200.0f;
-            gluLookAt(     camX + distX,  distY, camZ + distZ,
-                           camX, -2600.0f, camZ,   
-                           0.0f, -0.1f, 0.0f);
-
-        }            
-        break;
-
-        case STATE_IN_GAME: {
-
-
-            switch (mainPlayer.getCam()) {
-                case CAMERA_STYLE_RE_1:
-                gluLookAt(playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
-                          playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
-                          0.0f,   -0.1f,   0.0f);
-            
-                break;
-
-                case CAMERA_STYLE_RE_2:
-                gluLookAt(playerRDT.rdtCameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtCameraPos[mainPlayer.getCam()].positionZ,
-                          playerRDT.rdtCameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtCameraPos[mainPlayer.getCam()].targetZ,   
-                          0.0f,   -0.1f,   0.0f);
-                break;
-
-                case CAMERA_STYLE_SPECIAL: {
-                    float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 800.0f;
-                    float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 800.0f;
-                    float distX = -cos((mainPlayer.getAngle() * PI/180))  * 3500.0;
-                    float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 3500.0;
-                    float distY = -3000.0f;
-                    gluLookAt(     camX + distX,  distY, camZ + distZ,
-                                   camX, -2500.0f, camZ,   
-                                   0.0f, -0.1f, 0.0f);
-                }
-
-                break;
-
-
-                case CAMERA_STYLE_SPECIAL_2: {
-                    float camX = mainPlayer.getX()  - sin((mainPlayer.getAngle() * PI/180)) * 500.0f;
-                    float camZ = mainPlayer.getZ()  - cos((mainPlayer.getAngle() * PI/180)) * 500.0f;
-                    float distX = -cos((mainPlayer.getAngle() * PI/180))  * 1000.0;
-                    float distZ =  sin((mainPlayer.getAngle() * PI/180))  * 1000.0;
-                    float distY = -2800.0f;
-                    gluLookAt(     camX + distX,  distY, camZ + distZ,
-                                   camX, -2700.0f, camZ,   
-                                   0.0f, -0.1f, 0.0f);    
-                }
-                break;
-
-                default:
-
-                break;
-            }
-
-
-
-        }
-        break;
-    }
-}
 
 /*
  * eventSystem -> gameAction
@@ -1330,45 +1185,33 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
     }
 }
 
-/* I had some problems with collision, so I decide to draw the collisions wire-frame
-it will help me to figure if the collions boundaries are right or wrong */
-void renderCollision() {
+
+void renderBoundingBox(float x, float y, float z) {
 
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glLoadIdentity();
-    gluLookAt(     playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].positionZ,
-                   playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetX, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetY, playerRDT.rdtRE1CameraPos[mainPlayer.getCam()].targetZ,   
-                   0.0f,   -0.1f,   0.0f);
+
+    core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
+                      mainPlayer.getZ(),  mainPlayer.getAngle());
 
     // Enable wireframe mode
-    glPolygonMode(GL_FRONT, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
- 
-    for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
-        if (playerRDT.rdtRE1ColissionArray[i].type == 1) {
-            /* Wireframe collision */
-            glBegin(GL_QUADS);      
-                glColor3f(1.0f, 0.0f, 0.0f);                  
-                glVertex3f(playerRDT.rdtRE1ColissionArray[i].x1, 0x0,  playerRDT.rdtRE1ColissionArray[i].z1);          
-                glVertex3f((playerRDT.rdtRE1ColissionArray[i].x1 + playerRDT.rdtRE1ColissionArray[i].x2), 0x0,  playerRDT.rdtRE1ColissionArray[i].z1);              
-                glVertex3f((playerRDT.rdtRE1ColissionArray[i].x1 + playerRDT.rdtRE1ColissionArray[i].x2), 0x0,  (playerRDT.rdtRE1ColissionArray[i].z1 + playerRDT.rdtRE1ColissionArray[i].z2));   
-                glVertex3f(playerRDT.rdtRE1ColissionArray[i].x1, 0x0,  (playerRDT.rdtRE1ColissionArray[i].z1 + playerRDT.rdtRE1ColissionArray[i].z2));       
-            glEnd();
-        }
-    }
+    x = (x - 512.0f);
+    z = (z - 512.0f);
 
     /* Wireframe collision */
     glBegin(GL_QUADS);      
         glColor3f(1.0f, 0.0f, 0.0f);                  
-        glVertex3f(mainPlayer.getX(), 0x0,  mainPlayer.getZ());             
-        glVertex3f((mainPlayer.getX() + 1280), 0x0,  mainPlayer.getZ());              
-        glVertex3f((mainPlayer.getX() + 1280), 0x0,  (mainPlayer.getZ() + 1280));   
-        glVertex3f(mainPlayer.getX(), 0x0,  (mainPlayer.getZ() + 1280));       
+        glVertex3f(x,             0.0f,      z);             
+        glVertex3f((x + 1024.0f), 0.0f,      z);              
+        glVertex3f((x + 1024.0f), 0.0f,     (z + 1024.0f));   
+        glVertex3f(x,             0.0f,     (z + 1024.0f));
     glEnd();
 
     // disable wireframe
-    glPolygonMode(GL_FRONT, GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_LIGHTING);
@@ -1415,7 +1258,8 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
         
         glLoadIdentity();        
             
-        core->renderCamera();
+        core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
+                              mainPlayer.getZ(),  mainPlayer.getAngle());
 
         glTranslatef(m_x, m_y, m_z);  
 
@@ -1602,11 +1446,11 @@ void gameCore::renderMainMenu() {
                 miscStuff.renderSquareWithTexture(&engineMainMenu, false);
                 if (!miscStuff.isInFade()) {
                     if (menuArrow == 0) {
-                        renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME", 0.0f, 1.0f, 0.0f, 1.0f);
-                        renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT");
+                        miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME", 0.0f, 1.0f, 0.0f, 1.0f);
+                        miscStuff.renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT");
                     } else if (menuArrow == 1) {
-                        renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT", 0.0f, 1.0f, 0.0f, 1.0f);
-                        renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
+                        miscStuff.renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT", 0.0f, 1.0f, 0.0f, 1.0f);
+                        miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
                     }
                 }
             break;
@@ -1706,8 +1550,8 @@ void gameCore::renderSelectChar() {
 
 
 
-                        renderText(0.70, 0.10, 0.0, TEXT_TYPE_LITTLE, "Leon S. Kennedy", 1.0f, 1.0f, 1.0f, 1.0f);
-                        renderText(0.80, 0.20, 0.0, TEXT_TYPE_LITTLE, "From R.P.D ", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.70, 0.10, 0.0, TEXT_TYPE_LITTLE, "Leon S. Kennedy", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.80, 0.20, 0.0, TEXT_TYPE_LITTLE, "From R.P.D ", 1.0f, 1.0f, 1.0f, 1.0f);
                 }
                 break;
                 
@@ -1731,9 +1575,9 @@ void gameCore::renderSelectChar() {
                         renderEMD(x-500, -150.0f,z, 
                             45.0f+ nextCharAngle, 3,  mainPlayer.getAnimFrame());
 
-                        renderText(0.70, 0.10, 0.0, TEXT_TYPE_LITTLE, "Chris Redfield", 1.0f, 1.0f, 1.0f, 1.0f);
-                        renderText(0.80, 0.20, 0.0, TEXT_TYPE_LITTLE, "S.T.A.R.S. ", 1.0f, 1.0f, 1.0f, 1.0f);
-                        renderText(0.80, 0.25, 0.0, TEXT_TYPE_LITTLE, "Alpha Team", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.70, 0.10, 0.0, TEXT_TYPE_LITTLE, "Chris Redfield", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.80, 0.20, 0.0, TEXT_TYPE_LITTLE, "S.T.A.R.S. ", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.80, 0.25, 0.0, TEXT_TYPE_LITTLE, "Alpha Team", 1.0f, 1.0f, 1.0f, 1.0f);
                 }
                 break;
 
@@ -1748,23 +1592,23 @@ void gameCore::renderSelectChar() {
 
             switch (charMusicNum) {
                 case 0:
-                    renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil 2", 1.0f, 1.0f, 1.0f, 1.0f);
-                    renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Escape Alarm Theme", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil 2", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Escape Alarm Theme", 1.0f, 1.0f, 1.0f, 1.0f);
                 break;
 
                 case 1:
-                    renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil:TDSC", 1.0f, 1.0f, 1.0f, 1.0f);
-                    renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Sorrow - Steve Battle", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil:TDSC", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Sorrow - Steve Battle", 1.0f, 1.0f, 1.0f, 1.0f);
                 break;
 
                 case 2:
-                    renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil:TDSC", 1.0f, 1.0f, 1.0f, 1.0f);
-                    renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Blood Judgement - Final Boss", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil:TDSC", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Blood Judgement - Final Boss", 1.0f, 1.0f, 1.0f, 1.0f);
                 break;
                 
                 case 3:
-                    renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil CODE: Veronica", 1.0f, 1.0f, 1.0f, 1.0f);
-                    renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Alexia - Final Boss Theme", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil CODE: Veronica", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Alexia - Final Boss Theme", 1.0f, 1.0f, 1.0f, 1.0f);
 
                 break;
             }
@@ -1886,6 +1730,7 @@ void gameCore::renderGame() {
 
                     break;
                 }
+                mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
                 soundEngine.enginePlaySound(1);
                 inGame = IN_GAME_NORMAL;
             }
@@ -1896,7 +1741,7 @@ void gameCore::renderGame() {
             //drawMapBackground();
 
             /* All model rendering is done by renderEMD Function */
-            /* Player Rendering */
+           /* Player Rendering */
             renderEMD(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(), 
                       mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
             /* Enemy Rendering */
@@ -1904,14 +1749,17 @@ void gameCore::renderGame() {
                       gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
 
 
-            if (wireFrameMode)
-                renderCollision();
+            renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
+            renderBoundingBox(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ());
+
 
             char coord[0xFF];
 
-            sprintf(coord, "X:%d-Y:%d-Z:%d-Angle:%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
+            sprintf(coord, "XYZA %d/%d/%d/%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
+            miscStuff.renderText(0.0f, 1.00f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
-            renderText(0.0f, 0.02f, 100.0f, TEXT_TYPE_LITTLE, coord);
+            vrMode.gameLogic();
+
 
             if (gameState == STATE_IN_DEBUG) {
                 if (jumpToRun) 
@@ -2047,7 +1895,7 @@ void gameCore::renderInit() {
     // Título do Projeto
     glutCreateWindow(GAME_NAME);
     // Limpa a tela
-    glClearColor(0.0, 1.0, 0.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
 
     // Luz para normal dos modelos
     glEnable(GL_LIGHTING);

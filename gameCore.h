@@ -24,6 +24,8 @@
 #include "gameMath.h"
 #include "gameEvent.h"
 #include "gameMisc.h"
+#include "vr.h"
+#include "cam.h"
 
 #include "depack_vlc.h"
 #include "depack_mdec.h"
@@ -56,12 +58,10 @@ public:
 	 * OpenGL, GLUT and Texture Stuff
 	 */
 	void renderInit();
-	void renderText(float, float, float, int, std::string, float, float, float, float);
 	void renderLoadResource();
 	void renderMainMenu();
 	void renderGame();
 	void renderSelectChar();
-	void renderCamera();
 	void renderStateMachine();
 
 	/*
@@ -99,7 +99,12 @@ public:
 	 */
 
 	bool keyList[0x10];
+
+	cam camMode;
 private:
+
+
+	VR  vrMode;
 
 	std::vector<Mix_Chunk*> mixList;
 	std::vector<EMD_SEC2_DATA_T> interAnimation;

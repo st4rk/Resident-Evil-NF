@@ -26,6 +26,32 @@ float gameMath::interpolation(float n1, float n2, float p) {
 	return ((n1 * p) + (n2 * (1.0f - p)));
 }
 
+bool gameMath::collisionRectangle(int px, int py, int pz,
+								  int nx, int ny, int nz) {
+
+	rectangle rect1;
+	rectangle rect2;
+
+	rect1.x = (px - 512);
+	rect1.y = (pz - 512);
+	rect1.h = 1024;
+	rect1.w = 1024;
+
+	rect2.x = (nx - 512);
+	rect2.y = (nz - 512);
+	rect2.h = 1024;
+	rect2.w = 1024;
+
+
+	if ( (rect1.x < (rect2.x + rect2.w)) &&
+		 ((rect1.x + rect1.w) > rect2.x) &&
+		 (rect1.y < (rect2.y + rect2.h)) &&
+		 ((rect1.h + rect1.y) > rect2.y)) {
+		return true;
+	}
+
+	return false;
+}
 
 bool gameMath::mapSwitch(signed int x, signed int z, signed int x1, signed int z1, signed int x2, signed int z2, signed int x3, signed int z3, signed int x4, signed int z4) {
 	return 0;
