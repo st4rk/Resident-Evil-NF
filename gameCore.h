@@ -19,13 +19,13 @@
 #include "EMD.h"
 #include "PLD.h"
 #include "RDT.h"
-#include "gameStruct.h"
 #include "gameSound.h"
 #include "gameMath.h"
 #include "gameEvent.h"
 #include "gameMisc.h"
 #include "vr.h"
 #include "cam.h"
+#include "AI.h"
 
 #include "depack_vlc.h"
 #include "depack_mdec.h"
@@ -77,7 +77,7 @@ public:
 	/* 
 	 * Animation
 	 */
-	void engineAnimation();
+	void engineAnimation(entity *e);
 	
 	/*
 	 * System callback's and related
@@ -101,6 +101,8 @@ public:
 	bool keyList[0x10];
 
 	cam camMode;
+	AI  engineAI;
+
 private:
 
 

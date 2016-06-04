@@ -90,6 +90,23 @@ float  entity::getZ()     { return z; }
 float  entity::getAngle() { return angle; }
 
 
+enemy::enemy() {
+	type  = 0;
+	state = 0;
+}
+
+enemy::~enemy() {
+	type  = 0;
+	state = 0;
+}
+
+void enemy::setType(unsigned int type)   { this->type  = type;   }
+void enemy::setState(unsigned int state) { this->state = state; }
+
+unsigned int enemy::getType()  { return type;  }
+unsigned int enemy::getState() { return state; }
+
+
 player::player() {
 	for (int i = 0; i < 8; i++) {
 		iID[i] = 0x0;
@@ -121,38 +138,6 @@ unsigned int player::getItemID(unsigned char slot) {
 
 unsigned int player::getCam() { return cam; }
 
-
-/****************
-** Enemy Class **
-*****************/
-
-enemyClass::enemyClass() {
-
-}
-
-enemyClass::~enemyClass() {
-
-}
-
-
-float enemyClass::getX() { return x; }
-float enemyClass::getY() { return y; }
-float enemyClass::getZ() { return z; }
-float enemyClass::getAngle() { return p; }
-
-int   enemyClass::getEMD() { return emd; }
-
-unsigned int enemyClass::getAnimCount() { return animCount; }
-
-void  enemyClass::setX(float X) { x = X; }
-void  enemyClass::setY(float Y) { y = Y; }
-void  enemyClass::setZ(float Z) { z = Z; }
-void  enemyClass::setEMD(int n) { emd = n; }
-void  enemyClass::setAngle(float n) { p = n; }
-void  enemyClass::setAnim(EMD_SEC2_DATA_T n) { anim = n; }
-void  enemyClass::setAnimCount(unsigned int n) { animCount = n; }
-
-EMD_SEC2_DATA_T enemyClass::getAnim() { return anim; }
 
 bmp_loader_24bpp::bmp_loader_24bpp() {
 	memset(bmpHeader, 0x0, 54);

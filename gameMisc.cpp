@@ -349,12 +349,6 @@ void gameMisc::renderBoundingBox(float x, float y, float z) {
     glDisable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
 	
-		glPointSize(100000);
-	glBegin(GL_POINTS);
-		glColor3f(1.0f, 0.0f, 1.0f);
-		glVertex3f(x,y,z);
-	glEnd();
-
     glEnable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
 }

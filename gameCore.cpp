@@ -56,7 +56,7 @@ bmp_loader_24bpp engineCharMenu;
 player      mainPlayer;
 gameMath    mathEngine;
 gameSound   soundEngine;
-enemyClass  gameEnemy;
+enemy       gameEnemy;
 gameMisc    miscStuff;
 
 /* Room transition */
@@ -180,37 +180,6 @@ void background_Loader(std::string roomName) {
 *************************/
 void enemyAI_followPlayer() {
 
-    /* Crappy AI, it's only follow the player, without path find obvious */
-
-
-    if (!mathEngine.collisionRectangle(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
-                                      gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ())) {
-            if (mainPlayer.getX() > gameEnemy.getX()) {
-                gameEnemy.setX(gameEnemy.getX() + 5);
-            } else {
-                gameEnemy.setX(gameEnemy.getX() - 5);
-            }
-
-            if (mainPlayer.getZ() > gameEnemy.getZ()) {
-                gameEnemy.setZ(gameEnemy.getZ() + 5);
-            } else {
-                gameEnemy.setZ(gameEnemy.getZ() - 5);        
-            }
-    }
-
-    /* AI Animation */
-    if (gameEnemy.getAnimCount() < (modelList[gameEnemy.getEMD()].emdSec2AnimInfo[0].animCount-1))
-        gameEnemy.setAnimCount(gameEnemy.getAnimCount() + 1);
-    else {
-        gameEnemy.setAnimCount(0);
-    }
-
-    gameEnemy.setAnim(modelList[gameEnemy.getEMD()].emdSec2Data[gameEnemy.getAnimCount()+modelList[gameEnemy.getEMD()].emdSec2AnimInfo[0].animStart]);
-    
-
-    /* Angle between two vect, to know the player position */
-    float angle = (atan2(((mainPlayer.getX() - gameEnemy.getX())), (mainPlayer.getZ() - gameEnemy.getZ())) / (M_PI / 180));
-    gameEnemy.setAngle((angle-90)); 
 }
 
 /*
@@ -287,8 +256,12 @@ void gameCore::renderLoadResource() {
     gameEnemy.setX(0);
     gameEnemy.setZ(-10000.0f);
     gameEnemy.setY(0);
-    gameEnemy.setEMD(4);
+    gameEnemy.setModel(4);
     gameEnemy.setAngle(0);
+    gameEnemy.setState(ZOMBIE_RE2_STATE_BEGIN);
+    gameEnemy.setType(AI_TYPE_ZOMBIE_RE2);
+    gameEnemy.setAnimSection(EMD_SECTION_4);
+    gameEnemy.setAnimType(ZOMBIE_SEC4_ANIM_IDLE);
 
 
     /* Hardcoded Debug Room X,Y,Z,RoomNum and RoomName !*/
@@ -704,242 +677,241 @@ void gameCore::eventSystem_keyboardUp(unsigned char key, int x, int y) {
  * engineAnimation
  * Here all game animation is handled
  */
-void gameCore::engineAnimation() {
-    if (coreTmr_anim <= SDL_GetTicks()) {
-        coreTmr_anim = SDL_GetTicks() + 24;
+
+void gameCore::engineAnimation(entity *e) {
+    /*
+     * Verify if is the same animation, if not, should interpolate the animation
+     */
+
+    if ((inInterpolation == 0) && ((oldAnim != e->getAnimType()) 
+                      || (oldSection != e->getAnimSection()))) {
+
+        if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
+            if ((e->getAnimType() == STAND_SEC2_ANIM_BACKWARD) && (e->getAnimSection() == EMD_SECTION_2)) {
+            //  inInterpolation = 1;
+            }
+        }
+
+    }
+
+    switch (inInterpolation) {
+        /*
+         * play normal animations 
+         */
+        case 0: {
+            switch (e->getAnimSection()) {
+                case EMD_SECTION_2: {
+                    if (e->getAnimCount() < (modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animCount-1))
+                        e->setAnimCount(e->getAnimCount() + 1);
+                    else {
+                        if (e->getAnimRepeat()) {
+                            e->setAnimCount(0);
+                        }
+                    }
+
+                    e->setAnimFrame(modelList[e->getModel()].emdSec2Data[e->getAnimCount()+modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animStart]);
+                }
+                break;
+
+                case EMD_SECTION_4: {
+                    if (e->getAnimCount() < (modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animCount-1))
+                        e->setAnimCount(e->getAnimCount() + 1);
+                    else {
+                        if (e->getAnimRepeat()) {
+                            switch (e->getAnimType()) {
+                                case STAND_SEC4_ANIM_S_SHOOT:
+                                    e->setAnimType(STAND_SEC4_ANIM_AIM);
+                                break;
+                            }
+                            e->setAnimCount(0);
+                        }
+                    }
+
+                    e->setAnimFrame(modelList[e->getModel()].emdSec4Data[e->getAnimCount()+modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animStart]);
+                }
+                break;
+             }
+        }
+        break;
+
+        /* 
+         * does the interpolation
+         */
+        case 1: {
+            interAnimation.clear();
+            switch (oldSection) {
+                case EMD_SECTION_2: {
+
+                    EMD_SEC2_DATA_T  node;   // new animation (interpolated)
+                    EMD_SEC2_DATA_T *node_2; // old animation
+                    EMD_SEC2_DATA_T *node_3; // new animation
+                    unsigned int     i_2      = 0;
+
+                    float p_factor = (1.0f / ((modelList[e->getModel()].emdSec2AnimInfo[oldAnim].animCount-1) - e->getAnimCount()));
+                    float p = 0.0f;
+
+                    for (unsigned int i = e->getAnimCount(); i < (modelList[e->getModel()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p += p_factor) {
+                        node_2 = &modelList[e->getModel()].emdSec2Data[i+modelList[e->getModel()].emdSec2AnimInfo[oldAnim].animStart];
+                        
+                        switch (e->getAnimSection()) {
+                            case EMD_SECTION_2:
+                                node_3 = &modelList[e->getModel()].emdSec2Data[i_2+modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animStart];
+
+                                for (unsigned int t = 0; t <  modelList[e->getModel()].emdTotalObj; t++) {
+
+                                   node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
+                                   node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
+                                   node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
+                                }
+
+                                if (i_2 < (modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animCount-1))
+                                    i_2++;
+                                else
+                                    i_2 = 0;
+
+                                interAnimation.push_back(node);
+
+                            break;
+
+                            case EMD_SECTION_4:
+                                node_3 = &modelList[e->getModel()].emdSec4Data[i_2+modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animStart];
+        
+                                for (unsigned int t = 0; t <  modelList[e->getModel()].emdTotalObj; t++) {
+                                   node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
+                                   node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
+                                   node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
+                                }
+
+                                if (i_2 < (modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animCount-1))
+                                    i_2++;
+                                else
+                                    i_2 = 0;
+                                
+                                interAnimation.push_back(node);
+                            break;
+                        }                    
+                    }
+                    e->setAnimCount(0);
+                    inInterpolation = 2;
+                }
+                break;
+
+                case EMD_SECTION_4: {
+                    EMD_SEC2_DATA_T  node;   // new animation (interpolated)
+                    EMD_SEC2_DATA_T *node_2; // old animation
+                    EMD_SEC2_DATA_T *node_3; // new animation
+                    unsigned int     i_2    = 0;
+                    float p_factor = (1.0f / 3.0f);
+                    float p = 0.0f;
+
+                    for (unsigned int i = 0; i < 3; i++, p += p_factor) {
+                        node_2 = &modelList[e->getModel()].emdSec4Data[i+modelList[e->getModel()].emdSec4AnimInfo[oldAnim].animStart];
+                        
+                        switch (e->getAnimSection()) {
+                            case EMD_SECTION_2:
+                                node_3 = &modelList[e->getModel()].emdSec2Data[i_2+modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animStart];
+                                // here
+                                for (unsigned int t = 0; t <  modelList[e->getModel()].emdTotalObj; t++) {
+                                   node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
+                                   printf("node.x: %.2f node_2.x %.2f node_3.x %.2f p: %.2f\n", node.vector[t].x, node_2->vector[t].x, node_3->vector[t].x, p);
+                                   node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
+                                   printf("node.y: %.2f node_2.y %.2f node_3.y %.2f p: %.2f\n", node.vector[t].y, node_2->vector[t].y, node_3->vector[t].y, p);
+                                   node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
+                                   printf("node.z: %.2f node_2.z %.2f node_3.z %.2f p: %.2f\n", node.vector[t].z, node_2->vector[t].z, node_3->vector[t].z, p);    
+                                }
+
+                                if (i_2 < (modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animCount-1))
+                                    i_2++;
+                                else
+                                    i_2 = 0;
+
+                                interAnimation.push_back(node);
+
+                            break;
+
+                            case EMD_SECTION_4:
+                                node_3 = &modelList[e->getModel()].emdSec4Data[i_2+modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animStart];
+        
+                                for (unsigned int t = 0; t <  modelList[e->getModel()].emdTotalObj; t++) {
+                                   node.vector[t].x = mathEngine.interpolation(node_3->vector[t].x, node_2->vector[t].x, p);
+                                   node.vector[t].y = mathEngine.interpolation(node_3->vector[t].y, node_2->vector[t].y, p);
+                                   node.vector[t].z = mathEngine.interpolation(node_3->vector[t].z, node_2->vector[t].z, p);
+                                    }
+
+                                if (i_2 < (modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animCount-1))
+                                    i_2++;
+                                else
+                                    i_2 = 0;
+                                
+                                interAnimation.push_back(node);
+                            break;
+                        }                    
+                    }
+
+                    e->setAnimCount(0);
+                    inInterpolation = 2;
+                }
+                break;
+            }
+        }
+        break;
 
         /*
-         * Verify if is the same animation, if not, should interpolate the animation
+         * play the interpolated animation
          */
+        case 2:
+        if (e->getAnimCount() < 3)
+                e->setAnimCount(e->getAnimCount() + 1);
+            else {
 
-        if ((inInterpolation == 0) && ((oldAnim != mainPlayer.getAnimType()) 
-                          || (oldSection != mainPlayer.getAnimSection()))) {
+                e->setAnimCount(0);
 
-            if ((oldSection == EMD_SECTION_4) && (oldAnim == STAND_SEC4_ANIM_IDLE)) {
-                if ((mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) && (mainPlayer.getAnimSection() == EMD_SECTION_2)) {
-                //  inInterpolation = 1;
-                }
-            }
-
-        }
-
-        switch (inInterpolation) {
-            /*
-             * play normal animations 
-             */
-            case 0: {
-                switch (mainPlayer.getAnimSection()) {
-                    case EMD_SECTION_2: {
-                        if (mainPlayer.getAnimCount() < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                            mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
-                        else {
-                            if (mainPlayer.getAnimRepeat()) {
-                                mainPlayer.setAnimCount(0);
-                            }
+/*                    oldAnim         = e->getAnimType();
+                oldSection      = e->getAnimTypeSection();
+                inInterpolation = 0;
+                switch (e->getAnimTypeSection()) {
+                    case EMD_SECTION_2:
+                        if (e->getAnimCount() > (modelList[e->getModel()].emdSec2AnimInfo[e->getAnimType()].animCount-1)) {
+                            e->setAnimCount(0);
                         }
-
-                        mainPlayer.setAnimFrame(modelList[mainPlayer.getModel()].emdSec2Data[mainPlayer.getAnimCount()+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart]);
-                    }
                     break;
 
-                    case EMD_SECTION_4: {
-                        if (mainPlayer.getAnimCount() < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                            mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
-                        else {
-                            if (mainPlayer.getAnimRepeat()) {
-                                switch (mainPlayer.getAnimType()) {
-                                    case STAND_SEC4_ANIM_S_SHOOT:
-                                        mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
-                                    break;
-                                }
-                                mainPlayer.setAnimCount(0);
-                            }
+                    case EMD_SECTION_4:
+                        if (e->getAnimCount() > (modelList[e->getModel()].emdSec4AnimInfo[e->getAnimType()].animCount-1)) {
+                            e->setAnimCount(0);
                         }
-
-                        mainPlayer.setAnimFrame(modelList[mainPlayer.getModel()].emdSec4Data[mainPlayer.getAnimCount()+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart]);
-                    }
-                    break;
-                 }
-            }
-            break;
-
-            /* 
-             * does the interpolation
-             */
-            case 1: {
-                interAnimation.clear();
-                switch (oldSection) {
-                    case EMD_SECTION_2: {
-
-                        EMD_SEC2_DATA_T  node;   // new animation (interpolated)
-                        EMD_SEC2_DATA_T *node_2; // old animation
-                        EMD_SEC2_DATA_T *node_3; // new animation
-                        unsigned int     i_2      = 0;
-
-                        float p_factor = (1.0f / ((modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animCount-1) - mainPlayer.getAnimCount()));
-                        float p = 0.0f;
-
-                        for (unsigned int i = mainPlayer.getAnimCount(); i < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animCount-1); i++, p += p_factor) {
-                            node_2 = &modelList[mainPlayer.getModel()].emdSec2Data[i+modelList[mainPlayer.getModel()].emdSec2AnimInfo[oldAnim].animStart];
-                            
-                            switch (mainPlayer.getAnimSection()) {
-                                case EMD_SECTION_2:
-                                    node_3 = &modelList[mainPlayer.getModel()].emdSec2Data[i_2+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart];
-
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
-
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
-                                    }
-
-                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                                        i_2++;
-                                    else
-                                        i_2 = 0;
-
-                                    interAnimation.push_back(node);
-
-                                break;
-
-                                case EMD_SECTION_4:
-                                    node_3 = &modelList[mainPlayer.getModel()].emdSec4Data[i_2+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart];
-            
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
-                                    }
-
-                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                                        i_2++;
-                                    else
-                                        i_2 = 0;
-                                    
-                                    interAnimation.push_back(node);
-                                break;
-                            }                    
-                        }
-                        mainPlayer.setAnimCount(0);
-                        inInterpolation = 2;
-                    }
-                    break;
-
-                    case EMD_SECTION_4: {
-                        EMD_SEC2_DATA_T  node;   // new animation (interpolated)
-                        EMD_SEC2_DATA_T *node_2; // old animation
-                        EMD_SEC2_DATA_T *node_3; // new animation
-                        unsigned int     i_2    = 0;
-                        float p_factor = (1.0f / 3.0f);
-                        float p = 0.0f;
-
-                        for (unsigned int i = 0; i < 3; i++, p += p_factor) {
-                            node_2 = &modelList[mainPlayer.getModel()].emdSec4Data[i+modelList[mainPlayer.getModel()].emdSec4AnimInfo[oldAnim].animStart];
-                            
-                            switch (mainPlayer.getAnimSection()) {
-                                case EMD_SECTION_2:
-                                    node_3 = &modelList[mainPlayer.getModel()].emdSec2Data[i_2+modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animStart];
-                                    // here
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_2->vector[t].x, node_3->vector[t].x, p);
-                                       printf("node.x: %.2f node_2.x %.2f node_3.x %.2f p: %.2f\n", node.vector[t].x, node_2->vector[t].x, node_3->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_2->vector[t].y, node_3->vector[t].y, p);
-                                       printf("node.y: %.2f node_2.y %.2f node_3.y %.2f p: %.2f\n", node.vector[t].y, node_2->vector[t].y, node_3->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_2->vector[t].z, node_3->vector[t].z, p);
-                                       printf("node.z: %.2f node_2.z %.2f node_3.z %.2f p: %.2f\n", node.vector[t].z, node_2->vector[t].z, node_3->vector[t].z, p);    
-                                    }
-
-                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                                        i_2++;
-                                    else
-                                        i_2 = 0;
-
-                                    interAnimation.push_back(node);
-
-                                break;
-
-                                case EMD_SECTION_4:
-                                    node_3 = &modelList[mainPlayer.getModel()].emdSec4Data[i_2+modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animStart];
-            
-                                    for (unsigned int t = 0; t <  modelList[mainPlayer.getModel()].emdTotalObj; t++) {
-                                       node.vector[t].x = mathEngine.interpolation(node_3->vector[t].x, node_2->vector[t].x, p);
-                                       node.vector[t].y = mathEngine.interpolation(node_3->vector[t].y, node_2->vector[t].y, p);
-                                       node.vector[t].z = mathEngine.interpolation(node_3->vector[t].z, node_2->vector[t].z, p);
-                                        }
-
-                                    if (i_2 < (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1))
-                                        i_2++;
-                                    else
-                                        i_2 = 0;
-                                    
-                                    interAnimation.push_back(node);
-                                break;
-                            }                    
-                        }
-
-                        mainPlayer.setAnimCount(0);
-                        inInterpolation = 2;
-                    }
                     break;
                 }
-            }
-            break;
-
-            /*
-             * play the interpolated animation
-             */
-            case 2:
-            if (mainPlayer.getAnimCount() < 3)
-                    mainPlayer.setAnimCount(mainPlayer.getAnimCount() + 1);
-                else {
-
-                    mainPlayer.setAnimCount(0);
-  
-/*                    oldAnim         = mainPlayer.getAnimType();
-                    oldSection      = mainPlayer.getAnimTypeSection();
-                    inInterpolation = 0;
-                    switch (mainPlayer.getAnimTypeSection()) {
-                        case EMD_SECTION_2:
-                            if (mainPlayer.getAnimCount() > (modelList[mainPlayer.getModel()].emdSec2AnimInfo[mainPlayer.getAnimType()].animCount-1)) {
-                                mainPlayer.setAnimCount(0);
-                            }
-                        break;
-
-                        case EMD_SECTION_4:
-                            if (mainPlayer.getAnimCount() > (modelList[mainPlayer.getModel()].emdSec4AnimInfo[mainPlayer.getAnimType()].animCount-1)) {
-                                mainPlayer.setAnimCount(0);
-                            }
-                        break;
-                    }
 */
-                }     
+            }     
 
-                mainPlayer.setAnimFrame(interAnimation[1]);
-            break;
+            e->setAnimFrame(interAnimation[1]);
+        break;
 
 
-        }
-        
     }
 }
-
 void MainLoop() {
-    bool canMove = true;
     float x = 0;
     float z = 0;
     if (tmr60FPS < SDL_GetTicks()) {
         tmr60FPS = (SDL_GetTicks() + (1000/60));
 
+
+         if (core->coreTmr_anim <= SDL_GetTicks()) {
+             core->coreTmr_anim = SDL_GetTicks() + 24; 
+             core->engineAnimation(&mainPlayer);
+             core->engineAnimation(&gameEnemy);
+         }
+
         switch (gameState) {
             case STATE_SEL_CHAR:
-                core->engineAnimation();
+
             break;
 
             case STATE_IN_GAME: {
-                core->engineAnimation();
-                /* Enemy AI Stuff */
-                enemyAI_followPlayer();
 
+                core->engineAI.zombie_re_2(&mainPlayer, &gameEnemy);
 
                 switch (mainPlayer.getAnimRotationDir()) {
                     case PLAYER_ACTION_R_LEFT:
@@ -1046,10 +1018,7 @@ void MainLoop() {
 
         if (gameState  == STATE_SEL_CHAR) {
 
-            /*
-             * Player Animation
-             */
-            core->engineAnimation();
+
         }
 
         if ((gameState == STATE_IN_GAME) || (gameState == STATE_IN_ROOM)) {
@@ -1711,7 +1680,7 @@ void gameCore::renderGame() {
             if(!miscStuff.isInFade()) {
                 switch (charMusicNum) {
                     case 0:
-                        soundEngine.engineLoadSound("resource/ost/0.mp3");
+                        soundEngine.engineLoadSound("resource/ost/8.mp3");
                     break;
 
                     case 1:
@@ -1746,7 +1715,7 @@ void gameCore::renderGame() {
                       mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
             /* Enemy Rendering */
             renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
-                      gameEnemy.getAngle(), gameEnemy.getEMD(), gameEnemy.getAnim());
+                      gameEnemy.getAngle(), gameEnemy.getModel(), gameEnemy.getAnimFrame());
 
 
             renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());

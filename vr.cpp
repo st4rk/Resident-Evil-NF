@@ -2,6 +2,7 @@
 
 
 VR::VR() {
+	timer.mil     = 0;
 	timer.sec     = 0;
 	timer.min     = 0;
 	timer.sysTick = 0;
@@ -10,6 +11,7 @@ VR::VR() {
 }
 
 VR::~VR() {
+	timer.mil     = 0;
 	timer.sec     = 0;
 	timer.min     = 0;
 	timer.sysTick = 0;
