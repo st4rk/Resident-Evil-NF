@@ -13,7 +13,7 @@ EMD1::~EMD1() {
 void EMD1::loadFile(std::string fileName) {
 	FILE *emd1 = NULL;
 	unsigned int emd1Size = 0;
-	unsigned char buffer *;
+	unsigned char *buffer;
 
 	emd1 = fopen(fileName.c_str(), "rb");
 
