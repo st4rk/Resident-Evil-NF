@@ -43,6 +43,10 @@ public:
   							  int nx, int ny, int nz,
   							  int h, int w);
 
+    bool collisionShoot(float px, float py, float pz,
+                        float nx, float ny, float nz,
+                        float angle) ;
+
   	float interpolation(float n1, float n2, float p);
 private:
 

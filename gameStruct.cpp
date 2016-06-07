@@ -101,11 +101,13 @@ enemy::~enemy() {
 }
 
 void enemy::setType(unsigned int type)   { this->type  = type;   }
-void enemy::setState(unsigned int state) { this->state = state; }
+void enemy::setState(unsigned int state) { this->state = state;  }
+void enemy::setDelta(float delta)        { this->delta = delta;  }
 
 unsigned int enemy::getType()  { return type;  }
 unsigned int enemy::getState() { return state; }
 
+float enemy::getDelta() { return delta; }
 
 player::player() {
 	for (int i = 0; i < 8; i++) {
@@ -139,17 +141,17 @@ unsigned int player::getItemID(unsigned char slot) {
 unsigned int player::getCam() { return cam; }
 
 
-bmp_loader_24bpp::bmp_loader_24bpp() {
+BITMAP::BITMAP() {
 	memset(bmpHeader, 0x0, 54);
 	bmpBuffer = NULL;
 }
 
-bmp_loader_24bpp::~bmp_loader_24bpp() {
+BITMAP::~BITMAP() {
 	delete [] bmpBuffer;
 	bmpBuffer = NULL;
 }
 
-void bmp_loader_24bpp::bmpLoaderFile(std::string fileName, int type) {
+void BITMAP::loaderFile(std::string fileName, int type) {
 	FILE *bmpFile = NULL;
 
 	bmpFile = fopen(fileName.c_str(), "rb");
@@ -161,12 +163,12 @@ void bmp_loader_24bpp::bmpLoaderFile(std::string fileName, int type) {
 	}
 
 	if (bmpFile == NULL) {
-		std::cout << "Erro ao carregar bitmap !" << std::endl;
+		std::cout << "File "  << bmpFile << " not found " << std::endl;
 		return;
 	}
 
 	if ( fread (bmpHeader, 1, 54, bmpFile) != 54) {
-		std::cout << "Erro ao carregar bitmap, provavelmente não é um bitmap (?) " << std::endl;
+		std::cout << "Error while loading bitmap, not bitmap file (?) " << std::endl;
 		return;
 	}
 
@@ -179,6 +181,7 @@ void bmp_loader_24bpp::bmpLoaderFile(std::string fileName, int type) {
 	bmpSize     = *(int*)&(bmpHeader[0x22]);
 	bmpWidth    = *(int*)&(bmpHeader[0x12]);
 	bmpHeight   = *(int*)&(bmpHeader[0x16]);
+	bpp         = *(short*)&(bmpHeader[0x1C]);
 
 	if (type == 1) {
 		bmpBuffer = new unsigned char [bmpHeight * bmpWidth * 4];
@@ -202,8 +205,38 @@ void bmp_loader_24bpp::bmpLoaderFile(std::string fileName, int type) {
 			}
 		}
 	} else {
-		bmpBuffer = new unsigned char [bmpSize];
-		fread(bmpBuffer, 1, bmpSize, bmpFile);
+		switch (bpp) {
+			case BITMAP_TYPE_MONO:
+				std::cout << "Mono support not implemented" << std::endl;
+			break;
+
+			case BITMAP_TYPE_16COLOR:
+				std::cout << "16 color support not implemented" << std::endl;
+			break;
+
+			case BITMAP_TYPE_256COLOR:
+				std::cout << "256 color support not implemented" << std::endl;
+			break;
+
+			case BITMAP_TYPE_16BPP:
+				std::cout << "16 BPP color support not implemented" << std::endl;
+			break;
+
+			case BITMAP_TYPE_24BPP:
+				bmpBuffer = new unsigned char [bmpSize];
+				fread(bmpBuffer, 1, bmpSize, bmpFile);
+			break;
+
+			case BITMAP_TYPE_32BPP: {
+				bmpBuffer = new unsigned char [bmpSize];
+				fread(bmpBuffer, 1, bmpSize, bmpFile);
+			}
+			break;
+
+			default:
+				std::cout << "Something is wrong with BITMAP bpp" << std::endl;
+			break;
+		}
 	}
 
 	fclose (bmpFile);

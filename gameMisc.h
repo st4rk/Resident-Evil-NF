@@ -30,7 +30,7 @@ public:
 	~gameMisc();
 
 	void renderSquareWithColor(float R, float G, float B, float A);
-	void renderSquareWithTexture(bmp_loader_24bpp *texture, bool ARGB);
+	void renderSquareWithTexture(BITMAP *texture, bool ARGB);
 	void setupFadeEffect(unsigned char type, float R, float G, float B, 
 					     unsigned int  timer);
 	void renderFadeEffect();
@@ -55,7 +55,7 @@ private:
 	bool doubleMode;
 	unsigned char specialMode;
 
-	bmp_loader_24bpp engineFont;
+	BITMAP engineFont;
 };
 
 

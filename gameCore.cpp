@@ -46,12 +46,12 @@ EMD modelList[MAX_MODEL];
 // de debug
 // engineThisGame é a primeira imagem que aparece quando você abre o jogo
 // dizendo que o jogo contem cenas bla bla e o mainMenu é o menu de start
-bmp_loader_24bpp engineBackground;
-bmp_loader_24bpp engineThisGame;
-bmp_loader_24bpp engineMainMenu;
-bmp_loader_24bpp engineLogo;
-bmp_loader_24bpp engineSelectChar;
-bmp_loader_24bpp engineCharMenu;
+BITMAP engineBackground;
+BITMAP engineThisGame;
+BITMAP engineMainMenu;
+BITMAP engineLogo;
+BITMAP engineSelectChar;
+BITMAP engineCharMenu;
 
 player      mainPlayer;
 gameMath    mathEngine;
@@ -227,11 +227,11 @@ void gameCore::renderLoadResource() {
     mixList.push_back(node);
 
     // Algumas imagens carregadas na memória
-    engineThisGame.bmpLoaderFile  ("resource/menus/intro_2.bmp",0);
-    engineLogo.bmpLoaderFile      ("resource/menus/intro_1.bmp",0);
-    engineMainMenu.bmpLoaderFile  ("resource/menus/mainMenu.bmp",0);
-    engineSelectChar.bmpLoaderFile("resource/menus/selectChar.bmp", 0);
-    engineCharMenu.bmpLoaderFile  ("resource/menus/charMenu.bmp", 1);
+    engineThisGame.loaderFile  ("resource/menus/intro_2.bmp",0);
+    engineLogo.loaderFile      ("resource/menus/intro_1.bmp",0);
+    engineMainMenu.loaderFile  ("resource/menus/mainMenu.bmp",0);
+    engineSelectChar.loaderFile("resource/menus/selectChar.bmp", 0);
+    engineCharMenu.loaderFile  ("resource/menus/charMenu.bmp", 1);
 
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
@@ -898,11 +898,11 @@ void MainLoop() {
         tmr60FPS = (SDL_GetTicks() + (1000/60));
 
 
-         if (core->coreTmr_anim <= SDL_GetTicks()) {
-             core->coreTmr_anim = SDL_GetTicks() + 24; 
-             core->engineAnimation(&mainPlayer);
-             core->engineAnimation(&gameEnemy);
-         }
+	    if (core->coreTmr_anim <= SDL_GetTicks()) {
+	        core->coreTmr_anim = SDL_GetTicks() + 24; 
+	        core->engineAnimation(&mainPlayer);
+	        core->engineAnimation(&gameEnemy);
+	    }
 
         switch (gameState) {
             case STATE_SEL_CHAR:
@@ -927,7 +927,8 @@ void MainLoop() {
                     break;
                 }
 
-                    if ((core->keyList[0] == true)) {
+                if ((core->keyList[EVENT_SYSTEM_KEY_UP] == true)) {
+                    if (mainPlayer.getAnimSection() == EMD_SECTION_4) {
                         if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
                             x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
                             z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
@@ -939,7 +940,9 @@ void MainLoop() {
 
                             } 
                         }
-                    } else if ((core->keyList[1] == true)) {
+                    }
+                } else if ((core->keyList[EVENT_SYSTEM_KEY_DOWN] == true)) {
+                	if (mainPlayer.getAnimSection() == EMD_SECTION_2) {
                         if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
                             x = mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0;
                             z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
@@ -951,9 +954,8 @@ void MainLoop() {
                                 mainPlayer.setZ(z);
 
                         } 
-                    } 
-
-
+                    }
+                } 
 
 
                     /* Collision Detection RE 1 
@@ -1144,7 +1146,31 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
         break;
 
         case EVENT_SYSTEM_KEY_Z:
+        	if (pressed) {
+        		if (keyList[EVENT_SYSTEM_KEY_X] == true) {    			
+	        		keyList[EVENT_SYSTEM_KEY_Z] = true;
+	        		if (keyList[EVENT_SYSTEM_KEY_UP]) {
 
+	        		} else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
+
+	        		} else {
+	        			mainPlayer.setAnimType(STAND_SEC4_ANIM_SHOOTING);
+	        		}
+        		}
+        	} else {
+        		keyList[EVENT_SYSTEM_KEY_Z] = false;
+        		if (keyList[EVENT_SYSTEM_KEY_X] == true) {    			
+	        		if (keyList[EVENT_SYSTEM_KEY_UP]) {
+                    	mainPlayer.setAnimType(STAND_SEC4_ANIM_UAIM);
+	                } else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
+	                    mainPlayer.setAnimType(STAND_SEC4_ANIM_DAIM);
+	                } else {
+	                    mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
+	                }
+        		} else {
+
+        		}
+        	}
         break;
 
         case EVENT_SYSTEM_KEY_C:
@@ -1196,7 +1222,6 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
         glRotatef(animFrame.vector[var2].y, 0.0f, 1.0f, 0.0f);
         glRotatef(animFrame.vector[var2].z, 0.0f, 0.0f, 1.0f);
     }
-
 
 
     /*

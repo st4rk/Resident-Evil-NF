@@ -10,7 +10,7 @@ gameMisc::gameMisc() {
 	gTimer = 0;
 	mtype   = TYPE_FADE_NONE;
 
-    engineFont.bmpLoaderFile("resource/texture/1.bmp",1);
+    engineFont.loaderFile("resource/texture/1.bmp",1);
 }
 
 gameMisc::~gameMisc() {
@@ -308,7 +308,7 @@ void gameMisc::renderSquareWithColor(float R, float G, float B, float A) {
  * renderSquareWithTexture
  * This function render a square with a bitmap texture
  */
-void gameMisc::renderSquareWithTexture(bmp_loader_24bpp *texture, bool ARGB) {
+void gameMisc::renderSquareWithTexture(BITMAP *texture, bool ARGB) {
     glPushMatrix();
         glDepthMask(GL_FALSE);
         glDisable(GL_LIGHTING);

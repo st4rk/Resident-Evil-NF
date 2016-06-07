@@ -34,25 +34,21 @@ void AI::zombie_re_2(player* p, enemy *e) {
 
 
 		case ZOMBIE_RE2_STATE_FOLLOW: {
- 		if (!eMath.collisionRectangle(p->getX(), p->getY(), p->getZ(),
- 			                          e->getX(), e->getY(), e->getZ())) {
-	
-	            if (p->getX() > e->getX()) {
-	                e->setX(e->getX() + 5);
-	            } else {
-	                e->setX(e->getX() - 5);
-	            }
+            float angle = (atan2(((p->getX() - e->getX())), 
+    					  (p->getZ() - e->getZ())) / (M_PI / 180));
 
-	            if (p->getZ() > e->getZ()) {
-	                e->setZ(e->getZ() + 5);
-	            } else {
-	                e->setZ(e->getZ() - 5);        
-	            }
+    		e->setAngle((angle-90));
 
-	            float angle = (atan2(((p->getX() - e->getX())), 
-	    					  (p->getZ() - e->getZ())) / (M_PI / 180));
-	    		e->setAngle((angle - 90));
-    		}
+			float x = e->getX() + cos((e->getAngle() * M_PI/180)) * 10.0;
+			float z = e->getZ() - sin((e->getAngle() * M_PI/180)) * 10.0;
+
+	 		if (!eMath.collisionRectangle(p->getX(), p->getY(), p->getZ(),
+	 			                          x, e->getY(),z)) {
+
+					e->setX(x);
+					e->setZ(z);
+
+	    	}
 		}
 	}
 }

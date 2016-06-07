@@ -194,14 +194,18 @@ public:
   ~enemy();
 
   void setType(unsigned int type);
-
   void setState(unsigned int state);
+  void setDelta(float delta);
 
   unsigned int getType();
   unsigned int getState();
+
+  float getDelta();
 private:
    unsigned int type;
    unsigned int state;
+
+   float delta;
 };
 
 
@@ -225,12 +229,21 @@ private:
 
 
 
-class bmp_loader_24bpp {
-public:	
-	bmp_loader_24bpp();
-	~bmp_loader_24bpp();
+enum BITMAP_TYPE_FILE {
+   BITMAP_TYPE_MONO     = 0x1,
+   BITMAP_TYPE_16COLOR  = 0x4,
+   BITMAP_TYPE_256COLOR = 0x8,
+   BITMAP_TYPE_16BPP    = 0x10,
+   BITMAP_TYPE_24BPP    = 0x18,
+   BITMAP_TYPE_32BPP    = 0x20
+};
 
-	void bmpLoaderFile(std::string fileName, int type);
+class BITMAP {
+public:	
+	BITMAP();
+	~BITMAP();
+
+	void loaderFile(std::string fileName, int type);
 	unsigned char *bmpBuffer;
 	int bmpHeight;
 	int bmpWidth;
@@ -238,6 +251,7 @@ private:
 	unsigned char bmpHeader[54];
 	unsigned int bmpDataInit;
 	unsigned int bmpSize;
+   unsigned short bpp;
 
 };
 
