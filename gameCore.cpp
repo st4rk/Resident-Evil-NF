@@ -1265,13 +1265,6 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
     }
 
 
-    /*
-     * need to fix this bug
-     */
-
-  	if (var > 15)
-  		return;
-
     for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
         renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
     }
@@ -1304,6 +1297,10 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
         glRotatef(angle, 0.0f, 1.0f, 0.0f);
 
 
+
+        /*
+         * to solve the bug: render the model starting with value N
+         */
         for (unsigned int z = 0; z <  modelList[emdNum].emdTotalObj; z++) {
             renderEMD_modelAnimation(x, z, z, animFrame, emdNum);
         }

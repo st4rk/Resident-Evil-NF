@@ -170,10 +170,11 @@ bool EMD::emdLoadFile(std::string dir) {
 
     memcpy(&sizeSec1Header, (emdBufferData+emdFileSection[1] + 2), sizeof(unsigned short));
 
+
     sizeSec1Header = sizeSec1Header;
 
     emdSec1Header    = (EMD_SECTION_1_HEADER*) malloc (sizeof(EMD_SECTION_1_HEADER) * (sizeSec1Header / 4));
- 
+    
     unsigned short sizeSec1_f = (sizeSec1Header / 4);
 
     for (unsigned short i = 0; i < sizeSec1_f; i++) {
@@ -242,7 +243,6 @@ bool EMD::emdLoadFile(std::string dir) {
     
     // Section 4
     memcpy(&emdSec4Header, (emdBufferData+emdFileSection[4]), sizeof(EMD_SECTION_2_HEADER));
-
 
     // Section 7 - Mesh 
 
@@ -465,6 +465,8 @@ bool EMD::emdLoadFile(std::string dir) {
             memcpy(&emdQuadTexture[x][y], (emdBufferData + (s7ModelOffset + emdObjectBuffer[x].quads.quadTextureOffset+(y*sizeof(EMD_QUADTEXTURE_T)))), sizeof(EMD_QUADTEXTURE_T));
         }
     } 
+
+    emdTotalObj = 15;
     
     fclose(emdFile);
     return true;
