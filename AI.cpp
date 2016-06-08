@@ -32,9 +32,8 @@ void AI::zombie_re_2(player* p, enemy *e) {
 		}
 		break;
 
-
 		case ZOMBIE_RE2_STATE_FOLLOW: {
-            float angle = (atan2(((p->getX() - e->getX())), 
+	         float angle = (atan2(((p->getX() - e->getX())), 
     					  (p->getZ() - e->getZ())) / (M_PI / 180));
 
     		e->setAngle((angle-90));
@@ -50,6 +49,36 @@ void AI::zombie_re_2(player* p, enemy *e) {
 
 	    	}
 		}
+
+		break;
+
+		case ZOMBIE_RE2_STATE_HIT: {
+			if (e->getHitPoints() <= 0) {
+
+				e->setAnimSection(EMD_SECTION_4);
+				e->setAnimType(ZOMBIE_SEC4_ANIM_DEATH_1,false);
+				e->setState(ZOMBIE_RE2_STATE_DEATH);
+			} else {
+				e->setHitPoints(e->getHitPoints() - 1);
+				printf("hitpoints: %d\n", e->getHitPoints());
+				if (e->getAnimSection() != EMD_SECTION_2) {
+					e->setAnimSection(EMD_SECTION_2);
+					e->setAnimType(ZOMBIE_SEC2_ANIM_AWALK);
+					e->setState(ZOMBIE_RE2_STATE_FOLLOW);
+				}
+				e->setState(ZOMBIE_RE2_STATE_FOLLOW);
+			}
+		}
+		break;
+
+		case ZOMBIE_RE2_STATE_DEATH: {
+			EMD_SEC2_DATA_T node = e->getAnimFrame();
+
+			e->setY(2000 + node.yOffset);
+		}
+
+
+		break;
 	}
 }
 

@@ -14,7 +14,6 @@ TIM::~TIM() {
 		free(colorTable[i]);
 	}
 
-	free(colorTable);
 	free(timData);
 	free(rawTexture);
 	rawTexture = NULL;

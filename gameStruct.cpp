@@ -102,10 +102,12 @@ enemy::~enemy() {
 
 void enemy::setType(unsigned int type)   { this->type  = type;   }
 void enemy::setState(unsigned int state) { this->state = state;  }
+void enemy::setHitPoints(unsigned int hitPoints) { this->hitPoints = hitPoints; }
 void enemy::setDelta(float delta)        { this->delta = delta;  }
 
-unsigned int enemy::getType()  { return type;  }
-unsigned int enemy::getState() { return state; }
+unsigned int enemy::getType()      { return type;  }
+unsigned int enemy::getState()     { return state; }
+unsigned int enemy::getHitPoints() { return hitPoints; }
 
 float enemy::getDelta() { return delta; }
 
@@ -242,3 +244,38 @@ void BITMAP::loaderFile(std::string fileName, int type) {
 	fclose (bmpFile);
 }
 
+
+
+/*
+ * NFP - Nightamre Fiction Picture
+ */
+
+NFP::NFP() {
+	texture = NULL;
+}
+
+NFP::~NFP() {
+	if (texture != NULL)  {
+		SDL_FreeSurface(texture);
+		texture = NULL;
+	}
+}
+
+bool NFP::loadImage(std::string fileName) {
+
+	texture = IMG_Load( fileName.c_str() );
+
+	if (texture == NULL) {
+		std::cout << "Error while loading " << fileName << " texture" << std::endl;
+		return false;
+	}
+
+
+
+	return true;
+}
+
+void* NFP::getPixelData() { return texture->pixels; }
+
+int   NFP::getWidth()     { return texture->w;      }
+int   NFP::getHeight()    { return texture->h;      }

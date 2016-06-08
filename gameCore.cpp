@@ -56,7 +56,8 @@ BITMAP engineCharMenu;
 player      mainPlayer;
 gameMath    mathEngine;
 gameSound   soundEngine;
-enemy       gameEnemy;
+std::vector<enemy> enemyList;
+
 gameMisc    miscStuff;
 
 /* Room transition */
@@ -187,6 +188,7 @@ void enemyAI_followPlayer() {
  * This function is the hardcoded game initialization
  */
 void gameCore::renderLoadResource() {
+	enemy       gameEnemy;
     Mix_Chunk *node = NULL;
     // Clear Timer
     timer1_start = 0;
@@ -213,7 +215,7 @@ void gameCore::renderLoadResource() {
     /* Chris Redfield  RE2 */
     modelList[2].emdLoadFile("resource/models/2.EMD");
     modelList[3].emdLoadFile("resource/models/PL0BCH.EMD");
-    modelList[4].emdLoadFile("resource/models/EMD05.EMD");
+    modelList[4].emdLoadFile("resource/models/EM01E.EMD");
 
     /*
      * Load all sound effects
@@ -262,6 +264,21 @@ void gameCore::renderLoadResource() {
     gameEnemy.setType(AI_TYPE_ZOMBIE_RE2);
     gameEnemy.setAnimSection(EMD_SECTION_4);
     gameEnemy.setAnimType(ZOMBIE_SEC4_ANIM_IDLE);
+    gameEnemy.setHitPoints(3);
+
+    enemyList.push_back(gameEnemy);
+
+    gameEnemy.setX(0);
+    gameEnemy.setZ(-5000.0f);
+    gameEnemy.setY(0);
+    gameEnemy.setModel(4);
+    gameEnemy.setAngle(0);
+    gameEnemy.setState(ZOMBIE_RE2_STATE_BEGIN);
+    gameEnemy.setType(AI_TYPE_ZOMBIE_RE2);
+    gameEnemy.setAnimSection(EMD_SECTION_4);
+    gameEnemy.setAnimType(ZOMBIE_SEC4_ANIM_IDLE);
+    gameEnemy.setHitPoints(3);
+    enemyList.push_back(gameEnemy);
 
 
     /* Hardcoded Debug Room X,Y,Z,RoomNum and RoomName !*/
@@ -901,7 +918,9 @@ void MainLoop() {
 	    if (core->coreTmr_anim <= SDL_GetTicks()) {
 	        core->coreTmr_anim = SDL_GetTicks() + 24; 
 	        core->engineAnimation(&mainPlayer);
-	        core->engineAnimation(&gameEnemy);
+	        for (unsigned int i = 0; i < enemyList.size(); i++) {
+	        	core->engineAnimation(&enemyList[i]);
+	    	}
 	    }
 
         switch (gameState) {
@@ -911,7 +930,29 @@ void MainLoop() {
 
             case STATE_IN_GAME: {
 
-                core->engineAI.zombie_re_2(&mainPlayer, &gameEnemy);
+            	/*
+            	 * Shoot action
+            	 */
+
+	            	if ((mainPlayer.getAnimSection() == EMD_SECTION_4) && (mainPlayer.getAnimType() == STAND_SEC4_ANIM_SHOOTING)) {
+						if (mainPlayer.getAnimCount() == 22) {
+							for (unsigned int i = 0; i < enemyList.size(); i++) {
+
+								if (mathEngine.collisionShoot(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
+															  enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ(),
+															  mainPlayer.getAngle())) {
+
+									enemyList[i].setState(ZOMBIE_RE2_STATE_HIT);
+									break;
+								}
+							}
+							mainPlayer.setAnimCount(0);
+						}
+	            	}
+            	
+            	for (unsigned int i = 0; i < enemyList.size(); i++) {
+	                core->engineAI.zombie_re_2(&mainPlayer, &enemyList[i]);
+            	}
 
                 switch (mainPlayer.getAnimRotationDir()) {
                     case PLAYER_ACTION_R_LEFT:
@@ -933,7 +974,7 @@ void MainLoop() {
                             x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
                             z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
                             if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
-                                                              gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
+                                                              enemyList[0].getX(),enemyList[0].getY(), enemyList[0].getZ()))) {
 
                                 mainPlayer.setX(x);
                                 mainPlayer.setZ(z);
@@ -948,7 +989,7 @@ void MainLoop() {
                             z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
                         }
                         if (!(mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
-                                                          gameEnemy.getX(),gameEnemy.getY(), gameEnemy.getZ()))) {
+                                                          enemyList[0].getX(),enemyList[0].getY(), enemyList[0].getZ()))) {
 
                                 mainPlayer.setX(x);
                                 mainPlayer.setZ(z);
@@ -1154,7 +1195,7 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
 	        		} else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
 
 	        		} else {
-	        			mainPlayer.setAnimType(STAND_SEC4_ANIM_SHOOTING);
+	        			mainPlayer.setAnimType(STAND_SEC4_ANIM_SHOOTING, false);
 	        		}
         		}
         	} else {
@@ -1227,6 +1268,9 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
     /*
      * need to fix this bug
      */
+
+  	if (var > 15)
+  		return;
 
     for (unsigned int c = 0; c < modelList[emdNum].emdSec2Armature[var].meshCount; c++) {
         renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
@@ -1739,12 +1783,16 @@ void gameCore::renderGame() {
             renderEMD(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(), 
                       mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
             /* Enemy Rendering */
-            renderEMD(gameEnemy.getX(), gameEnemy.getY(),gameEnemy.getZ(), 
-                      gameEnemy.getAngle(), gameEnemy.getModel(), gameEnemy.getAnimFrame());
 
+            for (unsigned int i = 0; i < enemyList.size(); i++) {
+            	renderEMD(enemyList[i].getX(), enemyList[i].getY(),enemyList[i].getZ(), 
+            	          enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
+	  
+	            renderBoundingBox(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+        	}
 
             renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
-            renderBoundingBox(gameEnemy.getX(), gameEnemy.getY(), gameEnemy.getZ());
+
 
 
             char coord[0xFF];
@@ -1889,7 +1937,7 @@ void gameCore::renderInit() {
     // Título do Projeto
     glutCreateWindow(GAME_NAME);
     // Limpa a tela
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.4, 0.4, 0.4, 1.0);
 
     // Luz para normal dos modelos
     glEnable(GL_LIGHTING);

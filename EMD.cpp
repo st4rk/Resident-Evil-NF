@@ -26,20 +26,11 @@ EMD::~EMD() {
         free(emdSec2Mesh[i]);
     }
 
-    free(emdTritexture);
-    free(emdQuadTexture);
     free(emdBufferData);
-    free(emdquadNormal);
     free(emdFileSection);
     free(emdObjectBuffer);
-    free(emdTriangle);
-    free(emdQuad);
-    free(emdVertex);
-    free(emdNormal);
-    free(emdquadVertex);
-    free(emdSec2Mesh);
+
     free(emdSec2Armature);
-    free(emdSec2AnimInfo);
 
     emdSec2AnimInfo  = NULL;
     emdTritexture    = NULL;

@@ -1,5 +1,5 @@
 TARGET = NFE
-LIBS = -lm -lGL -lGLU -lglut -lSDL -lSDL_mixer 
+LIBS = -lm -lGL -lGLU -lglut -lSDL -lSDL_mixer -lSDL_image
 CC = g++ 
 CFLAGS = -std=c++11 -g -Wall 
 

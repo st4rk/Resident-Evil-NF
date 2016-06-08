@@ -12,6 +12,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 
 #include "EMD.h"
 
@@ -195,15 +197,18 @@ public:
 
   void setType(unsigned int type);
   void setState(unsigned int state);
+  void setHitPoints(unsigned int hitPoints);
   void setDelta(float delta);
 
   unsigned int getType();
   unsigned int getState();
+  unsigned int getHitPoints();
 
   float getDelta();
 private:
    unsigned int type;
    unsigned int state;
+   unsigned int hitPoints;
 
    float delta;
 };
@@ -236,6 +241,27 @@ enum BITMAP_TYPE_FILE {
    BITMAP_TYPE_16BPP    = 0x10,
    BITMAP_TYPE_24BPP    = 0x18,
    BITMAP_TYPE_32BPP    = 0x20
+};
+
+/*
+ * NFP - Nightamre Fiction Picture
+ * for now using SDL_Surface
+ */
+class NFP {
+public:
+   NFP();
+  ~NFP();
+
+   bool loadImage(std::string fileName);  
+
+   void* getPixelData();
+
+   int   getWidth();
+   int   getHeight();
+
+private:
+   SDL_Surface* texture;
+
 };
 
 class BITMAP {
