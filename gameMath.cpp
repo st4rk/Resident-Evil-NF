@@ -26,6 +26,12 @@ float gameMath::interpolation(float n1, float n2, float p) {
 	return ((n1 * p) + (n2 * (1.0f - p)));
 }
 
+float gameMath::d2Point(float x1, float y1, float z1,
+                        float x2, float y2, float z2) {
+
+	return sqrt(pow((x2-x1),2) + pow((z2-z1), 2));
+}
+
 
 bool gameMath::collisionShoot(float px, float py, float pz,
                               float nx, float ny, float nz,
@@ -70,8 +76,8 @@ bool gameMath::collisionRectangleHW(int px, int py, int pz,
 	rectangle rect1;
 	rectangle rect2;
 
-	rect1.x = (px - 512);
-	rect1.y = (pz - 512);
+	rect1.x = (px - (h/2));
+	rect1.y = (pz - (w/2));
 	rect1.h = h;
 	rect1.w = w;
 

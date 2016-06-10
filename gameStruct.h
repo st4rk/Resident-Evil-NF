@@ -91,6 +91,14 @@ enum SPECIAL_SEC4_ANIMATION {
 /*
  * Player Stuff
  */ 
+enum PLAYER_STATE {
+   PLAYER_STATE_NORMAL      = 0,
+   PLAYER_STATE_BEGIN_HIT   = 1,
+   PLAYER_STATE_HIT         = 2,
+   PLAYER_STATE_ATTACK      = 3,
+   PLAYER_STATE_BEGIN_DEATH = 4,
+   PLAYER_STATE_DEATH       = 5
+};
 
 enum PLAYER_ACTION {
    PLAYER_ACTION_R_NONE  = 0,
@@ -141,6 +149,9 @@ public:
 
       void setModel(unsigned int modelNum);
       
+      void setTmrAnim(unsigned int tmrAnim);
+      void setState(unsigned int state);
+      
       void setAnimSection(unsigned int animSection);
       void setAnimType(unsigned int animType, bool animRepeat = true);
       void setAnimCount(unsigned int animCount);
@@ -154,6 +165,9 @@ public:
 
 
       unsigned int      getModel();
+      
+      unsigned int      getTmrAnim();
+      unsigned int      getState();
 
       unsigned int      getAnimSection();
       unsigned int      getAnimType();
@@ -188,6 +202,10 @@ private:
       float angle;
 
 
+      unsigned int    tmrAnim;
+
+      unsigned int    state;
+
 };
 
 class enemy : public entity {
@@ -196,18 +214,16 @@ public:
   ~enemy();
 
   void setType(unsigned int type);
-  void setState(unsigned int state);
   void setHitPoints(unsigned int hitPoints);
   void setDelta(float delta);
 
   unsigned int getType();
-  unsigned int getState();
   unsigned int getHitPoints();
 
   float getDelta();
 private:
    unsigned int type;
-   unsigned int state;
+
    unsigned int hitPoints;
 
    float delta;

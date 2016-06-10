@@ -17,6 +17,8 @@ entity::entity() {
 	animType       = 0;
 	animRepeat     = true;
 
+	state   = 0;
+	tmrAnim = 0;
 }
 
 entity::~entity() {
@@ -27,11 +29,18 @@ entity::~entity() {
 	animOldCount   = 0;
 	animType       = 0;
 	animRepeat     = true;
+
+	state   = 0;
+	tmrAnim = 0;
 }
 
 
 void entity::setModel(unsigned int modelNum) {
 	this->modelNum = modelNum;
+}
+
+void entity::setTmrAnim(unsigned int tmrAnim) { 
+	this->tmrAnim  = tmrAnim;
 }
 
 void entity::setAnimSection(unsigned int animSection) {
@@ -72,9 +81,15 @@ void entity::setAngle(float angle) {
 	this->angle = angle;
 }
 
+void entity::setState(unsigned int state) { 
+	this->state = state;  
+}
 
 unsigned int      entity::getModel()             { return modelNum;        }
- 
+
+unsigned int      entity::getTmrAnim()           { return tmrAnim;         }
+unsigned int      entity::getState()             { return state;           }
+
 unsigned int      entity::getAnimSection()       { return animSection;     }
 unsigned int      entity::getAnimType()          { return animType;        }
 unsigned int      entity::getAnimCount()         { return animCount;       }
@@ -92,21 +107,17 @@ float  entity::getAngle() { return angle; }
 
 enemy::enemy() {
 	type  = 0;
-	state = 0;
 }
 
 enemy::~enemy() {
 	type  = 0;
-	state = 0;
 }
 
 void enemy::setType(unsigned int type)   { this->type  = type;   }
-void enemy::setState(unsigned int state) { this->state = state;  }
 void enemy::setHitPoints(unsigned int hitPoints) { this->hitPoints = hitPoints; }
 void enemy::setDelta(float delta)        { this->delta = delta;  }
 
 unsigned int enemy::getType()      { return type;  }
-unsigned int enemy::getState()     { return state; }
 unsigned int enemy::getHitPoints() { return hitPoints; }
 
 float enemy::getDelta() { return delta; }

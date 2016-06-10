@@ -27,11 +27,14 @@ public:
 	VR();
    ~VR();
 
+    void setGameScore(unsigned int gameScore);
     void gameLogic();
 
 private:
 	tmr      timer;
 	gameMisc misc;
+	char scoreBuffer[15];
+	unsigned int gameScore;
 };
 
 

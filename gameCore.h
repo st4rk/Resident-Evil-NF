@@ -78,6 +78,17 @@ public:
 	 * Animation
 	 */
 	void engineAnimation(entity *e);
+
+	/*
+	 * Gun 
+	 */
+	void gunHandle();
+
+	/* 
+	 * Player Action
+	 */
+
+	void handlePlayerAction();
 	
 	/*
 	 * System callback's and related
@@ -102,11 +113,10 @@ public:
 
 	cam camMode;
 	AI  engineAI;
-
+	VR  vrMode;
 private:
 
 
-	VR  vrMode;
 
 	std::vector<Mix_Chunk*> mixList;
 	std::vector<EMD_SEC2_DATA_T> interAnimation;

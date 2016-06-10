@@ -8,6 +8,7 @@ VR::VR() {
 	timer.sysTick = 0;
 
 	memset(timer.buffer, 0x0, 15);
+	memset(scoreBuffer,  0x0, 15);
 }
 
 VR::~VR() {
@@ -16,7 +17,16 @@ VR::~VR() {
 	timer.min     = 0;
 	timer.sysTick = 0;
 
+	memset(scoreBuffer,  0x0, 15);
 	memset(timer.buffer, 0x0, 15);
+}
+
+
+void VR::setGameScore(unsigned int gameScore) {
+	if (this->gameScore != gameScore) {
+		this->gameScore = gameScore;
+		sprintf(scoreBuffer, "Score: %d", gameScore);
+	}
 }
 
 
@@ -41,4 +51,5 @@ void VR::gameLogic() {
 	}
 	
 	misc.renderText(0.50, 0.05, 0.0, TEXT_TYPE_NORMAL, timer.buffer, 0.0f, 1.0f, 0.0f, 1.0f);
+	misc.renderText(0.0, 0.90, 0.0, TEXT_TYPE_LITTLE,  scoreBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
 }

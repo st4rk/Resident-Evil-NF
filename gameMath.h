@@ -11,6 +11,8 @@
 #include <iostream>
 #include <algorithm>
 
+#define Pow2(X) (X*X)
+
 enum COLLISION_TYPE {
 	COLLISION_TYPE_RECTANGLE = 1,
 	COLLISION_TYPE_ELLIPSE   = 3
@@ -48,6 +50,9 @@ public:
                         float angle) ;
 
   	float interpolation(float n1, float n2, float p);
+
+    float d2Point(float x1, float y1, float z1,
+                  float x2, float y2, float z2);
 private:
 
 
