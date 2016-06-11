@@ -48,12 +48,15 @@ void AI::zombie_re_2(player* p, enemy *e) {
 					e->setZ(z);
 
 		    } else {
-		    	if (!((p->getState() == PLAYER_STATE_BEGIN_HIT) || (p->getState() == PLAYER_STATE_HIT))) {
-			    	e->setTmrAnim(2000 + SDL_GetTicks());
-			    	e->setAnimSection(EMD_SECTION_4);
-					e->setAnimType(ZOMBIE_SEC4_ANIM_W_ATTACK);
-					e->setState(AI_STATE_ATTACK);
-					p->setState(PLAYER_STATE_BEGIN_HIT);
+		    	if (!((p->getState() == PLAYER_STATE_BEGIN_HIT)  || (p->getState() == PLAYER_STATE_HIT) || 
+		    		   p->getState() == PLAYER_STATE_BEGIN_DEATH || (p->getState() == PLAYER_STATE_DEATH))) {
+					    printf("valor: %d\n", p->getState());
+						e->setTmrAnim(2000 + SDL_GetTicks());
+						e->setAnimSection(EMD_SECTION_4);
+						e->setAnimType(ZOMBIE_SEC4_ANIM_W_ATTACK);
+						e->setState(AI_STATE_ATTACK);
+						p->setState(PLAYER_STATE_BEGIN_HIT);
+						p->setHitPoints(p->getHitPoints() - 1);
 		    	}
 		    }
 		}
@@ -79,10 +82,19 @@ void AI::zombie_re_2(player* p, enemy *e) {
 			if (e->getTmrAnim() < SDL_GetTicks()) {
 				e->setTmrAnim(0);
 				e->setAnimType(ZOMBIE_SEC4_ANIM_W_PUSH, false);
-				e->setState(AI_STATE_PUSH);
-				p->setState(PLAYER_STATE_NORMAL);
-				p->setAnimSection(EMD_SECTION_4);
-				p->setAnimType(STAND_SEC4_ANIM_IDLE);
+				if (p->getState() == PLAYER_STATE_DEATH) {
+					if (e->getAnimSection() != EMD_SECTION_2) {
+						e->setAnimSection(EMD_SECTION_2);
+						e->setAnimType(ZOMBIE_SEC2_ANIM_AWALK);
+						e->setState(AI_STATE_FOLLOW);
+					}
+					e->setState(AI_STATE_FOLLOW);
+				} else {
+					e->setState(AI_STATE_PUSH);
+					p->setState(PLAYER_STATE_NORMAL);
+					p->setAnimSection(EMD_SECTION_4);
+					p->setAnimType(STAND_SEC4_ANIM_IDLE);
+				}
 			}
 		}
 		break;

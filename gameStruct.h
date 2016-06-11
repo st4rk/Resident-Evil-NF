@@ -95,9 +95,10 @@ enum PLAYER_STATE {
    PLAYER_STATE_NORMAL      = 0,
    PLAYER_STATE_BEGIN_HIT   = 1,
    PLAYER_STATE_HIT         = 2,
-   PLAYER_STATE_ATTACK      = 3,
-   PLAYER_STATE_BEGIN_DEATH = 4,
-   PLAYER_STATE_DEATH       = 5
+   PLAYER_STATE_BEGIN_GUN   = 3,
+   PLAYER_STATE_GUN         = 4,
+   PLAYER_STATE_BEGIN_DEATH = 5,
+   PLAYER_STATE_DEATH       = 6
 };
 
 enum PLAYER_ACTION {
@@ -151,7 +152,8 @@ public:
       
       void setTmrAnim(unsigned int tmrAnim);
       void setState(unsigned int state);
-      
+      void setHitPoints(unsigned int hitPoints);
+
       void setAnimSection(unsigned int animSection);
       void setAnimType(unsigned int animType, bool animRepeat = true);
       void setAnimCount(unsigned int animCount);
@@ -166,6 +168,7 @@ public:
 
       unsigned int      getModel();
       
+      unsigned int      getHitPoints();
       unsigned int      getTmrAnim();
       unsigned int      getState();
 
@@ -204,6 +207,8 @@ private:
 
       unsigned int    tmrAnim;
 
+      unsigned int    hitPoints;
+      
       unsigned int    state;
 
 };
@@ -214,17 +219,13 @@ public:
   ~enemy();
 
   void setType(unsigned int type);
-  void setHitPoints(unsigned int hitPoints);
   void setDelta(float delta);
 
   unsigned int getType();
-  unsigned int getHitPoints();
 
   float getDelta();
 private:
    unsigned int type;
-
-   unsigned int hitPoints;
 
    float delta;
 };

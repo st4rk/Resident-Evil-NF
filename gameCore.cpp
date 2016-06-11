@@ -248,13 +248,13 @@ void gameCore::renderLoadResource() {
     mainPlayer.setX(0.0f);
     mainPlayer.setY(0.0f);
     mainPlayer.setZ(0.0f);
-
+    mainPlayer.setHitPoints(5);
 
     mainPlayer.setCam(CAMERA_STYLE_SEL_CHAR);
     mainPlayer.setAngle(90.0);
 
-    for (int i = 0; i < 2; i++) {
-        gameEnemy.setX(0);
+    for (int i = 0; i < 3; i++) {
+        gameEnemy.setX(-2000.0f + (-1000.0f * i));
         gameEnemy.setZ(-5000.0f + (-1000.0f * i));
         gameEnemy.setY(0);
         gameEnemy.setModel(4);
@@ -1115,33 +1115,18 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
                         mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
                         mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
                     }
+
                 break;
 
                 case EVENT_SYSTEM_KEY_Z:
                     if (pressed) {
                         if (keyList[EVENT_SYSTEM_KEY_X] == true) {              
                             keyList[EVENT_SYSTEM_KEY_Z] = true;
-                            if (keyList[EVENT_SYSTEM_KEY_UP]) {
 
-                            } else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
-
-                            } else {
-                                mainPlayer.setAnimType(STAND_SEC4_ANIM_SHOOTING, false);
-                            }
+                            mainPlayer.setState(PLAYER_STATE_BEGIN_GUN);
                         }
                     } else {
-                        keyList[EVENT_SYSTEM_KEY_Z] = false;
-                        if (keyList[EVENT_SYSTEM_KEY_X] == true) {              
-                            if (keyList[EVENT_SYSTEM_KEY_UP]) {
-                                mainPlayer.setAnimType(STAND_SEC4_ANIM_UAIM);
-                            } else if (keyList[EVENT_SYSTEM_KEY_DOWN]) {
-                                mainPlayer.setAnimType(STAND_SEC4_ANIM_DAIM);
-                            } else {
-                                mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
-                            }
-                        } else {
-
-                        }
+                        keyList[EVENT_SYSTEM_KEY_Z] = false;          
                     }
                 break;
 
@@ -1152,6 +1137,21 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
             }
         }
 
+        break;
+
+        case PLAYER_STATE_BEGIN_GUN:
+        case PLAYER_STATE_GUN: {
+            switch (key) {
+                case EVENT_SYSTEM_KEY_X:
+                    keyList[EVENT_SYSTEM_KEY_X] = pressed;
+                break;
+
+                case EVENT_SYSTEM_KEY_Z:
+                    keyList[EVENT_SYSTEM_KEY_Z] = pressed;
+                break;
+
+            }
+        }
         break;
 
         case PLAYER_STATE_HIT:
@@ -1986,15 +1986,6 @@ void gameCore::handlePlayerAction() {
 
     switch (mainPlayer.getState()) {
         case PLAYER_STATE_NORMAL: {
-            /*
-             * Shoot action
-             */
-            if ((mainPlayer.getAnimSection() == EMD_SECTION_4) && (mainPlayer.getAnimType() == STAND_SEC4_ANIM_SHOOTING)) {
-                if (mainPlayer.getAnimCount() == 22) {
-                    gunHandle();
-                    mainPlayer.setAnimCount(0);
-                }
-            }
 
             switch (mainPlayer.getAnimRotationDir()) {
                 case PLAYER_ACTION_R_LEFT:
@@ -2066,7 +2057,11 @@ void gameCore::handlePlayerAction() {
                 keyList[i] = false;
             }
 
-            mainPlayer.setState(PLAYER_STATE_HIT);
+            if (mainPlayer.getHitPoints() == 0) {
+                mainPlayer.setState(PLAYER_STATE_BEGIN_DEATH);
+            } else {
+                mainPlayer.setState(PLAYER_STATE_HIT);
+            }
         }
         break;
 
@@ -2075,16 +2070,55 @@ void gameCore::handlePlayerAction() {
         }
         break;
 
-        case PLAYER_STATE_ATTACK:
+        case PLAYER_STATE_BEGIN_GUN: {
+            mainPlayer.setAnimType(STAND_SEC4_ANIM_SHOOTING);
+            mainPlayer.setState(PLAYER_STATE_GUN);
+        }
+        break;
 
+        case PLAYER_STATE_GUN: {
+            /*
+             * Shoot action
+             */
+            if ((mainPlayer.getAnimSection() == EMD_SECTION_4) && (mainPlayer.getAnimType() == STAND_SEC4_ANIM_SHOOTING)) {
+
+                if (mainPlayer.getAnimCount() == 22) {
+                    gunHandle();
+                    if (keyList[EVENT_SYSTEM_KEY_Z]) {
+                        mainPlayer.setAnimCount(0);
+                    } else {
+
+                        if (keyList[EVENT_SYSTEM_KEY_X]) {
+                            mainPlayer.setAnimType(STAND_SEC4_ANIM_AIM);
+                        } else {
+                            mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
+                            mainPlayer.setAnimType(STAND_SEC4_ANIM_IDLE);
+                        }
+
+                        mainPlayer.setAnimSection(EMD_SECTION_4);
+                        mainPlayer.setState(PLAYER_STATE_NORMAL);
+
+                    }
+                }
+            }
+        }
         break;
 
         case PLAYER_STATE_BEGIN_DEATH:
-
+            mainPlayer.setAnimSection(EMD_SECTION_2);
+            mainPlayer.setAnimType(STAND_SEC2_ANIM_DEATH, false);
+            mainPlayer.setState(PLAYER_STATE_DEATH);
+            miscStuff.setupFadeEffect(TYPE_FADE_IN, 0, 0, 0, 260);
         break;
 
-        case PLAYER_STATE_DEATH:
+        case PLAYER_STATE_DEATH: {
+            EMD_SEC2_DATA_T node = mainPlayer.getAnimFrame();    
+            mainPlayer.setY(2000 + node.yOffset);
 
+            if (!miscStuff.isInFade()) {
+                
+            }
+        }
         break;
 
     }

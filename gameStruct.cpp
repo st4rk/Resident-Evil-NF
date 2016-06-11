@@ -85,10 +85,16 @@ void entity::setState(unsigned int state) {
 	this->state = state;  
 }
 
+void entity::setHitPoints(unsigned int hitPoints) { 
+	this->hitPoints = hitPoints; 
+}
+
 unsigned int      entity::getModel()             { return modelNum;        }
 
 unsigned int      entity::getTmrAnim()           { return tmrAnim;         }
 unsigned int      entity::getState()             { return state;           }
+
+unsigned int      entity::getHitPoints()          { return hitPoints; }
 
 unsigned int      entity::getAnimSection()       { return animSection;     }
 unsigned int      entity::getAnimType()          { return animType;        }
@@ -114,11 +120,9 @@ enemy::~enemy() {
 }
 
 void enemy::setType(unsigned int type)   { this->type  = type;   }
-void enemy::setHitPoints(unsigned int hitPoints) { this->hitPoints = hitPoints; }
 void enemy::setDelta(float delta)        { this->delta = delta;  }
 
 unsigned int enemy::getType()      { return type;  }
-unsigned int enemy::getHitPoints() { return hitPoints; }
 
 float enemy::getDelta() { return delta; }
 
