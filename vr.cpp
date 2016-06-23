@@ -7,6 +7,10 @@ VR::VR() {
 	timer.min     = 0;
 	timer.sysTick = 0;
 
+	inFadeEnd = false;
+	vrState   = VR_STATE_IN_GAME;
+	ammo      = 0;
+
 	memset(timer.buffer, 0x0, 15);
 	memset(scoreBuffer,  0x0, 15);
 }
@@ -16,6 +20,10 @@ VR::~VR() {
 	timer.sec     = 0;
 	timer.min     = 0;
 	timer.sysTick = 0;
+
+	inFadeEnd = false;
+	vrState   = VR_STATE_IN_GAME;
+	ammo      = 0;
 
 	memset(scoreBuffer,  0x0, 15);
 	memset(timer.buffer, 0x0, 15);
@@ -27,6 +35,7 @@ void VR::setGameScore(unsigned int gameScore) {
 		this->gameScore = gameScore;
 		sprintf(scoreBuffer, "Score: %d", gameScore);
 	}
+
 }
 
 
@@ -52,4 +61,23 @@ void VR::gameLogic() {
 	
 	misc.renderText(0.50, 0.05, 0.0, TEXT_TYPE_NORMAL, timer.buffer, 0.0f, 1.0f, 0.0f, 1.0f);
 	misc.renderText(0.0, 0.90, 0.0, TEXT_TYPE_LITTLE,  scoreBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
+
+
+	if (gameScore == VR_ENEMY_NUM) {
+		if (inFadeEnd == false) {
+			misc.setupFadeEffect(TYPE_FADE_IN, 0, 0, 0, 260);
+			inFadeEnd = true;
+		} else {
+
+			if (!misc.isInFade()) {
+				vrState = VR_STATE_IN_BEND;
+			}
+
+			misc.renderFadeEffect();
+		}
+	}
 }
+
+void VR::setState(unsigned int vrState) { this->vrState = vrState; }
+
+unsigned int VR::getState() { return vrState; }

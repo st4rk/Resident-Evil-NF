@@ -78,6 +78,16 @@ void cam::camList(unsigned int camNum, float x, float y, float z, float angle) {
         }
         break;
 
+        case CAMERA_STYLE_SPECIAL_3: {
+            camZ  = z;
+            distX =    -cos((angle * PI/180));
+            distZ =     sin((angle * PI/180));
+            distY =    -15000.0f;
+            gluLookAt(     camX + distX,  distY, camZ + distZ,
+                           camX, 0.0f, camZ,   
+                           0.0f, -0.1f, 0.0f);
+        }
+        break;
 
     }
 }

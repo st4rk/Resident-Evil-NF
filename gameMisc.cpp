@@ -64,13 +64,13 @@ void gameMisc::renderText(float x, float y, float z, int type, std::string text,
                         glVertex3f(tX, tY, -1.0f);            
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.053,Yo);
-                        glVertex3f(tX+0.08f, tY, -1.0f);              
+                        glVertex3f(tX+0.07f, tY, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.053,Yo+0.053);
-                        glVertex3f(tX+0.08f,tY+0.08f, -1.0f);              
+                        glVertex3f(tX+0.07f,tY+0.07f, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo, Yo+0.053);
-                        glVertex3f(tX, tY+0.08f, -1.0f);                  
+                        glVertex3f(tX, tY+0.07f, -1.0f);                  
                     glEnd();
                 }
             }
@@ -92,13 +92,13 @@ void gameMisc::renderText(float x, float y, float z, int type, std::string text,
                         glVertex3f(tX, tY, -1.0f);            
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.030,Yo);
-                        glVertex3f(tX+0.05f, tY, -1.0f);              
+                        glVertex3f(tX+0.040f, tY, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.030,Yo+0.030);
-                        glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
+                        glVertex3f(tX+0.040f,tY+0.040f, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo, Yo+0.030);
-                        glVertex3f(tX, tY+0.05f, -1.0f);                  
+                        glVertex3f(tX, tY+0.040f, -1.0f);                 
                     glEnd();
                 }
             }

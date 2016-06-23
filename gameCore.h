@@ -17,6 +17,7 @@
 #include <math.h>
 #include <SDL/SDL.h>
 #include "EMD.h"
+#include "EMD1.h"
 #include "PLD.h"
 #include "RDT.h"
 #include "gameSound.h"

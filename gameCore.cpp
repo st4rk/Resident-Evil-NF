@@ -37,7 +37,7 @@ int delay_sys  = 0;
 RDT playerRDT;
 PLD modelList_2[MAX_MODEL];
 EMD modelList[MAX_MODEL];
-
+EMD1 testModel;
 
 
 // engineBackground é utilizado para carregar os backgrounds de cada .RDT
@@ -52,6 +52,8 @@ BITMAP engineMainMenu;
 BITMAP engineLogo;
 BITMAP engineSelectChar;
 BITMAP engineCharMenu;
+BITMAP engineResult;
+NFP shadow;
 
 player      mainPlayer;
 gameMath    mathEngine;
@@ -216,6 +218,9 @@ void gameCore::renderLoadResource() {
     modelList[2].emdLoadFile("resource/models/2.EMD");
     modelList[3].emdLoadFile("resource/models/PL0BCH.EMD");
     modelList[4].emdLoadFile("resource/models/EM01E.EMD");
+    modelList[5].emdLoadFile("resource/models/EM030.EMD");
+
+    testModel.loadFile("resource/models/EM1110.EMD");
 
     /*
      * Load all sound effects
@@ -234,6 +239,9 @@ void gameCore::renderLoadResource() {
     engineMainMenu.loaderFile  ("resource/menus/mainMenu.bmp",0);
     engineSelectChar.loaderFile("resource/menus/selectChar.bmp", 0);
     engineCharMenu.loaderFile  ("resource/menus/charMenu.bmp", 1);
+    engineResult.loaderFile    ("resource/menus/RESULT.BMP", 0);
+
+    shadow.loadImage           ("resource/texture/1.png");
 
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
@@ -253,7 +261,7 @@ void gameCore::renderLoadResource() {
     mainPlayer.setCam(CAMERA_STYLE_SEL_CHAR);
     mainPlayer.setAngle(90.0);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < VR_ENEMY_NUM; i++) {
         gameEnemy.setX(-2000.0f + (-1000.0f * i));
         gameEnemy.setZ(-5000.0f + (-1000.0f * i));
         gameEnemy.setY(0);
@@ -921,7 +929,7 @@ void MainLoop() {
 
                     for (unsigned int i = 0; i < enemyList.size(); i++) {
                         core->engineAI.zombie_re_2(&mainPlayer, &enemyList[i]);
-                        if (enemyList[i].getState() == AI_STATE_DEATH)
+                        if (enemyList[i].getState() == AI_STATE_DEATH) 
                             gameScore++;
                     }
 
@@ -1165,6 +1173,39 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
 }
 
 
+
+void renderShadow(float x, float y, float z) {
+
+    glDisable(GL_LIGHTING);
+   
+    glLoadIdentity();
+ 
+    core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
+                      mainPlayer.getZ(),  mainPlayer.getAngle());
+ 
+ 
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, shadow.getWidth(), shadow.getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, shadow.getPixelData());
+ 
+ 
+    glBegin(GL_QUADS);  
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f(x-1024.0f,             0.0f,      z-1024.0f);  
+        glTexCoord2f(1.0f,0.0f);          
+        glVertex3f((x + 1024.0f), 0.0f,      z-1024.0f);  
+        glTexCoord2f(1.0f,1.0f);          
+        glVertex3f((x + 1024.0f), 0.0f,     (z + 1024.0f));
+        glTexCoord2f(0.0f,1.0f);  
+        glVertex3f(x-1024.0f,             0.0f,     (z + 1024.0f));
+    glEnd();
+ 
+    glEnable(GL_LIGHTING);
+
+
+}
+
+
 void renderBoundingBox(float x, float y, float z) {
 
     glDisable(GL_LIGHTING);
@@ -1198,6 +1239,8 @@ void renderBoundingBox(float x, float y, float z) {
 
 }
 
+
+
 /* This function is responsible for all emd animation */
 void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, EMD_SEC2_DATA_T animFrame, unsigned int emdNum) {
     if (var == objNum) {
@@ -1212,6 +1255,9 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
         renderEMD_modelAnimation(objNum, modelList[emdNum].emdSec2Mesh[var][c], var2, animFrame, emdNum);
     }
 }
+
+
+
 
 /*
  * renderEMD
@@ -1715,39 +1761,164 @@ void gameCore::renderGame() {
         break;
 
         case IN_GAME_NORMAL:
-            /* .BSS Background stuff */
-            //drawMapBackground();
+            switch (vrMode.getState()) {
+                case VR_STATE_IN_GAME:
+                    /* .BSS Background stuff */
+                    //drawMapBackground();
 
-            /* All model rendering is done by renderEMD Function */
-           /* Player Rendering */
-            renderEMD(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(), 
-                      mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
-            /* Enemy Rendering */
-
-            for (unsigned int i = 0; i < enemyList.size(); i++) {
-            	renderEMD(enemyList[i].getX(), enemyList[i].getY(),enemyList[i].getZ(), 
-            	          enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
-	  
-	            renderBoundingBox(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
-        	}
-
-            renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
+                    /* All model rendering is done by renderEMD Function */
+                    /* Player Rendering */
+                    renderEMD(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(), 
+                              mainPlayer.getAngle(), mainPlayer.getModel(), mainPlayer.getAnimFrame());
 
 
 
-            char coord[0xFF];
+                    /* Enemy Rendering */
 
-            sprintf(coord, "XYZA %d/%d/%d/%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
-            miscStuff.renderText(0.0f, 1.00f, 100.0f, TEXT_TYPE_LITTLE, coord);
+                    for (unsigned int i = 0; i < enemyList.size(); i++) {
+                        renderEMD(enemyList[i].getX(), enemyList[i].getY(),enemyList[i].getZ(), 
+                                  enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
 
-            vrMode.gameLogic();
+                        renderBoundingBox(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+                        renderShadow(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+                    }
+
+                    renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
+                    renderShadow(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
 
 
-            if (gameState == STATE_IN_DEBUG) {
-                if (jumpToRun) 
-                    eventSystem_debugJumpToRun();
-                else 
-                    eventSystem_debugMenu();
+
+                    char coord[0xFF];
+
+                    sprintf(coord, "XYZA %d/%d/%d/%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
+                    miscStuff.renderText(0.0f, 1.00f, 100.0f, TEXT_TYPE_LITTLE, coord);
+
+                    vrMode.gameLogic();
+
+                break;
+
+                case VR_STATE_IN_BEND:
+                    miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 260);
+                    vrMode.setState(VR_STATE_IN_END);
+                break;
+
+                case VR_STATE_IN_END: {
+                    miscStuff.renderSquareWithTexture(&engineResult, false);
+                    
+                    if (!miscStuff.isInFade()) {
+                        /*
+                         * result information
+                         */
+
+
+                         /*
+                          * player name
+                          */
+                         if (mainPlayer.getModel() == 1) {
+                            miscStuff.renderText(0.15, 0.25, 0.0, TEXT_TYPE_NORMAL, "LEON", 0.0f, 0.0f, 1.0f, 1.0f);
+                         } else {
+                            miscStuff.renderText(0.15, 0.25, 0.0, TEXT_TYPE_NORMAL, "CHRIS", 0.0f, 0.0f, 1.0f, 1.0f);
+                         }
+
+
+                        /* 
+                         * game time
+                         */
+                        miscStuff.renderText(0.15, 0.35, 0.0, TEXT_TYPE_NORMAL, "TIME: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                        miscStuff.renderText(0.50, 0.35, 0.0, TEXT_TYPE_NORMAL, vrMode.timer.buffer, 0.0f, 1.0f, 0.0f, 1.0f);
+                       
+                        /* 
+                         * ammo
+                         */
+                        miscStuff.renderText(0.15, 0.45, 0.0, TEXT_TYPE_NORMAL, "AMMO: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                        char dBuffer[4];
+                        sprintf(dBuffer, "%d", vrMode.ammo);
+                        miscStuff.renderText(0.50, 0.45, 0.0, TEXT_TYPE_NORMAL, dBuffer, 1.0f, 0.0f, 0.0f, 1.0f);
+                        
+                        /*
+                         * kills
+                         */
+                        miscStuff.renderText(0.15, 0.55, 0.0, TEXT_TYPE_NORMAL, "KILLS: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                        sprintf(dBuffer, "%d", vrMode.gameScore);
+                        miscStuff.renderText(0.60, 0.55, 0.0, TEXT_TYPE_NORMAL, dBuffer, 1.0f, 0.0f, 0.0f, 1.0f);
+
+
+                        int rankNum = 0;
+
+                        /* RANK B OR C */
+                        if ((vrMode.timer.min > 2)) {
+                            /* RANK B OR C */
+                            if (vrMode.ammo > ((vrMode.gameScore * 3) + 6)) {
+                                rankNum = 3;
+                            } else {
+                                rankNum = 2;
+                            }
+                        } else {
+                            /* RANK B */
+                            if (vrMode.ammo > ((vrMode.gameScore * 3) + 6)) {
+                                rankNum = 2;
+                            } else {
+                                rankNum = 1;
+                            }
+                        }
+                         
+                        switch (rankNum) {
+                            case 1: {
+                                /*
+                                 * RANK
+                                 */
+                                miscStuff.renderText(0.15, 0.65, 0.0, TEXT_TYPE_NORMAL, "YOUR RANK: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "A", 1.0f, 1.0f, 0.0f, 1.0f);
+
+                                /*
+                                 * RANK INFO
+                                 */
+
+                                miscStuff.renderText(0.10, 0.85, 0.0, TEXT_TYPE_LITTLE, "Nice Job ! You're the", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.10, 0.90, 0.0, TEXT_TYPE_LITTLE, "true Big Boss", 1.0f, 1.0f, 1.0f, 1.0f);
+                            }
+                            break;
+
+                            case 2: {
+                            
+                                /*
+                                 * RANK
+                                 */
+                                miscStuff.renderText(0.15, 0.65, 0.0, TEXT_TYPE_NORMAL, "YOUR RANK: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "B", 0.1f, 0.1f, 1.0f, 1.0f);
+
+                                /*
+                                 * RANK INFO
+                                 */
+
+                                miscStuff.renderText(0.10, 0.85, 0.0, TEXT_TYPE_LITTLE, "Well Done ! Wait to see you", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.10, 0.90, 0.0, TEXT_TYPE_LITTLE, "for the next mission", 1.0f, 1.0f, 1.0f, 1.0f);
+
+                            }
+                            break;
+
+                            case 3: {
+                                /*
+                                 * RANK
+                                 */
+                                miscStuff.renderText(0.15, 0.65, 0.0, TEXT_TYPE_NORMAL, "YOUR RANK: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "C", 1.0f, 0.1f, 0.1f, 1.0f);
+
+                                /*
+                                 * RANK INFO
+                                 */
+
+                                miscStuff.renderText(0.10, 0.85, 0.0, TEXT_TYPE_LITTLE, "It's a Job !", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.10, 0.90, 0.0, TEXT_TYPE_LITTLE, "At least you tried", 1.0f, 1.0f, 1.0f, 1.0f);
+
+                            }
+
+                            break;
+                        }
+
+                    }
+                }
+                break;
             }
         break;
     }
@@ -2084,6 +2255,7 @@ void gameCore::handlePlayerAction() {
 
                 if (mainPlayer.getAnimCount() == 22) {
                     gunHandle();
+                    vrMode.ammo++;
                     if (keyList[EVENT_SYSTEM_KEY_Z]) {
                         mainPlayer.setAnimCount(0);
                     } else {
@@ -2124,3 +2296,4 @@ void gameCore::handlePlayerAction() {
     }
 
 }
+

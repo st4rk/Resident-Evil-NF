@@ -170,9 +170,6 @@ bool EMD::emdLoadFile(std::string dir) {
 
     memcpy(&sizeSec1Header, (emdBufferData+emdFileSection[1] + 2), sizeof(unsigned short));
 
-
-    sizeSec1Header = sizeSec1Header;
-
     emdSec1Header    = (EMD_SECTION_1_HEADER*) malloc (sizeof(EMD_SECTION_1_HEADER) * (sizeSec1Header / 4));
     
     unsigned short sizeSec1_f = (sizeSec1Header / 4);
