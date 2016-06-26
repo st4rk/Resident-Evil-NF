@@ -1144,7 +1144,7 @@ void MainLoop() {
                             specialEnemy = true;
                             soundEngine.engineStopSound();
                             soundEngine.engineLoadSound("resource/ost/10.mp3");
-                            soundEngine.enginePlaySound(1);
+                            soundEngine.enginePlaySound(0);
                             soundEngine.enginePlaySoundEffect(core->mixList[9]);                            
                         }
 
@@ -1884,13 +1884,13 @@ void gameCore::renderMainMenu() {
                         oldSection  = EMD_SECTION_2;
                         mainPlayer.setAnimSection(EMD_SECTION_2);
                         mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_POSE);
-                        soundEngine.enginePlaySound(1);
+                        soundEngine.enginePlaySound(0);
                     } else if (menuArrow == 1) {
                         miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
                         gameState   = STATE_CREDITS;
                         mainMenu    = SEL_PLAYER_BEGIN;
                         menuArrow   = 0x0;
-                        soundEngine.enginePlaySound(1); 
+                        soundEngine.enginePlaySound(0); 
                     }
                 }
            break;
@@ -2185,7 +2185,7 @@ void gameCore::renderGame() {
                     break;
                 }
                 mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
-                soundEngine.enginePlaySound(1);
+                soundEngine.enginePlaySound(0);
                 inGame = IN_GAME_NORMAL;
             }
         break;
@@ -2261,7 +2261,7 @@ void gameCore::renderGame() {
                 break;
 
                 case VR_STATE_IN_END: {
-                    soundEngine.enginePlaySound(1);
+                    soundEngine.enginePlaySound(0);
 
                     miscStuff.renderSquareWithTexture(&engineResult, false);
                     
