@@ -1144,7 +1144,7 @@ void MainLoop() {
                             specialEnemy = true;
                             soundEngine.engineStopSound();
                             soundEngine.engineLoadSound("resource/ost/10.mp3");
-                            soundEngine.enginePlaySound(0);
+                            soundEngine.enginePlaySound(-1);
                             soundEngine.enginePlaySoundEffect(core->mixList[9]);                            
                         }
 
@@ -1884,13 +1884,13 @@ void gameCore::renderMainMenu() {
                         oldSection  = EMD_SECTION_2;
                         mainPlayer.setAnimSection(EMD_SECTION_2);
                         mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_POSE);
-                        soundEngine.enginePlaySound(0);
+                        soundEngine.enginePlaySound(-1);
                     } else if (menuArrow == 1) {
                         miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
                         gameState   = STATE_CREDITS;
                         mainMenu    = SEL_PLAYER_BEGIN;
                         menuArrow   = 0x0;
-                        soundEngine.enginePlaySound(0); 
+                        soundEngine.enginePlaySound(-1); 
                     }
                 }
            break;
@@ -2030,8 +2030,8 @@ void gameCore::renderSelectChar() {
                 break;
                 
                 case 3:
-                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil CODE: Veronica", 1.0f, 1.0f, 1.0f, 1.0f);
-                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "Alexia - Final Boss Theme", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 0.935, 0.0, TEXT_TYPE_LITTLE, "Resident Evil 2", 1.0f, 1.0f, 1.0f, 1.0f);
+                    miscStuff.renderText(0.1, 1.005, 0.0, TEXT_TYPE_LITTLE, "The Second Malformation", 1.0f, 1.0f, 1.0f, 1.0f);
 
                 break;
             }
@@ -2177,7 +2177,7 @@ void gameCore::renderGame() {
                     break;
 
                     case 3:
-
+                        soundEngine.engineLoadSound("resource/ost/15.mp3");
                     break;
 
                     default:
@@ -2185,7 +2185,7 @@ void gameCore::renderGame() {
                     break;
                 }
                 mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
-                soundEngine.enginePlaySound(0);
+                soundEngine.enginePlaySound(-1);
                 inGame = IN_GAME_NORMAL;
             }
         break;
@@ -2261,7 +2261,7 @@ void gameCore::renderGame() {
                 break;
 
                 case VR_STATE_IN_END: {
-                    soundEngine.enginePlaySound(0);
+                    soundEngine.enginePlaySound(-1);
 
                     miscStuff.renderSquareWithTexture(&engineResult, false);
                     
@@ -2708,6 +2708,8 @@ void gameCore::handlePlayerAction() {
                             } 
                         }
 
+                        if (x > 200000 || x < -200000 || z > 200000 || z < -200000) canMove = false;
+
                         if (canMove) {
                             mainPlayer.setX(x);
                             mainPlayer.setZ(z);
@@ -2730,7 +2732,9 @@ void gameCore::handlePlayerAction() {
                                 break;
                             } 
                         }   
-                    
+
+                        if (x > 200000 || x < -200000 || z > 200000 || z < -200000) canMove = false;
+
                         if (canMove) {
                             mainPlayer.setX(x);
                             mainPlayer.setZ(z);

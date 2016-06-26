@@ -79,6 +79,7 @@ void cam::camList(unsigned int camNum, float x, float y, float z, float angle) {
         break;
 
         case CAMERA_STYLE_SPECIAL_3: {
+            camX  = x;
             camZ  = z;
             distX =    -cos((angle * PI/180));
             distZ =     sin((angle * PI/180));
