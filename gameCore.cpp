@@ -1407,6 +1407,10 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
                 break;
 
                 case EVENT_SYSTEM_KEY_C:
+                    if (mainPlayer.getCam() == CAMERA_STYLE_SPECIAL)
+                        mainPlayer.setCam(CAMERA_STYLE_SPECIAL_3);
+                    else
+                        mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
 
                 break;
 
@@ -1798,15 +1802,15 @@ void gameCore::renderCredits() {
 
         case MENU_CREDITS_END: {
                 miscStuff.renderText(0.30, 0.15, 0.0, TEXT_TYPE_NORMAL, "Assets/SFX/OST", 0.4f, 0.4f, 1.0f, 1.0f);
-                miscStuff.renderText(0.62, 0.25, 0.0, TEXT_TYPE_LITTLE,  "CAPCOM");      
+                miscStuff.renderText(0.62, 0.25, 0.0, TEXT_TYPE_LITTLE, "CAPCOM");      
 
 
                 miscStuff.renderText(0.40, 0.45, 0.0, TEXT_TYPE_NORMAL, "Game Engine",0.4f, 0.4f, 1.0f, 1.0f);
-                miscStuff.renderText(0.64, 0.55, 0.0, TEXT_TYPE_LITTLE,  "ST4RK");      
+                miscStuff.renderText(0.64, 0.55, 0.0, TEXT_TYPE_LITTLE, "ST4RK");      
                                      
 
                 miscStuff.renderText(0.51, 0.75, 0.0, TEXT_TYPE_NORMAL, "Game Dev",0.4f, 0.4f, 1.0f, 1.0f);
-                miscStuff.renderText(0.25, 0.85, 0.0, TEXT_TYPE_LITTLE, "ST4RK AND GABRIEL MOITA");      
+                miscStuff.renderText(0.35, 0.85, 0.0, TEXT_TYPE_LITTLE, "ST4RK AND SKAKIM");      
                                      
 
         }
