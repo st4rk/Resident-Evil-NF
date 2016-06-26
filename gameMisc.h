@@ -31,6 +31,10 @@ public:
 
 	void renderSquareWithColor(float R, float G, float B, float A);
 	void renderSquareWithTexture(BITMAP *texture, bool ARGB);
+
+	void renderSquareWithTexture2(NFP *texture,
+		                         float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f);
+
 	void setupFadeEffect(unsigned char type, float R, float G, float B, 
 					     unsigned int  timer);
 	void renderFadeEffect();

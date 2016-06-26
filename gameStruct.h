@@ -129,6 +129,11 @@ enum SEL_PLAYER_SUB_MENU {
    SEL_PLAYER_START      = 1
 };
 
+enum MENU_CREDITS {
+   MENU_CREDITS_BEGIN = 0,
+   MENU_CREDITS_END   = 1
+};
+
 // InGame sub-menus/status
 #define IN_GAME_BEGIN          0x0
 #define IN_GAME_NORMAL         0x1

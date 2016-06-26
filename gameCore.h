@@ -65,6 +65,7 @@ public:
 	void renderGame();
 	void renderSelectChar();
 	void renderStateMachine();
+	void renderCredits();
 
 	/*
 	 * Input

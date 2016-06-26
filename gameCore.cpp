@@ -45,6 +45,14 @@ EMD modelList[MAX_MODEL];
 PLW testGun;
 EMD1 testModel;
 
+
+float bR = 1.0f;
+float bG = 1.0f;
+float bB = 0.1f;
+float bA = 1.0f;
+
+bool colorBlow = false;
+
 unsigned int tmr1000 = 0;
 
 
@@ -65,11 +73,12 @@ BITMAP engineLogo;
 BITMAP engineSelectChar;
 BITMAP engineCharMenu;
 BITMAP engineResult;
-
-
+BITMAP engineCredits;
 BITMAP engineBlood;
 
 NFP shadow;
+NFP tile;
+NFP tileBG;
 
 player      mainPlayer;
 gameMath    mathEngine;
@@ -91,6 +100,7 @@ unsigned int fpsGyver = 0;
 unsigned int fpsCnt   = 0;
 
 unsigned int tmrAnim  = 0;
+unsigned int tmrAnim2 = 0;
 
 float bloodX   = 0;
 float bloodY   = 0;
@@ -281,19 +291,16 @@ void gameCore::renderLoadResource() {
     engineCharMenu.loaderFile  ("resource/menus/charMenu.bmp", 1);
     engineResult.loaderFile    ("resource/menus/RESULT.BMP", 0);
     engineBlood.loaderFile     ("resource/texture/blood_1.bmp", 1);
-
+    engineCredits.loaderFile    ("resource/texture/bg.bmp", 0);
     shadow.loadImage           ("resource/texture/1.png");
+    tile.loadImage             ("resource/texture/dojo_tile.png");
+    tileBG.loadImage             ("resource/texture/ray.png");
 
     // Carrega o background com número 5
     background_Loader("resource/stages/re1/ROOM106.BSS");
 
     // HardCode, modelo inicial, X,Y,Z e Número da câmera
     mainPlayer.setModel(0);
-    /*
-    mainPlayer.setX(18391);
-    mainPlayer.setZ(12901);
-    mainPlayer.setY(0);
-    */
     mainPlayer.setX(0.0f);
     mainPlayer.setY(0.0f);
     mainPlayer.setZ(0.0f);
@@ -399,6 +406,82 @@ void gameCore::eventSystem_debugMenu() {
     glEnable(GL_LIGHTING);
 
     */
+}
+
+
+void renderFloor(){
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+
+    glLoadIdentity();
+ 
+    core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
+                      mainPlayer.getZ(),  mainPlayer.getAngle());
+ 
+ 
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, tile.getWidth(), tile.getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, tile.getPixelData());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+    float x=0.0f,y=0.0f,z=0.0f;
+    
+    glBegin(GL_QUADS); 
+        glColor4f(bR, bG, bB, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f((x - 200000.0f),  70.0f,      (z - 200000.0f));  
+        glTexCoord2f(200.0f,0.0f);          
+        glVertex3f((x + 200000.0f),  70.0f,      (z - 200000.0f));  
+        glTexCoord2f(200.0f,200.0f);          
+        glVertex3f((x + 200000.0f),  70.0f,      (z + 200000.0f));
+        glTexCoord2f(0.0f,200.0f);   
+        glVertex3f((x - 200000.0f),  70.0f,      (z + 200000.0f));
+        
+        /*glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f(20000.0f,  (y - 20000.0f),   (z - 20000.0f));  
+        glTexCoord2f(10.0f,0.0f);          
+        glVertex3f(20000.0f,   y,               (z - 20000.0f));  
+        glTexCoord2f(10.0f,20.0f);          
+        glVertex3f(20000.0f,   y,               (z + 20000.0f));
+        glTexCoord2f(0.0f,20.0f);  
+        glVertex3f(20000.0f,  (y - 20000.0f),   (z + 20000.0f));
+        
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f(-20000.0f,  (y - 20000.0f),      (z - 20000.0f));  
+        glTexCoord2f(10.0f,0.0f);          
+        glVertex3f(-20000.0f,   y,                  (z - 20000.0f));  
+        glTexCoord2f(10.0f,20.0f);          
+        glVertex3f(-20000.0f,   y,                  (z + 20000.0f));
+        glTexCoord2f(0.0f,20.0f);  
+        glVertex3f(-20000.0f,  (y - 20000.0f),      (z + 20000.0f));
+        
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f((x - 20000.0f),  (y - 20000.0f), 20000.0f);  
+        glTexCoord2f(10.0f,0.0f);          
+        glVertex3f((x - 20000.0f),   y,             20000.0f);  
+        glTexCoord2f(10.0f,20.0f);          
+        glVertex3f((x + 20000.0f),   y,             20000.0f);
+        glTexCoord2f(0.0f,20.0f);  
+        glVertex3f((x + 20000.0f),  (y - 20000.0f), 20000.0f);
+        
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(0.0f,0.0f);                
+        glVertex3f((x - 20000.0f),  (y - 20000.0f), -20000.0f);  
+        glTexCoord2f(10.0f,0.0f);          
+        glVertex3f((x - 20000.0f),   y,             -20000.0f);  
+        glTexCoord2f(10.0f,20.0f);          
+        glVertex3f((x + 20000.0f),   y,             -20000.0f);
+        glTexCoord2f(0.0f,20.0f);  
+        glVertex3f((x + 20000.0f),  (y - 20000.0f), -20000.0f);*/
+    glEnd();
+    
+    glEnable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
+    
 }
 
 void eventSystem_debugJumpToRun() {
@@ -518,14 +601,15 @@ void gameCore::eventSystem_downKey(int key, int x, int y) {
                 switch (key) {
                     case GLUT_KEY_UP:
                         soundEngine.enginePlaySoundEffect(mixList[0]);
-                        if (menuArrow == 1)
-                            menuArrow = 0;
+                        
+                        if (menuArrow > 0)
+                            menuArrow--;
                     break;
 
                     case GLUT_KEY_DOWN:
                         soundEngine.enginePlaySoundEffect(mixList[0]);
-                        if (menuArrow == 0)
-                            menuArrow = 1;
+                        if (menuArrow < 2)
+                            menuArrow++;
                     break;
 
                     default:
@@ -659,6 +743,13 @@ void gameCore::eventSystem_keyboardDown(unsigned char key, int x, int y) {
                         miscStuff.setupFadeEffect(TYPE_FADE_SPECIAL, 0, 0, 0, 70);
                         glutIgnoreKeyRepeat(1);    
                     } else if (menuArrow == 1) {
+
+                        soundEngine.enginePlaySoundEffect(mixList[1]);
+                        soundEngine.engineLoadSound("resource/ost/11.mp3");
+                        mainMenu = MAIN_MENU_GAME;
+                        miscStuff.setupFadeEffect(TYPE_FADE_SPECIAL, 0, 0, 0, 70);
+                        glutIgnoreKeyRepeat(1);    
+                    } else if (menuArrow == 2) {
                         exit(0);
                     }
                 }
@@ -1086,6 +1177,31 @@ void MainLoop() {
                         }
                     }
 
+                    if (tmrAnim2 < SDL_GetTicks()) {
+                        tmrAnim2 = SDL_GetTicks() + 60;
+
+                        if (colorBlow) {
+                            if (bR < 1.0f) {
+                                bR += 0.01f;
+                                bG += 0.01f;
+                                bB -= 0.01f;
+                                bA += 0.01f;
+                            } else {
+                                colorBlow = false;
+                            }
+
+                        } else {
+                            if (bB < 1.0f) {
+                                bB += 0.01f;
+                                bR -= 0.01f;
+                                bG -= 0.01f;
+                                bA -= 0.01f;
+                            } else {
+                                colorBlow = true;
+                            }
+                        }
+                    }
+
 
                     /* Collision Detection RE 1 
                     for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
@@ -1338,13 +1454,13 @@ void renderShadow(float x, float y, float z) {
     glBegin(GL_QUADS);  
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         glTexCoord2f(0.0f,0.0f);                
-        glVertex3f(x-1024.0f,             0.0f,      z-1024.0f);  
+        glVertex3f(x-1024.0f,     -10.0f,      z-1024.0f);  
         glTexCoord2f(1.0f,0.0f);          
-        glVertex3f((x + 1024.0f), 0.0f,      z-1024.0f);  
+        glVertex3f((x + 1024.0f), -10.0f,      z-1024.0f);  
         glTexCoord2f(1.0f,1.0f);          
-        glVertex3f((x + 1024.0f), 0.0f,     (z + 1024.0f));
+        glVertex3f((x + 1024.0f), -10.0f,     (z + 1024.0f));
         glTexCoord2f(0.0f,1.0f);  
-        glVertex3f(x-1024.0f,             0.0f,     (z + 1024.0f));
+        glVertex3f(x-1024.0f,     -10.0f,     (z + 1024.0f));
     glEnd();
  
     glEnable(GL_LIGHTING);
@@ -1622,31 +1738,17 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
 }
 
 void engineLight() {
-    GLfloat ambientColor[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.R/255.0f)*1.0f + 1.0),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.G/255.0f)*1.0f + 1.0),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorAmbient.B/255.0f)*1.0f + 1.0),  1.0 };
-    GLfloat lightPos1[] = {(float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].X), 
-        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].Y), 
-        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[0].Z), 1.0};
-    GLfloat lightPos2[] = {(float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].X), 
-        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].Y), 
-        (float)(playerRDT.rdtLight[mainPlayer.getCam()].lightPos[1].Z), 1.0};
-    GLfloat lightColor1[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].R/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].G/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[0].B/255.0f)*1.0f), 1.0};
-    GLfloat lightColor2[] = {(float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].R/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].G/255.0f)*1.0f),
-        (float)((playerRDT.rdtLight[mainPlayer.getCam()].colorLight[1].B/255.0f)*1.0f), 1.0};
 
-    glLoadIdentity();
-    // Cor do ambiente, modifica de acordo com a camera
-    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, ambientColor);
-    // Primeira Luz
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos1);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor1);
-    // Segunda Luz
-    glLightfv(GL_LIGHT1, GL_POSITION, lightPos2);   
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor2);
+    GLfloat light_ambient[] = { bR, bG, bB };
+    GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat light_position1[] = {0.0, 0.0, 0.0, 1.0 };
+
+
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position1);
 }
 
 /*
@@ -1681,6 +1783,38 @@ void drawMapBackground() {
 }
 
 /*
+ * renderCredits
+ * This function is used to render the game engine credits
+ */
+void gameCore::renderCredits() {
+    miscStuff.renderSquareWithTexture(&engineCredits, false);
+
+    switch (mainMenu) {
+        case MENU_CREDITS_BEGIN:    
+            if (!miscStuff.isInFade()) {
+                mainMenu = MENU_CREDITS_END;
+            }
+        break;
+
+        case MENU_CREDITS_END: {
+                miscStuff.renderText(0.30, 0.15, 0.0, TEXT_TYPE_NORMAL, "Assets/SFX/OST", 0.4f, 0.4f, 1.0f, 1.0f);
+                miscStuff.renderText(0.62, 0.25, 0.0, TEXT_TYPE_LITTLE,  "CAPCOM");      
+
+
+                miscStuff.renderText(0.40, 0.45, 0.0, TEXT_TYPE_NORMAL, "Game Engine",0.4f, 0.4f, 1.0f, 1.0f);
+                miscStuff.renderText(0.64, 0.55, 0.0, TEXT_TYPE_LITTLE,  "ST4RK");      
+                                     
+
+                miscStuff.renderText(0.51, 0.75, 0.0, TEXT_TYPE_NORMAL, "Game Dev",0.4f, 0.4f, 1.0f, 1.0f);
+                miscStuff.renderText(0.25, 0.85, 0.0, TEXT_TYPE_LITTLE, "ST4RK AND GABRIEL MOITA");      
+                                     
+
+        }
+        break;
+    }
+}
+
+/*
  * renderMainMenu
  * This function is used to render all image and text stuff used on intro
  */
@@ -1709,12 +1843,25 @@ void gameCore::renderMainMenu() {
             case MAIN_MENU_START:
                 miscStuff.renderSquareWithTexture(&engineMainMenu, false);
                 if (!miscStuff.isInFade()) {
-                    if (menuArrow == 0) {
-                        miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME", 0.0f, 1.0f, 0.0f, 1.0f);
-                        miscStuff.renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT");
-                    } else if (menuArrow == 1) {
-                        miscStuff.renderText(0.70, 0.80, 0.0, TEXT_TYPE_LITTLE, "EXIT", 0.0f, 1.0f, 0.0f, 1.0f);
-                        miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
+                    switch (menuArrow) {
+                        case 0:
+                            miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME", 0.0f, 1.0f, 0.0f, 1.0f);
+                            miscStuff.renderText(0.62, 0.80, 0.0, TEXT_TYPE_LITTLE, "CREDITS");                           
+                            miscStuff.renderText(0.70, 0.90, 0.0, TEXT_TYPE_LITTLE, "EXIT");
+                        break;
+
+                        case 1:
+                            miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
+                            miscStuff.renderText(0.62, 0.80, 0.0, TEXT_TYPE_LITTLE, "CREDITS", 0.0f, 1.0f, 0.0f, 1.0f);                            
+                            miscStuff.renderText(0.70, 0.90, 0.0, TEXT_TYPE_LITTLE, "EXIT");
+                        break;
+
+                        case 2:
+                            miscStuff.renderText(0.60, 0.70, 0.0, TEXT_TYPE_LITTLE, "NEW GAME");
+                            miscStuff.renderText(0.62, 0.80, 0.0, TEXT_TYPE_LITTLE, "CREDITS");                            
+                            miscStuff.renderText(0.70, 0.90, 0.0, TEXT_TYPE_LITTLE, "EXIT", 0.0f, 1.0f, 0.0f, 1.0f);
+                        break;
+
                     }
                 }
             break;
@@ -1724,15 +1871,23 @@ void gameCore::renderMainMenu() {
                 if (miscStuff.isInFade()) {
                     miscStuff.renderSquareWithTexture(&engineMainMenu, false);
                 } else {
-                    miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
-                    gameState   = STATE_SEL_CHAR;
-                    selectState = SEL_PLAYER_BEGIN; 
-                    menuArrow   = 0x0;
-                    oldAnim     = SPECIAL_SEC2_ANIM_POSE;
-                    oldSection  = EMD_SECTION_2;
-                    mainPlayer.setAnimSection(EMD_SECTION_2);
-                    mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_POSE);
-                    soundEngine.enginePlaySound(1);
+                    if (menuArrow == 0) {
+                        miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
+                        gameState   = STATE_SEL_CHAR;
+                        selectState = SEL_PLAYER_BEGIN; 
+                        menuArrow   = 0x0;
+                        oldAnim     = SPECIAL_SEC2_ANIM_POSE;
+                        oldSection  = EMD_SECTION_2;
+                        mainPlayer.setAnimSection(EMD_SECTION_2);
+                        mainPlayer.setAnimType(SPECIAL_SEC2_ANIM_POSE);
+                        soundEngine.enginePlaySound(1);
+                    } else if (menuArrow == 1) {
+                        miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 60);
+                        gameState   = STATE_CREDITS;
+                        mainMenu    = SEL_PLAYER_BEGIN;
+                        menuArrow   = 0x0;
+                        soundEngine.enginePlaySound(1); 
+                    }
                 }
            break;
 
@@ -2036,6 +2191,11 @@ void gameCore::renderGame() {
                 case VR_STATE_IN_GAME:
                     /* .BSS Background stuff */
                     //drawMapBackground();
+
+                    miscStuff.renderSquareWithTexture2(&tileBG, 1.0f, 1.0f, 1.0f, bA);
+
+                    renderFloor();
+
                     if (inBlood)
                      renderBlood(bloodX, bloodY, bloodZ);
 
@@ -2085,6 +2245,7 @@ void gameCore::renderGame() {
                     miscStuff.renderText(0.0f, 1.05f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
                     vrMode.gameLogic();
+                    engineLight();
 
                 break;
 
@@ -2326,7 +2487,7 @@ void gameCore::renderStateMachine() {
         break;
 
         case STATE_CREDITS:
-
+            renderCredits();
         break;
     }
   
@@ -2366,7 +2527,7 @@ void gameCore::renderInit() {
     // Título do Projeto
     glutCreateWindow(GAME_NAME);
     // Limpa a tela
-    glClearColor(0.4, 0.4, 0.4, 1.0);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0);
 
     // Luz para normal dos modelos
     glEnable(GL_LIGHTING);

@@ -306,6 +306,35 @@ void gameMisc::renderSquareWithColor(float R, float G, float B, float A) {
     glPopMatrix();
 }
 
+void gameMisc::renderSquareWithTexture2(NFP *texture, float r, float g, float b, float a) {
+    glPushMatrix();
+        glDepthMask(GL_FALSE);
+        glDisable(GL_LIGHTING);
+        glLoadIdentity();
+        /*
+         * This API is used to setup a texture to object
+         */
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    	glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, texture->getWidth(), texture->getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, texture->getPixelData());
+
+        glBegin(GL_QUADS);                     
+            glColor4f(r,g,b,a);
+            glTexCoord2i(0,1);
+            glVertex3f(-0.77f, 0.78f, -1.0f);   
+            glTexCoord2i(1,1);
+            glVertex3f( 0.77f, 0.78f, -1.0f);  
+            glTexCoord2i(1,0);
+            glVertex3f( 0.77f,-0.38f, -1.0f); 
+            glTexCoord2i(0,0);
+            glVertex3f(-0.77f,-0.38f, -1.0f);     
+        glEnd();
+
+        glEnable(GL_LIGHTING);
+   		glDepthMask(GL_TRUE);
+    glPopMatrix();	
+}
+
+
 /*
  * renderSquareWithTexture
  * This function render a square with a bitmap texture
