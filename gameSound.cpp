@@ -52,7 +52,7 @@ void gameSound::engineLoadSound(std::string soundName) {
 
 void gameSound::enginePlaySound(int rept) {
 	if (Mix_PlayingMusic() == 0) {
-	//	Mix_PlayMusic(backgroundMusic, rept);
+		Mix_PlayMusic(backgroundMusic, rept);
 	}
 }
 
@@ -61,7 +61,7 @@ void gameSound::engineStopSound() {
 }
 
 void gameSound::enginePlaySoundEffect(Mix_Chunk *node) {
-	//Mix_PlayChannel(-1, node, 0);
+	Mix_PlayChannel(-1, node, 0);
 }
 
 

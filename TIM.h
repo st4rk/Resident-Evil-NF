@@ -33,6 +33,8 @@ public:
    ~TIM();
 
    void timLoad(std::string imgName);
+   void readFromPtr(unsigned char *data);
+
 	TIM_DATA timTexture;
 	unsigned char *rawTexture;
 private:

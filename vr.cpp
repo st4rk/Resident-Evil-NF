@@ -63,7 +63,7 @@ void VR::gameLogic() {
 	misc.renderText(0.0, 0.90, 0.0, TEXT_TYPE_LITTLE,  scoreBuffer, 1.0f, 1.0f, 1.0f, 1.0f);
 
 
-	if (gameScore == VR_ENEMY_NUM) {
+	if (gameScore >= VR_ENEMY_NUM + VR_SPECIAL) {
 		if (inFadeEnd == false) {
 			misc.setupFadeEffect(TYPE_FADE_IN, 0, 0, 0, 260);
 			inFadeEnd = true;

@@ -30,6 +30,7 @@ gameMisc::~gameMisc() {
  */
 void gameMisc::renderText(float x, float y, float z, int type, std::string text, float r, float g, float b, float a) {
     glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
 
     glLoadIdentity();
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -92,13 +93,13 @@ void gameMisc::renderText(float x, float y, float z, int type, std::string text,
                         glVertex3f(tX, tY, -1.0f);            
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.030,Yo);
-                        glVertex3f(tX+0.040f, tY, -1.0f);              
+                        glVertex3f(tX+0.05f, tY, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo+0.030,Yo+0.030);
-                        glVertex3f(tX+0.040f,tY+0.040f, -1.0f);              
+                        glVertex3f(tX+0.05f,tY+0.05f, -1.0f);              
                         /* Texture Coord */
                         glTexCoord2f(Xo, Yo+0.030);
-                        glVertex3f(tX, tY+0.040f, -1.0f);                 
+                        glVertex3f(tX, tY+0.05f, -1.0f);                  
                     glEnd();
                 }
             }
@@ -111,6 +112,7 @@ void gameMisc::renderText(float x, float y, float z, int type, std::string text,
     }
     
     glEnable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
 }
 
 /*
@@ -352,3 +354,22 @@ void gameMisc::renderBoundingBox(float x, float y, float z) {
     glEnable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
 }
+
+
+void gameMisc::renderBlood(float x, float y, float z) {
+	glDisable(GL_LIGHTING);
+		glTranslatef(x,y,z);
+
+		glBegin(GL_QUADS);
+		
+			glColor3f(1.0f, 1.0f, 0.0f);
+
+            glVertex3f(-0.77f, 0.58f, -1.0f);   
+            glVertex3f( 0.77f, 0.58f, -1.0f);  
+            glVertex3f( 0.77f,-0.58f, -1.0f); 
+            glVertex3f(-0.77f,-0.58f, -1.0f);   
+
+		glEnd();	
+
+	glEnable(GL_LIGHTING);
+}	

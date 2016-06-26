@@ -45,10 +45,10 @@ bool gameMath::collisionShoot(float px, float py, float pz,
 	px = px + cos((angle * M_PI/180)) * D;
 	pz = pz - sin((angle * M_PI/180)) * D;
 
-	rect1.x = (px - 512);
-	rect1.y = (pz - 512);
-	rect1.h = 1024;
-	rect1.w = 1024;
+	rect1.x = (px - 128);
+	rect1.y = (pz - 128);
+	rect1.h = 256;
+	rect1.w = 256;
 
 	rect2.x = (nx - 512);
 	rect2.y = (nz - 512);

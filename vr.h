@@ -12,8 +12,8 @@
 #include <SDL/SDL.h>
 #include "gameMisc.h"
 
-#define VR_ENEMY_NUM 2
-#define VR_SPECIAL_  1
+#define VR_ENEMY_NUM 5
+#define VR_SPECIAL  1
 
 
 enum VR_STATE {

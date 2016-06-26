@@ -178,6 +178,7 @@ bool EMD::emdLoadFile(std::string dir) {
         memcpy(&emdSec1Header[i], (emdBufferData+emdFileSection[1]+(i*sizeof(EMD_SECTION_1_HEADER))), sizeof(EMD_SECTION_1_HEADER));
      }
 
+     
     for (unsigned short i = 0; i < sizeSec1_f; i++) {
         for(unsigned short j = 0; j < emdSec1Header[i].dataCount; j++) {
             memcpy(&emdSec1AnimSkelT[i][j], (emdBufferData+emdFileSection[1]+emdSec1Header[i].dataOffset+(j*sizeof(unsigned int))), sizeof(unsigned int));
@@ -208,7 +209,7 @@ bool EMD::emdLoadFile(std::string dir) {
 
     // Carrega o HEADER do Section 2
     memcpy(&emdSec2Header, (emdBufferData+emdFileSection[2]), sizeof(EMD_SECTION_2_HEADER));
-
+    
     emdSec2RelPos   = (EMD_SEC2_RELPOS_T*) malloc (sizeof(EMD_SEC2_RELPOS_T) * emdSec2Header.count);
     emdSec2Armature = (EMD_SEC2_ARMATURE_T*) malloc (sizeof(EMD_SEC2_ARMATURE_T) * emdSec2Header.count);
 
@@ -235,7 +236,7 @@ bool EMD::emdLoadFile(std::string dir) {
 	for (unsigned int i = 0; i < emdSec2Header.count; i++ ) {
 		for (unsigned int a = 0; a < emdSec2Armature[i].meshCount; a++) { 
 			memcpy(&emdSec2Mesh[i][a], (emdBufferData + relOffset + emdSec2Armature[i].offSet + a), sizeof(unsigned char));
-		}
+        }
 	}
     
     // Section 4

@@ -29,6 +29,11 @@ unsigned char menuUpDown = 0x0;
 // In Game
 unsigned char inGame   = 0x0;
 
+bool inBlood = false;
+unsigned char bloodAnimNum = 0;
+
+bool specialEnemy = false;
+
 // System Time, you can do a delay with it
 int timer1_start = 0;
 int timer2_start = 0;
@@ -37,7 +42,14 @@ int delay_sys  = 0;
 RDT playerRDT;
 PLD modelList_2[MAX_MODEL];
 EMD modelList[MAX_MODEL];
+PLW testGun;
 EMD1 testModel;
+
+unsigned int tmr1000 = 0;
+
+
+float mobListX[] = {-2500.0f, 5701.0f, -3049.0f, 2373.0f, -2729.0f};
+float mobListY[] = {8200.0f, -2860.0f,  4126.0f, 257.0f,  -3828.0f};
 
 
 // engineBackground é utilizado para carregar os backgrounds de cada .RDT
@@ -53,6 +65,10 @@ BITMAP engineLogo;
 BITMAP engineSelectChar;
 BITMAP engineCharMenu;
 BITMAP engineResult;
+
+
+BITMAP engineBlood;
+
 NFP shadow;
 
 player      mainPlayer;
@@ -71,6 +87,17 @@ bool wireFrameMode = false;
 SDL_Surface *bg[0xFF];
 
 unsigned int tmr60FPS = 0;
+unsigned int fpsGyver = 0;
+unsigned int fpsCnt   = 0;
+
+unsigned int tmrAnim  = 0;
+
+float bloodX   = 0;
+float bloodY   = 0;
+float bloodZ   = 0;
+bool shootSound = false;
+bool hitState   = false;
+
     
 /* Debug Room */
 debugRoom debugR[0xFF];
@@ -178,13 +205,6 @@ void background_Loader(std::string roomName) {
 
 
 
-/************************
-** ENEMY Render and AI **
-*************************/
-void enemyAI_followPlayer() {
-
-}
-
 /*
  * renderLoadResource
  * This function is the hardcoded game initialization
@@ -219,8 +239,14 @@ void gameCore::renderLoadResource() {
     modelList[3].emdLoadFile("resource/models/PL0BCH.EMD");
     modelList[4].emdLoadFile("resource/models/EM01E.EMD");
     modelList[5].emdLoadFile("resource/models/EM030.EMD");
+    modelList[6].emdLoadFile("resource/models/EM005.EMD");
+    modelList[7].emdLoadFile("resource/models/EM010.EMD");
+    modelList[8].emdLoadFile("resource/models/EM031.EMD");
+
+    modelList[8].emdTotalObj = 18;
 
     testModel.loadFile("resource/models/EM1110.EMD");
+    testGun.readFile("resource/models/PL00W05.PLW");
 
     /*
      * Load all sound effects
@@ -232,6 +258,20 @@ void gameCore::renderLoadResource() {
     mixList.push_back(node);
     node = Mix_LoadWAV("resource/sfx/next.wav");
     mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/gun_1.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/hit.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/zw_1.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/zp_2.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/step.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/step2.wav");
+    mixList.push_back(node);
+    node = Mix_LoadWAV("resource/sfx/g.wav");
+    mixList.push_back(node);
 
     // Algumas imagens carregadas na memória
     engineThisGame.loaderFile  ("resource/menus/intro_2.bmp",0);
@@ -240,6 +280,7 @@ void gameCore::renderLoadResource() {
     engineSelectChar.loaderFile("resource/menus/selectChar.bmp", 0);
     engineCharMenu.loaderFile  ("resource/menus/charMenu.bmp", 1);
     engineResult.loaderFile    ("resource/menus/RESULT.BMP", 0);
+    engineBlood.loaderFile     ("resource/texture/blood_1.bmp", 1);
 
     shadow.loadImage           ("resource/texture/1.png");
 
@@ -261,11 +302,32 @@ void gameCore::renderLoadResource() {
     mainPlayer.setCam(CAMERA_STYLE_SEL_CHAR);
     mainPlayer.setAngle(90.0);
 
+    srand(time(NULL));
+    
     for (int i = 0; i < VR_ENEMY_NUM; i++) {
-        gameEnemy.setX(-2000.0f + (-1000.0f * i));
-        gameEnemy.setZ(-5000.0f + (-1000.0f * i));
+        gameEnemy.setX(mobListX[i]);
+        gameEnemy.setZ(mobListY[i]);
         gameEnemy.setY(0);
-        gameEnemy.setModel(4);
+        int x = rand() % 3;
+        
+        switch (x) {
+            case 0:
+                gameEnemy.setModel(4);
+            break;
+
+            case 1:
+                gameEnemy.setModel(7);
+            break;
+
+            case 2:
+                gameEnemy.setModel(6);
+            break;
+
+            case 3:
+                printf("k\n");
+            break;
+        }
+        
         gameEnemy.setAngle(0);
         gameEnemy.setState(AI_STATE_BEGIN);
         gameEnemy.setType(AI_TYPE_ZOMBIE_RE2);
@@ -273,7 +335,19 @@ void gameCore::renderLoadResource() {
         gameEnemy.setAnimType(ZOMBIE_SEC4_ANIM_IDLE);
         gameEnemy.setHitPoints(3);
         enemyList.push_back(gameEnemy);
-    }
+    } 
+
+    gameEnemy.setX(-2000.0f);
+    gameEnemy.setZ(-5000.0f);
+    gameEnemy.setModel(8);
+    gameEnemy.setAngle(0);
+    gameEnemy.setState(AI_STATE_BEGIN);
+    gameEnemy.setAnimSection(EMD_SECTION_2);
+    gameEnemy.setAnimType(G_VIRUS_SEC2_FORM_2_PRESENT, false);
+    gameEnemy.setHitPoints(20);
+    enemyList.push_back(gameEnemy);
+
+
 
     /* Hardcoded Debug Room X,Y,Z,RoomNum and RoomName !*/
 
@@ -904,36 +978,114 @@ void gameCore::engineAnimation(entity *e) {
 }
 
 void MainLoop() {
+    unsigned int sysTick = SDL_GetTicks();
+
+
+
     if (tmr60FPS < SDL_GetTicks()) {
-        tmr60FPS = (SDL_GetTicks() + (1000/60));
+        tmr60FPS = (SDL_GetTicks() + 14);
 
 
-	    if (core->coreTmr_anim <= SDL_GetTicks()) {
-	        core->coreTmr_anim = SDL_GetTicks() + 24; 
-	        core->engineAnimation(&mainPlayer);
-	        for (unsigned int i = 0; i < enemyList.size(); i++) {
-	        	core->engineAnimation(&enemyList[i]);
-	    	}
-	    }
+        if (tmr1000 < sysTick) {
+            tmr1000 = sysTick + 1000;
+            fpsGyver = fpsCnt;
+            fpsCnt = 0;
+        } else {
+            fpsCnt++;
+        }
+
+
 
         switch (gameState) {
             case STATE_SEL_CHAR:
-
+               if (core->coreTmr_anim <= SDL_GetTicks()) {
+                    core->coreTmr_anim = SDL_GetTicks() + 24; 
+                    core->engineAnimation(&mainPlayer);
+                }
             break;
 
             case STATE_IN_GAME: {
+                if (mainPlayer.getState() != PLAYER_STATE_END) {
+                if (core->coreTmr_anim <= SDL_GetTicks()) {
+                    core->coreTmr_anim = SDL_GetTicks() + 24; 
+                    core->engineAnimation(&mainPlayer);
+
+                    if (!specialEnemy) {
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
+                            core->engineAnimation(&enemyList[i]);
+                        } 
+                    } else {
+                        core->engineAnimation(&enemyList[VR_ENEMY_NUM]);
+                    }
+
+                    if (mainPlayer.getAnimSection() == EMD_SECTION_4) {
+                        if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
+                            if (mainPlayer.getAnimCount() == 9)
+                                soundEngine.enginePlaySoundEffect(core->mixList[7]);
+
+                            if (mainPlayer.getAnimCount() == 26)
+                                soundEngine.enginePlaySoundEffect(core->mixList[7]);
+
+                        }
+                    
+                    } else if (mainPlayer.getAnimSection() == EMD_SECTION_2) {
+                        if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
+                            
+                            if (mainPlayer.getAnimCount() == 9)
+                                soundEngine.enginePlaySoundEffect(core->mixList[7]);
+
+                            if (mainPlayer.getAnimCount() == 26)
+                                soundEngine.enginePlaySoundEffect(core->mixList[7]);
+            
+                        }
+                    }
+
+                    unsigned int gameScore = 0;
+                    if (!specialEnemy) {
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
+                            core->engineAI.zombie_re_2(&mainPlayer, &enemyList[i]);
+                            if (enemyList[i].getState() == AI_STATE_DEATH) 
+                                gameScore++;
+                        }
+    
+
+                        if (gameScore == VR_ENEMY_NUM) {
+                            specialEnemy = true;
+                            soundEngine.engineStopSound();
+                            soundEngine.engineLoadSound("resource/ost/10.mp3");
+                            soundEngine.enginePlaySound(1);
+                            soundEngine.enginePlaySoundEffect(core->mixList[9]);                            
+                        }
+
+                    } else {
+                        gameScore = core->vrMode.gameScore;
+                        core->engineAI.g_virus_2(&mainPlayer, &enemyList[VR_ENEMY_NUM]);
+                        if (enemyList[VR_ENEMY_NUM].getState() == AI_STATE_DEATH) {
+                            if (gameScore < VR_ENEMY_NUM + VR_SPECIAL)
+                                gameScore++;
+                        }
+                    }
+
+
+                    core->vrMode.setGameScore(gameScore);
+
+
+                }
 
                     core->handlePlayerAction();
 
-                    unsigned int gameScore = 0;
-
-                    for (unsigned int i = 0; i < enemyList.size(); i++) {
-                        core->engineAI.zombie_re_2(&mainPlayer, &enemyList[i]);
-                        if (enemyList[i].getState() == AI_STATE_DEATH) 
-                            gameScore++;
+                    if (inBlood) {
+                        if (tmrAnim < SDL_GetTicks()) {
+                            tmrAnim = SDL_GetTicks() + 60;
+                            bloodAnimNum++;
+                            
+                            if (bloodAnimNum > 5) {
+                                bloodAnimNum = 0;
+                                inBlood = false;
+                            }
+                        }
                     }
 
-                    core->vrMode.setGameScore(gameScore);
 
                     /* Collision Detection RE 1 
                     for (unsigned int i = 0; i < playerRDT.rdtRE1ColissionArray.size(); i++) {
@@ -986,7 +1138,7 @@ void MainLoop() {
                     }                    
                     */
 
-
+                }
             }
 
             break;
@@ -1175,18 +1327,13 @@ void gameCore::eventSystem_gameAction(unsigned int key, bool pressed) {
 
 
 void renderShadow(float x, float y, float z) {
-
+    glDisable(GL_CULL_FACE);
     glDisable(GL_LIGHTING);
    
     glLoadIdentity();
  
     core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
                       mainPlayer.getZ(),  mainPlayer.getAngle());
- 
- 
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, shadow.getWidth(), shadow.getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, shadow.getPixelData());
- 
  
     glBegin(GL_QUADS);  
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1202,7 +1349,7 @@ void renderShadow(float x, float y, float z) {
  
     glEnable(GL_LIGHTING);
 
-
+    glEnable(GL_CULL_FACE);
 }
 
 
@@ -1264,16 +1411,17 @@ void renderEMD_modelAnimation(unsigned int objNum, unsigned int var, int var2, E
  * Resident Evil 1.5 and Resident Evil 2 model render
  */
 void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum, EMD_SEC2_DATA_T animFrame) {
-    float width_t  = (float) (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2);
-    float height_t = (float)  modelList[emdNum].emdTimTexture.timTexture.imageHeight;
-
+    float width_t, width_t_2;
+    float height_t, height_t_2;
+    width_t  = (float) (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2);
+    height_t = (float)  modelList[emdNum].emdTimTexture.timTexture.imageHeight;
+    width_t_2  = (float) (testGun.emdTimTexture.timTexture.imageWidth*2);
+    height_t_2 = (float)  testGun.emdTimTexture.timTexture.imageHeight;
     unsigned short uPage = 0;
 
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2), modelList[emdNum].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[emdNum].emdTimTexture.rawTexture);
 
-
-    // Toda a renderização do personagem vai ficar aqui !
     for (unsigned int x = 0; x < modelList[emdNum].emdTotalObj; x++) {
         
         glLoadIdentity();        
@@ -1285,99 +1433,191 @@ void renderEMD(float m_x, float m_y, float m_z, float angle, unsigned int emdNum
 
         glRotatef(angle, 0.0f, 1.0f, 0.0f);
 
-
-
-        /*
-         * to solve the bug: render the model starting with value N
-         */
         for (unsigned int z = 0; z <  modelList[emdNum].emdTotalObj; z++) {
             renderEMD_modelAnimation(x, z, z, animFrame, emdNum);
         }
 
-        for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].triangles.triCount; y++) {
-            uPage = ((modelList[emdNum].emdTritexture[x][y].page & 0b00111111) * 128);
+        if ((x == 11) && ((emdNum == 2) || (emdNum == 1))) {
+            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+            glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (testGun.emdTimTexture.timTexture.imageWidth*2), testGun.emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, testGun.emdTimTexture.rawTexture);
 
-            glBegin(GL_TRIANGLES);
- 
-                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].x,
-                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].y)*-1,
-                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].z);
-                
-                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v0/height_t);
+            for (unsigned int y = 0; y < testGun.sec3ModelBuffer[0].triangles.triCount; y++) {
+                uPage = ((testGun.plwTritexture[0][y].page & 0b00111111) * 128);
 
-                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].x,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].y ,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].z);
+                glBegin(GL_TRIANGLES);
 
-                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].x,
-                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].y)*-1,
-                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].z);
-                
-                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v1/height_t);
-                
-                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].x,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].y ,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].z );
+                    glNormal3i(testGun.plwNormal[0][testGun.plwTriangle[0][y].n0].x,
+                        (testGun.plwNormal[0][testGun.plwTriangle[0][y].n0].y)*-1,
+                         testGun.plwNormal[0][testGun.plwTriangle[0][y].n0].z);
 
-                glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].x,
-                    (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].y)*-1,
-                    modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].z);
-                
-                glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[emdNum].emdTritexture[x][y].v2/height_t);
+                    glTexCoord2f((float)(testGun.plwTritexture[0][y].u0 + uPage) / width_t_2 , (float)testGun.plwTritexture[0][y].v0/height_t_2);
 
-                glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].x ,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].y ,
-                    modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].z );
-                
-            glEnd();
+                                    
+                    glVertex3i(testGun.plwVertex[0][testGun.plwTriangle[0][y].v0].x,
+                        testGun.plwVertex[0][testGun.plwTriangle[0][y].v0].y ,
+                        testGun.plwVertex[0][testGun.plwTriangle[0][y].v0].z);
+
+                    glNormal3i(testGun.plwNormal[0][testGun.plwTriangle[0][y].n1].x,
+                        (testGun.plwNormal[0][testGun.plwTriangle[0][y].n1].y)*-1,
+                        testGun.plwNormal[0][testGun.plwTriangle[0][y].n1].z);
+
+                    glTexCoord2f((float)(testGun.plwTritexture[0][y].u1 + uPage) / width_t_2, (float)testGun.plwTritexture[0][y].v1/height_t_2);
+
+
+                    glVertex3i( testGun.plwVertex[0][ testGun.plwTriangle[0][y].v1].x,
+                         testGun.plwVertex[0][ testGun.plwTriangle[0][y].v1].y ,
+                         testGun.plwVertex[0][ testGun.plwTriangle[0][y].v1].z );
+
+                    glNormal3i(testGun.plwNormal[0][testGun.plwTriangle[0][y].n2].x,
+                        (testGun.plwNormal[0][testGun.plwTriangle[0][y].n2].y)*-1,
+                        testGun.plwNormal[0][testGun.plwTriangle[0][y].n2].z);
+
+                    glTexCoord2f((float)(testGun.plwTritexture[0][y].u2 + uPage)  / width_t_2,(float) testGun.plwTritexture[0][y].v2/height_t_2);
+
+
+                    glVertex3i( testGun.plwVertex[0][ testGun.plwTriangle[0][y].v2].x ,
+                         testGun.plwVertex[0][ testGun.plwTriangle[0][y].v2].y ,
+                         testGun.plwVertex[0][ testGun.plwTriangle[0][y].v2].z );
+
+                glEnd();
+            }
+
+            for (unsigned int y = 0; y < testGun.sec3ModelBuffer[0].quads.quadCount; y++) {
+                uPage = ((testGun.plwQuadTexture[0][y].page & 0b00111111) * 128);
+                glBegin(GL_QUADS);
+
+                    glNormal3i(testGun.plwquadNormal[0][testGun.plwQuad[0][y].n0].x,
+                        (testGun.plwquadNormal[0][testGun.plwQuad[0][y].n0].y)*-1,
+                        testGun.plwquadNormal[0][testGun.plwQuad[0][y].n0].z);
+
+                    glTexCoord2f((float)(testGun.plwQuadTexture[0][y].u0 + uPage) / width_t_2, (float)testGun.plwQuadTexture[0][y].v0/height_t_2);
+
+                    glVertex3i(testGun.plwquadVertex[0][testGun.plwQuad[0][y].v0].x , 
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v0].y ,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v0].z );
+
+                    glNormal3i(testGun.plwquadNormal[0][testGun.plwQuad[0][y].n1].x,
+                        (testGun.plwquadNormal[0][testGun.plwQuad[0][y].n1].y) * -1,
+                        testGun.plwquadNormal[0][testGun.plwQuad[0][y].n1].z);
+                   glTexCoord2f((float)(testGun.plwQuadTexture[0][y].u1 + uPage)  / width_t_2, (float)testGun.plwQuadTexture[0][y].v1/height_t_2);
+                    
+                    glVertex3i(testGun.plwquadVertex[0][testGun.plwQuad[0][y].v1].x ,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v1].y ,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v1].z );
+
+
+                    glNormal3i(testGun.plwquadNormal[0][testGun.plwQuad[0][y].n3].x ,
+                        (testGun.plwquadNormal[0][testGun.plwQuad[0][y].n3].y)*-1,
+                        testGun.plwquadNormal[0][testGun.plwQuad[0][y].n3].z);
+                    glTexCoord2f((float)(testGun.plwQuadTexture[0][y].u3 + uPage)  / width_t_2, (float)testGun.plwQuadTexture[0][y].v3/height_t_2);
+                   
+                    glVertex3i(testGun.plwquadVertex[0][testGun.plwQuad[0][y].v3].x,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v3].y ,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v3].z);
+
+
+                   glNormal3i(testGun.plwquadNormal[0][testGun.plwQuad[0][y].n2].x,
+                        (testGun.plwquadNormal[0][testGun.plwQuad[0][y].n2].y)*-1,
+                        testGun.plwquadNormal[0][testGun.plwQuad[0][y].n2].z);
+                   glTexCoord2f((float)(testGun.plwQuadTexture[0][y].u2 + uPage)  / width_t_2, (float)testGun.plwQuadTexture[0][y].v2/height_t_2);
+                   
+                    glVertex3i(testGun.plwquadVertex[0][testGun.plwQuad[0][y].v2].x,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v2].y ,
+                        testGun.plwquadVertex[0][testGun.plwQuad[0][y].v2].z);
+
+                glEnd();
+            }
+
+             glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+             glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, (modelList[emdNum].emdTimTexture.timTexture.imageWidth*2), modelList[emdNum].emdTimTexture.timTexture.imageHeight, 0,GL_RGB, GL_UNSIGNED_BYTE, modelList[emdNum].emdTimTexture.rawTexture);
+
+        } else {
+            for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].triangles.triCount; y++) {
+                uPage = ((modelList[emdNum].emdTritexture[x][y].page & 0b00111111) * 128);
+
+                glBegin(GL_TRIANGLES);
+     
+                    glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].x,
+                        (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].y)*-1,
+                        modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n0].z);
+                    
+                    glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u0 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v0/height_t);
+
+                    glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].x,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].y ,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v0].z);
+
+                    glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].x,
+                        (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].y)*-1,
+                        modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n1].z);
+                    
+                    glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u1 + uPage) / width_t , (float)modelList[emdNum].emdTritexture[x][y].v1/height_t);
+                    
+                    glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].x,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].y ,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v1].z );
+
+                    glNormal3i(modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].x,
+                        (modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].y)*-1,
+                        modelList[emdNum].emdNormal[x][modelList[emdNum].emdTriangle[x][y].n2].z);
+                    
+                    glTexCoord2f((float)(modelList[emdNum].emdTritexture[x][y].u2 + uPage)  / width_t ,(float) modelList[emdNum].emdTritexture[x][y].v2/height_t);
+
+                    glVertex3i(modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].x ,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].y ,
+                        modelList[emdNum].emdVertex[x][modelList[emdNum].emdTriangle[x][y].v2].z );
+                    
+                glEnd();
+            }
+
+            for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].quads.quadCount; y++) {
+                uPage = ((modelList[emdNum].emdQuadTexture[x][y].page & 0b00111111) * 128);
+                glBegin(GL_QUADS);
+
+                    glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].x,
+                        (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].y)*-1,
+                        modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].z);
+
+                    glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v0/height_t);
+
+                    glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].x , 
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].y ,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].z );
+
+                    glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].x,
+                        (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].y) * -1,
+                        modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].z);
+                    
+                    glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v1/height_t);
+                    
+                    glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].x ,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].y ,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].z );
+
+
+                    glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].x ,
+                        (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].y)*-1,
+                        modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].z);
+                    glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v3/height_t);
+                   
+                    glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].x,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].y ,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].z);
+
+
+                    glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].x,
+                        (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].y)*-1,
+                        modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].z);
+                    glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v2/height_t);
+                   
+                    glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].x,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].y ,
+                        modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].z);
+
+
+                glEnd();
+            }
         }
-
-        for (unsigned int y = 0; y < modelList[emdNum].emdObjectBuffer[x].quads.quadCount; y++) {
-            uPage = ((modelList[emdNum].emdQuadTexture[x][y].page & 0b00111111) * 128);
-            glBegin(GL_QUADS);
-
-                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].x,
-                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].y)*-1,
-                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n0].z);
-
-                glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u0 + uPage) / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v0/height_t);
-
-                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].x , 
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].y ,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v0].z );
-
-                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].x,
-                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].y) * -1,
-                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n1].z);
-               glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u1 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v1/height_t);
-                
-                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].x ,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].y ,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v1].z );
-
-
-                glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].x ,
-                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].y)*-1,
-                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n3].z);
-                glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u3 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v3/height_t);
-               
-                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].x,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].y ,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v3].z);
-
-
-               glNormal3i(modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].x,
-                    (modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].y)*-1,
-                    modelList[emdNum].emdquadNormal[x][modelList[emdNum].emdQuad[x][y].n2].z);
-               glTexCoord2f((float)(modelList[emdNum].emdQuadTexture[x][y].u2 + uPage)  / width_t, (float)modelList[emdNum].emdQuadTexture[x][y].v2/height_t);
-               
-                glVertex3i(modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].x,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].y ,
-                    modelList[emdNum].emdquadVertex[x][modelList[emdNum].emdQuad[x][y].v2].z);
-
-
-            glEnd();
-           }
     } 
 }
 
@@ -1727,6 +1967,37 @@ void gameCore::renderSelectChar() {
 }
 
 
+void renderBlood(float x, float y, float z) {
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHTING);
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, engineBlood.bmpWidth, engineBlood.bmpHeight, 0,GL_BGRA, GL_UNSIGNED_BYTE, engineBlood.bmpBuffer);
+ 
+
+    glLoadIdentity();
+ 
+    core->camMode.camList(mainPlayer.getCam(), mainPlayer.getX(), mainPlayer.getY(),
+                      mainPlayer.getZ(),  mainPlayer.getAngle());
+    float Xo = 0.16f * bloodAnimNum;
+
+    glBegin(GL_QUADS);  
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        glTexCoord2f(Xo,0.0f);                
+        glVertex3f(x-1024.0f,     -2048.0f,      z-0.0f);  
+        glTexCoord2f(Xo+0.16f,0.0f);          
+        glVertex3f((x + 1024.0f), -2048.0f,      z-0.0f);  
+        glTexCoord2f(Xo+0.16f,1.0f);          
+        glVertex3f((x + 1024.0f), -3072.0f,     (z + 0.0f));
+        glTexCoord2f(Xo+0.0f,1.0f);  
+        glVertex3f(x-1024.0f,     -3072.0f,     (z + 0.0f));
+    glEnd();
+ 
+    glEnable(GL_LIGHTING);
+    glEnable(GL_CULL_FACE);
+}   
+
+
 // All in game stuff related with rendering is done here
 void gameCore::renderGame() {
 
@@ -1735,7 +2006,7 @@ void gameCore::renderGame() {
             if(!miscStuff.isInFade()) {
                 switch (charMusicNum) {
                     case 0:
-                        soundEngine.engineLoadSound("resource/ost/8.mp3");
+                        soundEngine.engineLoadSound("resource/ost/0.mp3");
                     break;
 
                     case 1:
@@ -1743,7 +2014,7 @@ void gameCore::renderGame() {
                     break;
 
                     case 2:
-
+                        soundEngine.engineLoadSound("resource/ost/2.mp3");
                     break;
 
                     case 3:
@@ -1765,6 +2036,8 @@ void gameCore::renderGame() {
                 case VR_STATE_IN_GAME:
                     /* .BSS Background stuff */
                     //drawMapBackground();
+                    if (inBlood)
+                     renderBlood(bloodX, bloodY, bloodZ);
 
                     /* All model rendering is done by renderEMD Function */
                     /* Player Rendering */
@@ -1775,23 +2048,41 @@ void gameCore::renderGame() {
 
                     /* Enemy Rendering */
 
-                    for (unsigned int i = 0; i < enemyList.size(); i++) {
+                    if (!specialEnemy) {
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
+                            renderEMD(enemyList[i].getX(), enemyList[i].getY(),enemyList[i].getZ(), 
+                                      enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
+
+                        //    renderBoundingBox(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+                         }
+
+                        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+                        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, shadow.getWidth(), shadow.getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, shadow.getPixelData());
+                        renderShadow(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
+
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
+                           renderShadow(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+                        }
+                      //  renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
+
+                    } else {
+                        
+                        unsigned int i = VR_ENEMY_NUM;
                         renderEMD(enemyList[i].getX(), enemyList[i].getY(),enemyList[i].getZ(), 
-                                  enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
+                                      enemyList[i].getAngle(), enemyList[i].getModel(), enemyList[i].getAnimFrame());
+        
+                        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+                        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, shadow.getWidth(), shadow.getHeight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, shadow.getPixelData());
+                        renderShadow(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
 
-                        renderBoundingBox(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
                         renderShadow(enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ());
+
                     }
-
-                    renderBoundingBox(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
-                    renderShadow(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ());
-
-
 
                     char coord[0xFF];
 
-                    sprintf(coord, "XYZA %d/%d/%d/%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle());
-                    miscStuff.renderText(0.0f, 1.00f, 100.0f, TEXT_TYPE_LITTLE, coord);
+                    sprintf(coord, "XYZA/FPS %d/%d/%d/%d/%d", (int)mainPlayer.getX(),(int)mainPlayer.getY(),(int)mainPlayer.getZ(), (int)mainPlayer.getAngle(), fpsGyver);
+                    miscStuff.renderText(0.0f, 1.05f, 100.0f, TEXT_TYPE_LITTLE, coord);
 
                     vrMode.gameLogic();
 
@@ -1800,9 +2091,13 @@ void gameCore::renderGame() {
                 case VR_STATE_IN_BEND:
                     miscStuff.setupFadeEffect(TYPE_FADE_OUT, 0, 0, 0, 260);
                     vrMode.setState(VR_STATE_IN_END);
+                    soundEngine.engineStopSound();
+                    soundEngine.engineLoadSound("resource/ost/9.mp3");
                 break;
 
                 case VR_STATE_IN_END: {
+                    soundEngine.enginePlaySound(1);
+
                     miscStuff.renderSquareWithTexture(&engineResult, false);
                     
                     if (!miscStuff.isInFade()) {
@@ -1845,6 +2140,7 @@ void gameCore::renderGame() {
 
                         int rankNum = 0;
 
+
                         /* RANK B OR C */
                         if ((vrMode.timer.min > 2)) {
                             /* RANK B OR C */
@@ -1862,6 +2158,10 @@ void gameCore::renderGame() {
                             }
                         }
                          
+
+                        if (mainPlayer.getState() == PLAYER_STATE_END)
+                            rankNum = 4;
+
                         switch (rankNum) {
                             case 1: {
                                 /*
@@ -1902,7 +2202,7 @@ void gameCore::renderGame() {
                                  * RANK
                                  */
                                 miscStuff.renderText(0.15, 0.65, 0.0, TEXT_TYPE_NORMAL, "YOUR RANK: ", 1.0f, 1.0f, 1.0f, 1.0f);
-                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "C", 1.0f, 0.1f, 0.1f, 1.0f);
+                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "C", 1.0f, 0.5f, 0.1f, 1.0f);
 
                                 /*
                                  * RANK INFO
@@ -1912,6 +2212,24 @@ void gameCore::renderGame() {
                                 miscStuff.renderText(0.10, 0.90, 0.0, TEXT_TYPE_LITTLE, "At least you tried", 1.0f, 1.0f, 1.0f, 1.0f);
 
                             }
+
+                            case 4:  {
+                                /*
+                                 * RANK
+                                 */
+                                miscStuff.renderText(0.15, 0.65, 0.0, TEXT_TYPE_NORMAL, "YOUR RANK: ", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.85, 0.65, 0.0, TEXT_TYPE_NORMAL, "F", 1.0f, 0.0f, 0.0f, 1.0f);
+
+                                /*
+                                 * RANK INFO
+                                 */
+
+                                miscStuff.renderText(0.10, 0.85, 0.0, TEXT_TYPE_LITTLE, "Don't give up !", 1.0f, 1.0f, 1.0f, 1.0f);
+                                miscStuff.renderText(0.10, 0.90, 0.0, TEXT_TYPE_LITTLE, "Do your best next time", 1.0f, 1.0f, 1.0f, 1.0f);
+
+                            }
+
+                            break;
 
                             break;
                         }
@@ -2058,6 +2376,8 @@ void gameCore::renderInit() {
     glEnable(GL_NORMALIZE);
     glEnable(GL_BLEND); 
     glEnable(GL_ALPHA_TEST);
+    glEnable(GL_CULL_FACE);  
+    glCullFace(GL_FRONT);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Permite utilização de textura 2D
     glEnable(GL_TEXTURE_2D);
@@ -2103,9 +2423,21 @@ void gameCore::renderInit() {
 void gameCore::gunHandle() {
     std::vector<int>    colList;
     std::vector<float>  Dlist;
-
-    for (unsigned int i = 0; i < enemyList.size(); i++) {
-        if (enemyList[i].getState() != AI_STATE_DEATH) {
+    if (!specialEnemy) {
+        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
+            if (enemyList[i].getState() != AI_STATE_DEATH) {
+                if (mathEngine.collisionShoot(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
+                                                                      enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ(),
+                                                                      mainPlayer.getAngle())) {
+                    colList.push_back(i);
+                    Dlist.push_back(mathEngine.d2Point(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
+                                       enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ()));
+                }
+            }
+        }
+    } else {
+        unsigned int i = VR_ENEMY_NUM;
+        if ((enemyList[i].getState() != AI_STATE_DEATH) && (enemyList[i].getState() != AI_STATE_BEGIN)) {
             if (mathEngine.collisionShoot(mainPlayer.getX(), mainPlayer.getY(), mainPlayer.getZ(),
                                                                   enemyList[i].getX(), enemyList[i].getY(), enemyList[i].getZ(),
                                                                   mainPlayer.getAngle())) {
@@ -2138,11 +2470,35 @@ void gameCore::gunHandle() {
         }
 
         enemyList[eI].setState(AI_STATE_HIT);   
+
+        bloodX = enemyList[eI].getX();
+        bloodY = enemyList[eI].getY();
+        bloodZ = enemyList[eI].getZ();
+        
+        int i = 0;
+        i = rand() % 6;
+
+        if ((i == 2) || (i == 3) )
+            soundEngine.enginePlaySoundEffect(mixList[6]);
+        
+        inBlood = true;
+
     } else {
         enemyList[colList[0]].setState(AI_STATE_HIT);
+
+        bloodX = enemyList[colList[0]].getX();
+        bloodY = enemyList[colList[0]].getY();
+        bloodZ = enemyList[colList[0]].getZ();
+        
+        int i = 0;
+        i = rand() % 6;
+
+        if ((i == 2) || (i == 3) )
+            soundEngine.enginePlaySoundEffect(mixList[6]);
+
+        inBlood = true;
+
     }
-
-
 
 }
 
@@ -2175,9 +2531,11 @@ void gameCore::handlePlayerAction() {
             if ((keyList[EVENT_SYSTEM_KEY_UP] == true)) {
                 if (mainPlayer.getAnimSection() == EMD_SECTION_4) {
                     if (mainPlayer.getAnimType() == STAND_SEC4_ANIM_WALK) {
+
+
                         x = mainPlayer.getX() + cos((mainPlayer.getAngle() * PI/180)) * 80.0;
                         z = mainPlayer.getZ() - sin((mainPlayer.getAngle() * PI/180)) * 80.0;
-                        for (unsigned int i = 0; i < enemyList.size(); i++) {                        
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {                        
                             if (mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
                                                               enemyList[i].getX(),enemyList[i].getY(), enemyList[i].getZ())) {
                                 canMove = false;
@@ -2196,10 +2554,11 @@ void gameCore::handlePlayerAction() {
             } else if ((keyList[EVENT_SYSTEM_KEY_DOWN] == true)) {
                 if (mainPlayer.getAnimSection() == EMD_SECTION_2) {
                     if (mainPlayer.getAnimType() == STAND_SEC2_ANIM_BACKWARD) {
+
                         x = mainPlayer.getX() - cos((mainPlayer.getAngle() * PI/180)) * 80.0;
                         z = mainPlayer.getZ() + sin((mainPlayer.getAngle() * PI/180)) * 80.0;
 
-                        for (unsigned int i = 0; i < enemyList.size(); i++) {
+                        for (unsigned int i = 0; i < VR_ENEMY_NUM; i++) {
                             if (mathEngine.collisionRectangle(x, mainPlayer.getY(), z,
                                                               enemyList[i].getX(),enemyList[i].getY(), enemyList[i].getZ())) {
                                 canMove = false;
@@ -2224,6 +2583,13 @@ void gameCore::handlePlayerAction() {
             mainPlayer.setAnimSection(EMD_SECTION_2);
             mainPlayer.setAnimType(STAND_SEC2_ANIM_HIT_2);
             mainPlayer.setCam(CAMERA_STYLE_SPECIAL);
+
+            bloodX = mainPlayer.getX();
+            bloodY = mainPlayer.getY();
+            bloodZ = mainPlayer.getZ();
+
+            inBlood = true;
+
             for (int i = 0; i < 7; i++) {
                 keyList[i] = false;
             }
@@ -2232,12 +2598,16 @@ void gameCore::handlePlayerAction() {
                 mainPlayer.setState(PLAYER_STATE_BEGIN_DEATH);
             } else {
                 mainPlayer.setState(PLAYER_STATE_HIT);
+                hitState = false;
             }
         }
         break;
 
         case PLAYER_STATE_HIT: {
-
+            if (!hitState) {
+                soundEngine.enginePlaySoundEffect(mixList[4]);
+                hitState = true;
+            }
         }
         break;
 
@@ -2251,11 +2621,17 @@ void gameCore::handlePlayerAction() {
             /*
              * Shoot action
              */
+
+            if (!shootSound) {
+                soundEngine.enginePlaySoundEffect(mixList[3]);
+                shootSound = true;
+            }
             if ((mainPlayer.getAnimSection() == EMD_SECTION_4) && (mainPlayer.getAnimType() == STAND_SEC4_ANIM_SHOOTING)) {
 
                 if (mainPlayer.getAnimCount() == 22) {
                     gunHandle();
                     vrMode.ammo++;
+                    shootSound = false;
                     if (keyList[EVENT_SYSTEM_KEY_Z]) {
                         mainPlayer.setAnimCount(0);
                     } else {
@@ -2288,9 +2664,14 @@ void gameCore::handlePlayerAction() {
             mainPlayer.setY(2000 + node.yOffset);
 
             if (!miscStuff.isInFade()) {
-                
+                vrMode.setState(VR_STATE_IN_BEND);      
+                mainPlayer.setState(PLAYER_STATE_END);          
             }
         }
+        break;
+        
+        case PLAYER_STATE_END:
+
         break;
 
     }

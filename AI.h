@@ -67,6 +67,13 @@ enum ZOMBIE_SEC4_ANIMATION {
    ZOMBIE_SEC4_ANIM_A_HIT_3  = 30
 };
 
+enum G_VIRUS_SEC2_FORM_2_ANIMATION {
+   G_VIRUS_SEC2_FORM_2_WALK    = 1,
+   G_VIRUS_SEC2_FORM_2_ATTACK  = 7,
+   G_VIRUS_SEC2_FORM_2_DEATH   = 10,
+   G_VIRUS_SEC2_FORM_2_PRESENT = 23
+};
+
 
 enum AI_STATE {
 	AI_STATE_BEGIN  = 0,
@@ -80,7 +87,8 @@ enum AI_STATE {
 
 enum AI_LIST {
 	AI_TYPE_ZOMBIE_RE2 = 0,
-	AI_TYPE_TYRANT_RE1 = 1
+	AI_TYPE_TYRANT_RE1 = 1,
+   AI_TYPE_G_VIRUS_2  = 2
 };
 
 class AI {
@@ -90,6 +98,7 @@ public:
    ~AI();
 
    void zombie_re_2(player *p, enemy *e);
+   void g_virus_2(player *p, enemy *e);
 
 private:
 

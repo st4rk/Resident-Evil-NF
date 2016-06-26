@@ -36,6 +36,8 @@ public:
 	void renderFadeEffect();
 	void renderText(float, float, float, int, std::string, float r = 1.0, float g = 1.0, float b = 1.0, float a = 1.0);
 	void renderBoundingBox(float x, float y, float z);
+	void renderBlood(float x, float y, float z);
+
 
 	bool isInFade();
 

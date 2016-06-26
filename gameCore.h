@@ -20,6 +20,7 @@
 #include "EMD1.h"
 #include "PLD.h"
 #include "RDT.h"
+#include "PLW.h"
 #include "gameSound.h"
 #include "gameMath.h"
 #include "gameEvent.h"
@@ -115,11 +116,12 @@ public:
 	cam camMode;
 	AI  engineAI;
 	VR  vrMode;
+
+	std::vector<Mix_Chunk*> mixList;
 private:
 
 
 
-	std::vector<Mix_Chunk*> mixList;
 	std::vector<EMD_SEC2_DATA_T> interAnimation;
 	unsigned int inInterpolation;
 	unsigned int oldAnim;
